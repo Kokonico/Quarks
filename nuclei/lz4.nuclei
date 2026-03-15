@@ -1,0 +1,15 @@
+nuclei "lz4", "1.9.4" do
+  description "Extremely fast compression algorithm"
+  homepage "https://lz4.github.io/lz4/"
+  license "BSD"
+  category "app-arch"
+  
+  source "https://github.com/lz4/lz4/archive/v1.9.4.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    make
+    install "make DESTDIR=${DESTDIR} PREFIX=/ install"
+  end
+end

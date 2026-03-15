@@ -1,0 +1,19 @@
+nuclei "libpsl", "0.21.5" do
+  description "Public Suffix List library"
+  homepage "https://github.com/rockdaboot/libpsl"
+  license "MIT"
+  category "net-libs"
+  
+  source "https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libidn2", "libunistring"
+  build_depends "meson", "ninja"
+  
+  build do
+    run "meson setup build --prefix=/"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

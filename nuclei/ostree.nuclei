@@ -1,0 +1,23 @@
+nuclei "ostree", "2024.1" do
+  description "Operating system and container binary deployment and upgrades"
+  homepage "https://ostreedev.github.io/ostree/"
+  license "LGPL-2.0"
+  category "sys-apps"
+  
+  source "https://github.com/ostreedev/ostree/releases/download/v2024.1/libostree-2024.1.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib", "libsoup", "gpgme", "libarchive", "fuse", "libcurl", "openssl"
+  build_depends "gobject-introspection", "bison"
+  
+  configure "--with-curl",
+            "--with-openssl",
+            "--without-soup"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

@@ -1,0 +1,18 @@
+nuclei "openssh", "9.6p1" do
+  description "OpenBSD's SSH client and server"
+  homepage "https://www.openssh.com/"
+  license "BSD"
+  category "net-misc"
+  
+  source "https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  configure "--with-ssl-dir=/usr"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

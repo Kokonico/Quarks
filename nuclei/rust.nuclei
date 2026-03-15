@@ -1,0 +1,16 @@
+nuclei "rust", "1.75.0" do
+  description "Systems programming language focused on safety and performance"
+  homepage "https://www.rust-lang.org/"
+  license "MIT"
+  category "dev-lang"
+  
+  source "https://static.rust-lang.org/dist/rustc-1.75.0-src.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "./configure --prefix=/ --release-channel=stable"
+    run "python3 ./x.py build"
+    install "python3 ./x.py install --destdir=${DESTDIR}"
+  end
+end

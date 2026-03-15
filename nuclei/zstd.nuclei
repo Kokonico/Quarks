@@ -1,0 +1,15 @@
+nuclei "zstd", "1.5.5" do
+  description "Fast real-time compression algorithm"
+  homepage "https://facebook.github.io/zstd/"
+  license "BSD"
+  category "app-arch"
+  
+  source "https://github.com/facebook/zstd/releases/download/v1.5.5/zstd-1.5.5.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    make
+    install "make DESTDIR=${DESTDIR} PREFIX=/ install"
+  end
+end

@@ -1,0 +1,16 @@
+nuclei "libunistring", "1.1" do
+  description "Library for manipulating Unicode strings"
+  homepage "https://www.gnu.org/software/libunistring/"
+  license "LGPL-3.0"
+  category "dev-libs"
+  
+  source "https://ftp.gnu.org/gnu/libunistring/libunistring-1.1.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

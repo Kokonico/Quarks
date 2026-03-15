@@ -1,0 +1,16 @@
+nuclei "readline", "8.2" do
+  description "GNU readline library"
+  homepage "https://tiswww.case.edu/php/chet/readline/rltop.html"
+  license "GPL-3.0"
+  category "dev-libs"
+  
+  source "https://ftp.gnu.org/gnu/readline/readline-8.2.tar.gz",
+         checksum: "3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

@@ -1,0 +1,19 @@
+nuclei "appstream", "1.0.1" do
+  description "Tools and libraries to work with AppStream metadata"
+  homepage "https://www.freedesktop.org/wiki/Distributions/AppStream/"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://www.freedesktop.org/software/appstream/releases/AppStream-1.0.1.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib", "libxml2", "libyaml", "libcurl", "libxmlb"
+  build_depends "meson", "ninja", "gobject-introspection"
+  
+  build do
+    run "meson setup build --prefix=/ -Dapidocs=false"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

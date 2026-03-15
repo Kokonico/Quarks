@@ -1,0 +1,18 @@
+nuclei "fuse", "3.16.2" do
+  description "Filesystem in Userspace"
+  homepage "https://github.com/libfuse/libfuse"
+  license "GPL-2.0"
+  category "sys-fs"
+  
+  source "https://github.com/libfuse/libfuse/releases/download/fuse-3.16.2/fuse-3.16.2.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build_depends "meson", "ninja"
+  
+  build do
+    run "meson setup build --prefix=/"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

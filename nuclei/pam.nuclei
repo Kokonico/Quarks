@@ -1,0 +1,18 @@
+nuclei "pam", "1.6.0" do
+  description "Linux Pluggable Authentication Modules"
+  homepage "http://www.linux-pam.org/"
+  license "BSD"
+  category "sys-libs"
+  
+  source "https://github.com/linux-pam/linux-pam/releases/download/v1.6.0/Linux-PAM-1.6.0.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  configure "--disable-doc"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

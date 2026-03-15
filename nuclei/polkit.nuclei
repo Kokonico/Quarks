@@ -1,0 +1,19 @@
+nuclei "polkit", "123" do
+  description "Application development toolkit for controlling system-wide privileges"
+  homepage "https://www.freedesktop.org/wiki/Software/polkit/"
+  license "LGPL-2.0"
+  category "sys-auth"
+  
+  source "https://gitlab.freedesktop.org/polkit/polkit/-/archive/123/polkit-123.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib", "expat", "pam", "duktape"
+  build_depends "meson", "ninja", "gobject-introspection"
+  
+  build do
+    run "meson setup build --prefix=/ -Dsession_tracking=libelogind -Dtests=false"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

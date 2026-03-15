@@ -1,0 +1,16 @@
+nuclei "libseccomp", "2.5.5" do
+  description "High level interface to Linux seccomp filter"
+  homepage "https://github.com/seccomp/libseccomp"
+  license "LGPL-2.1"
+  category "sys-libs"
+  
+  source "https://github.com/seccomp/libseccomp/releases/download/v2.5.5/libseccomp-2.5.5.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

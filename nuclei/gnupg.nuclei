@@ -1,0 +1,20 @@
+nuclei "gnupg", "2.4.3" do
+  description "GNU Privacy Guard - PGP encryption and signing tools"
+  homepage "https://gnupg.org/"
+  license "GPL-3.0"
+  category "app-crypt"
+  
+  source "https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.4.3.tar.bz2",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libgpg-error", "libgcrypt", "libassuan", "libksba", "npth", "sqlite", "zlib"
+  
+  configure "--enable-maintainer-mode"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

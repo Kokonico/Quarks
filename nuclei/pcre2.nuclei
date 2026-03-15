@@ -1,0 +1,18 @@
+nuclei "pcre2", "10.42" do
+  description "Perl-compatible regular expression library (version 2)"
+  homepage "https://www.pcre.org/"
+  license "BSD"
+  category "dev-libs"
+  
+  source "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  configure "--enable-jit", "--enable-pcre2-16", "--enable-pcre2-32"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

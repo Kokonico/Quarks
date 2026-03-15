@@ -1,0 +1,18 @@
+nuclei "glib", "2.78.3" do
+  description "Low-level core library for GNOME"
+  homepage "https://wiki.gnome.org/Projects/GLib"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://download.gnome.org/sources/glib/2.78/glib-2.78.3.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libffi", "pcre", "zlib"
+  
+  build do
+    run "meson setup build --prefix=/"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

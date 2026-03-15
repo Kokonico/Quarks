@@ -1,0 +1,15 @@
+nuclei "ninja", "1.11.1" do
+  description "Small build system with a focus on speed"
+  homepage "https://ninja-build.org/"
+  license "Apache-2.0"
+  category "dev-util"
+  
+  source "https://github.com/ninja-build/ninja/archive/v1.11.1.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "python3 configure.py --bootstrap"
+    install "install -Dm755 ninja ${DESTDIR}/bin/ninja"
+  end
+end

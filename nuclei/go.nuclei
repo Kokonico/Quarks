@@ -1,0 +1,23 @@
+nuclei "go", "1.22.0" do
+  description "The Go programming language"
+  homepage "https://go.dev/"
+  license "BSD-3"
+  category "dev-lang"
+
+  source "https://go.dev/dl/go1.22.0.src.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+
+  install_prefix "/usr"
+  build_system :manual
+
+  host_tools "bash", "make", "go"
+
+  build do
+    run "cd src && ./make.bash"
+    install "mkdir -p %{destdir}%{prefix}/lib/go && cp -a . %{destdir}%{prefix}/lib/go"
+    install "mkdir -p %{destdir}%{prefix}/bin"
+    install "ln -sf ../lib/go/bin/go %{destdir}%{prefix}/bin/go"
+    install "ln -sf ../lib/go/bin/gofmt %{destdir}%{prefix}/bin/gofmt"
+  end
+end

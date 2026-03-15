@@ -1,0 +1,15 @@
+nuclei "fd", "9.0.0" do
+  description "Simple, fast alternative to find"
+  homepage "https://github.com/sharkdp/fd"
+  license "MIT"
+  category "sys-apps"
+  
+  source "https://github.com/sharkdp/fd/archive/v9.0.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "cargo build --release"
+    install "install -Dm755 target/release/fd ${DESTDIR}/bin/fd"
+  end
+end

@@ -1,0 +1,27 @@
+nuclei "fastfetch", "2.60.0" do
+  description "Fast system information tool written in C"
+  homepage "https://github.com/fastfetch-cli/fastfetch"
+  license "MIT"
+  category "app-misc"
+
+  source "https://github.com/fastfetch-cli/fastfetch/releases/download/2.60.0/fastfetch-dragonfly-amd64.tar.gz",
+         checksum: "6d15456f13595834c2e9571e3d8a6d8a1bf4bf02bfccdc8c86f01196f24e0a47",
+         algorithm: "sha256"
+
+  build_system :cmake
+  build_dir "build"
+  install_prefix "/usr"
+
+  host_tools "cmake", "make"
+
+  cmake_args \
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DENABLE_VULKAN=OFF",
+    "-DENABLE_OPENCL=OFF"
+
+  build do
+    run "cmake -S %{srcdir} -B %{builddir} -DCMAKE_INSTALL_PREFIX=%{prefix} #{cmake_args.join(' ')}"
+    run "cmake --build %{builddir} --parallel %{jobs}"
+    install "DESTDIR=%{destdir} cmake --install %{builddir}"
+  end
+end

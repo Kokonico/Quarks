@@ -1,0 +1,15 @@
+nuclei "bat", "0.24.0" do
+  description "Cat clone with syntax highlighting"
+  homepage "https://github.com/sharkdp/bat"
+  license "MIT"
+  category "sys-apps"
+  
+  source "https://github.com/sharkdp/bat/archive/v0.24.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "cargo build --release"
+    install "install -Dm755 target/release/bat ${DESTDIR}/bin/bat"
+  end
+end

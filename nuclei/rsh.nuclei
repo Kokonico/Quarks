@@ -1,0 +1,16 @@
+nuclei "rsh", "1.0.0" do
+  description "RSH - Robert's Shell, a custom Unix shell"
+  homepage "https://github.com/RobertFlexx/RSH"
+  license "MIT"
+  category "app-shells"
+  
+  source "https://github.com/RobertFlexx/RSH/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    # If it has a Makefile
+    run "make"
+    install "install -Dm755 rsh ${DESTDIR}/bin/rsh"
+  end
+end

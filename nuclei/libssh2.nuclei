@@ -1,0 +1,18 @@
+nuclei "libssh2", "1.11.0" do
+  description "C library implementing the SSH2 protocol"
+  homepage "https://www.libssh2.org/"
+  license "BSD"
+  category "net-libs"
+  
+  source "https://www.libssh2.org/download/libssh2-1.11.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "openssl", "zlib"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

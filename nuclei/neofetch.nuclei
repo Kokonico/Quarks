@@ -1,0 +1,14 @@
+nuclei "neofetch", "7.1.0" do
+  description "Fast, highly customizable system info script"
+  homepage "https://github.com/dylanaraps/neofetch"
+  license "MIT"
+  category "app-misc"
+  
+  source "https://github.com/dylanaraps/neofetch/archive/7.1.0.tar.gz",
+         checksum: "58a95e6b714e41efc804eca389a223309169b2def35e57fa934482a6b47c27e7",
+         algorithm: "sha256"
+  
+  build do
+    install "make DESTDIR=${DESTDIR} PREFIX=/ install"
+  end
+end

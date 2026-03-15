@@ -1,0 +1,15 @@
+nuclei "docbook-xsl", "1.79.2" do
+  description "DocBook XSL Stylesheets"
+  homepage "https://github.com/docbook/xslt10-stylesheets"
+  license "MIT"
+  category "app-text"
+  
+  source "https://github.com/docbook/xslt10-stylesheets/releases/download/release/1.79.2/docbook-xsl-1.79.2.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    install "mkdir -p ${DESTDIR}/share/xml/docbook/xsl-stylesheets-1.79.2"
+    install "cp -r * ${DESTDIR}/share/xml/docbook/xsl-stylesheets-1.79.2/"
+  end
+end

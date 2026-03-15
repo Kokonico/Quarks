@@ -1,0 +1,15 @@
+nuclei "yafp", "1.0.0" do
+  description "YAFP - Yet Another Fetch Program"
+  homepage "https://github.com/RobertFlexx/YAFP"
+  license "MIT"
+  category "app-misc"
+  
+  source "https://github.com/RobertFlexx/YAFP/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "make"
+    install "install -Dm755 yafp ${DESTDIR}/bin/yafp"
+  end
+end

@@ -1,0 +1,16 @@
+nuclei "c-ares", "1.24.0" do
+  description "C library for asynchronous DNS requests"
+  homepage "https://c-ares.org/"
+  license "MIT"
+  category "net-dns"
+  
+  source "https://c-ares.org/download/c-ares-1.24.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

@@ -1,0 +1,20 @@
+nuclei "python3", "3.12.1" do
+  description "Interactive high-level object-oriented language"
+  homepage "https://www.python.org/"
+  license "PSF-2.0"
+  category "dev-lang"
+  
+  source "https://www.python.org/ftp/python/3.12.1/Python-3.12.1.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "openssl", "zlib", "libffi"
+  
+  configure "--enable-shared", "--with-ensurepip=yes"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

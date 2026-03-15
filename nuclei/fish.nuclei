@@ -1,0 +1,17 @@
+nuclei "fish", "3.6.4" do
+  description "User friendly command line shell"
+  homepage "https://fishshell.com/"
+  license "GPL-2.0"
+  category "app-shells"
+  
+  source "https://github.com/fish-shell/fish-shell/releases/download/3.6.4/fish-3.6.4.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "mkdir -p build"
+    run "cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/"
+    run "cd build && make"
+    install "cd build && make DESTDIR=${DESTDIR} install"
+  end
+end

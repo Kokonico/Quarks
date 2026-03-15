@@ -1,0 +1,18 @@
+nuclei "gpgme", "1.23.2" do
+  description "GnuPG Made Easy - library for accessing GnuPG"
+  homepage "https://gnupg.org/software/gpgme/"
+  license "LGPL-2.1"
+  category "app-crypt"
+  
+  source "https://www.gnupg.org/ftp/gcrypt/gpgme/gpgme-1.23.2.tar.bz2",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libgpg-error", "libassuan", "gnupg"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

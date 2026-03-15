@@ -1,0 +1,21 @@
+nuclei "hello", "2.12.1" do
+  description "GNU Hello - prints a friendly greeting"
+  homepage "https://www.gnu.org/software/hello/"
+  license "GPL-3"
+  category "app"
+
+  source "https://ftp.gnu.org/gnu/hello/hello-2.12.1.tar.gz",
+         checksum: "8d99142afd92576f30b0cd7cb42a8dc6809998bc5d607d88761f512e26c7db20",
+         algorithm: "sha256"
+
+  install_prefix "/usr"
+  build_system :autotools
+  host_tools "make"
+
+  build do
+    run "./configure --prefix=%{prefix}"
+    run "make -j%{jobs}"
+    install "make DESTDIR=%{destdir} install"
+    install "rm -f %{destdir}%{prefix}/share/info/dir"
+  end
+end

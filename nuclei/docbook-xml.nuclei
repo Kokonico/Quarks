@@ -1,0 +1,15 @@
+nuclei "docbook-xml", "4.5" do
+  description "DocBook XML DTD"
+  homepage "https://docbook.org/"
+  license "MIT"
+  category "app-text"
+  
+  source "https://docbook.org/xml/4.5/docbook-xml-4.5.zip",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    install "mkdir -p ${DESTDIR}/share/xml/docbook/xml-dtd-4.5"
+    install "cp -r * ${DESTDIR}/share/xml/docbook/xml-dtd-4.5/"
+  end
+end

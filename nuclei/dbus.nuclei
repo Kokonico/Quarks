@@ -1,0 +1,23 @@
+nuclei "dbus", "1.14.10" do
+  description "Message bus system for inter-process communication"
+  homepage "https://www.freedesktop.org/wiki/Software/dbus/"
+  license "GPL-2.0"
+  category "sys-apps"
+  
+  source "https://dbus.freedesktop.org/releases/dbus/dbus-1.14.10.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "expat"
+  
+  configure "--disable-doxygen-docs",
+            "--disable-xml-docs",
+            "--disable-static",
+            "--with-system-socket=/run/dbus/system_bus_socket"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

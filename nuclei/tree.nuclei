@@ -1,0 +1,18 @@
+nuclei "tree", "2.1.1" do
+  description "Recursive directory listing program"
+  homepage "https://oldmanprogrammer.net/source.php?dir=projects/tree"
+  license "GPL-2"
+  category "sys-apps"
+
+  source "http://mama.indstate.edu/users/ice/tree/src/tree-2.1.1.tgz",
+         checksum: "skip",
+         algorithm: "sha256"
+
+  install_prefix "/usr"
+  build_system :manual
+
+  build do
+    run "make -j%{jobs}"
+    install "make DESTDIR=%{destdir} PREFIX=%{prefix} install"
+  end
+end

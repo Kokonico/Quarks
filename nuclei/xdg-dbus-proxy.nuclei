@@ -1,0 +1,19 @@
+nuclei "xdg-dbus-proxy", "0.1.5" do
+  description "Filtering proxy for D-Bus connections"
+  homepage "https://github.com/flatpak/xdg-dbus-proxy"
+  license "LGPL-2.1"
+  category "sys-apps"
+  
+  source "https://github.com/flatpak/xdg-dbus-proxy/releases/download/0.1.5/xdg-dbus-proxy-0.1.5.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib", "dbus"
+  build_depends "meson", "ninja"
+  
+  build do
+    run "meson setup build --prefix=/"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

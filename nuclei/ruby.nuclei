@@ -1,0 +1,20 @@
+nuclei "ruby", "3.2.2" do
+  description "An interpreted object-oriented programming language"
+  homepage "https://www.ruby-lang.org/"
+  license "Ruby"
+  category "dev-lang"
+
+  source "https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.2.tar.gz",
+         checksum: "96c57558871a6748de5bc9f274e93f4b5aad06cd8f37befa0e8d94e7b8a423bc",
+         algorithm: "sha256"
+
+  configure "--enable-shared", "--disable-install-doc"
+
+  env "CFLAGS", "-O2 -fPIC"
+
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

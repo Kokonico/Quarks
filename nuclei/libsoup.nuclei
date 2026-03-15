@@ -1,0 +1,19 @@
+nuclei "libsoup", "3.4.4" do
+  description "HTTP client/server library for GNOME"
+  homepage "https://wiki.gnome.org/Projects/libsoup"
+  license "LGPL-2.0"
+  category "net-libs"
+  
+  source "https://download.gnome.org/sources/libsoup/3.4/libsoup-3.4.4.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib", "libxml2", "sqlite", "libpsl", "nghttp2"
+  build_depends "meson", "ninja", "gobject-introspection"
+  
+  build do
+    run "meson setup build --prefix=/ -Dtests=false -Dgssapi=disabled"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

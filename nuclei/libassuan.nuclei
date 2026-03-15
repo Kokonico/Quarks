@@ -1,0 +1,18 @@
+nuclei "libassuan", "2.5.6" do
+  description "IPC library used by GnuPG and related software"
+  homepage "https://www.gnupg.org/software/libassuan/"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://www.gnupg.org/ftp/gcrypt/libassuan/libassuan-2.5.6.tar.bz2",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libgpg-error"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

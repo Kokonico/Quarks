@@ -1,0 +1,16 @@
+nuclei "libgpg-error", "1.47" do
+  description "Library that defines common error values for GnuPG"
+  homepage "https://www.gnupg.org/software/libgpg-error/"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.47.tar.bz2",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

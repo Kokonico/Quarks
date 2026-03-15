@@ -1,0 +1,16 @@
+nuclei "htop", "3.3.0" do
+  description "Interactive process viewer"
+  homepage "https://htop.dev/"
+  license "GPL-2.0"
+  category "app"
+  
+  source "https://github.com/htop-dev/htop/releases/download/3.3.0/htop-3.3.0.tar.xz",
+         checksum: "1e5cc328eee2bd1acff89f860e3179ea24b85df3ac483433f92a29977b14b045",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

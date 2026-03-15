@@ -1,0 +1,18 @@
+nuclei "powder-sandbox", "1.0.0" do
+  description "Powder Sandbox Classic - Falling sand physics game"
+  homepage "https://github.com/RobertFlexx/Powder-Sandbox-Classic"
+  license "GPL-3.0"
+  category "games-simulation"
+  
+  source "https://github.com/RobertFlexx/Powder-Sandbox-Classic/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  # Likely needs SDL or similar graphics library
+  depends "sdl2"
+  
+  build do
+    run "make"
+    install "install -Dm755 powder ${DESTDIR}/bin/powder-sandbox"
+  end
+end

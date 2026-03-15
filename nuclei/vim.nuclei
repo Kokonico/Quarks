@@ -1,0 +1,16 @@
+nuclei "vim", "9.0" do
+  description "Highly configurable text editor"
+  homepage "https://www.vim.org/"
+  license "Vim"
+  category "app-editors"
+  
+  source "https://github.com/vim/vim/archive/refs/tags/v9.0.2116.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "cd src && sh ./configure --prefix=/opt/photon --with-features=normal --disable-gui --disable-gpm && cd .."
+    make
+    install "cd src && make DESTDIR=${DESTDIR} install"
+  end
+end

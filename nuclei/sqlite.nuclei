@@ -1,0 +1,18 @@
+nuclei "sqlite", "3.44.2" do
+  description "C library that implements an SQL database engine"
+  homepage "https://www.sqlite.org/"
+  license "Public-Domain"
+  category "dev-db"
+  
+  source "https://www.sqlite.org/2023/sqlite-autoconf-3440200.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  configure "--enable-fts5", "--enable-json1"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

@@ -1,0 +1,16 @@
+nuclei "rsync", "3.2.7" do
+  description "Fast incremental file transfer utility"
+  homepage "https://rsync.samba.org/"
+  license "GPL-3.0"
+  category "net-misc"
+  
+  source "https://download.samba.org/pub/rsync/src/rsync-3.2.7.tar.gz",
+         checksum: "4e7d9d3f6ed10878c58c5fb724a67dacf4b6aac7340b13e488fb2dc41346f2bb",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

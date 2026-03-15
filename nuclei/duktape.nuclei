@@ -1,0 +1,17 @@
+nuclei "duktape", "2.7.0" do
+  description "Embeddable JavaScript engine"
+  homepage "https://duktape.org/"
+  license "MIT"
+  category "dev-lang"
+  
+  source "https://duktape.org/duktape-2.7.0.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "make -f Makefile.sharedlibrary"
+    install "install -Dm755 libduktape.so.207 ${DESTDIR}/lib/libduktape.so.207"
+    install "ln -sf libduktape.so.207 ${DESTDIR}/lib/libduktape.so"
+    install "install -Dm644 duktape.h ${DESTDIR}/include/duktape.h"
+  end
+end

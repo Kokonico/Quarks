@@ -1,0 +1,18 @@
+nuclei "cmusic", "1.0.0" do
+  description "cMusic - Terminal music player by Kokonico"
+  homepage "https://github.com/Kokonico/cMusic"
+  license "MIT"
+  category "media-sound"
+  
+  source "https://github.com/Kokonico/cMusic/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  # Music players often need audio libraries
+  depends "portaudio"
+  
+  build do
+    run "make"
+    install "install -Dm755 cmusic ${DESTDIR}/bin/cmusic"
+  end
+end

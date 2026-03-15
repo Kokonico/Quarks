@@ -1,0 +1,20 @@
+nuclei "cmake", "3.28.1" do
+  description "Cross-platform make system"
+  homepage "https://cmake.org/"
+  license "BSD"
+  category "dev-util"
+
+  source "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+
+  install_prefix "/usr"
+  build_system :manual
+  build_depends "make"
+
+  build do
+    run "./bootstrap --prefix=%{prefix} --parallel=%{jobs}"
+    run "make -j%{jobs}"
+    install "make DESTDIR=%{destdir} install"
+  end
+end

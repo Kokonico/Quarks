@@ -1,0 +1,16 @@
+nuclei "libyaml", "0.2.5" do
+  description "YAML 1.1 parser and emitter written in C"
+  homepage "https://pyyaml.org/wiki/LibYAML"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://pyyaml.org/download/libyaml/yaml-0.2.5.tar.gz",
+         checksum: "c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

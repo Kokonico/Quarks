@@ -1,0 +1,16 @@
+nuclei "libffi", "3.4.4" do
+  description "Portable foreign function interface library"
+  homepage "https://sourceware.org/libffi/"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://github.com/libffi/libffi/releases/download/v3.4.4/libffi-3.4.4.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

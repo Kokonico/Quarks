@@ -1,0 +1,15 @@
+nuclei "libtermkey", "0.22" do
+  description "Library for processing keyboard entry from terminal"
+  homepage "http://www.leonerd.org.uk/code/libtermkey/"
+  license "MIT"
+  category "dev-libs"
+  
+  source "http://www.leonerd.org.uk/code/libtermkey/libtermkey-0.22.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    make
+    install "make DESTDIR=${DESTDIR} PREFIX=/ install"
+  end
+end

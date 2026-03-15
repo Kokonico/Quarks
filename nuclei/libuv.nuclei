@@ -1,0 +1,17 @@
+nuclei "libuv", "1.48.0" do
+  description "Multi-platform asynchronous I/O library"
+  homepage "https://libuv.org/"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://dist.libuv.org/dist/v1.48.0/libuv-v1.48.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "./autogen.sh"
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

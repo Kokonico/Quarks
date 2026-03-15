@@ -1,0 +1,19 @@
+nuclei "gobject-introspection", "1.78.1" do
+  description "Introspection system for GObject-based libraries"
+  homepage "https://gi.readthedocs.io/"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://download.gnome.org/sources/gobject-introspection/1.78/gobject-introspection-1.78.1.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib", "python3"
+  build_depends "meson", "ninja"
+  
+  build do
+    run "meson setup build --prefix=/"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

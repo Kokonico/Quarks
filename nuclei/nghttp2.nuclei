@@ -1,0 +1,16 @@
+nuclei "nghttp2", "1.58.0" do
+  description "HTTP/2 C library"
+  homepage "https://nghttp2.org/"
+  license "MIT"
+  category "net-libs"
+  
+  source "https://github.com/nghttp2/nghttp2/releases/download/v1.58.0/nghttp2-1.58.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

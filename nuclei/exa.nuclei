@@ -1,0 +1,15 @@
+nuclei "exa", "0.10.1" do
+  description "Modern replacement for ls"
+  homepage "https://the.exa.website/"
+  license "MIT"
+  category "sys-apps"
+  
+  source "https://github.com/ogham/exa/archive/v0.10.1.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "cargo build --release"
+    install "install -Dm755 target/release/exa ${DESTDIR}/bin/exa"
+  end
+end

@@ -1,0 +1,16 @@
+nuclei "make", "4.4.1" do
+  description "GNU Make - controls the generation of executables"
+  homepage "https://www.gnu.org/software/make/"
+  license "GPL-3.0"
+  category "sys-devel"
+  
+  source "https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz",
+         checksum: "dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

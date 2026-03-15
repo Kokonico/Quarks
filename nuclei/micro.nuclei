@@ -1,0 +1,15 @@
+nuclei "micro", "2.0.13" do
+  description "Modern and intuitive terminal-based text editor"
+  homepage "https://micro-editor.github.io/"
+  license "MIT"
+  category "app-editors"
+  
+  source "https://github.com/zyedidia/micro/releases/download/v2.0.13/micro-2.0.13-src.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "make build"
+    install "install -Dm755 micro ${DESTDIR}/bin/micro"
+  end
+end

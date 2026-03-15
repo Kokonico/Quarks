@@ -1,0 +1,18 @@
+nuclei "libidn2", "2.3.4" do
+  description "Implementation of IDNA2008/TR46 internationalized domain names"
+  homepage "https://www.gnu.org/software/libidn/"
+  license "GPL-3.0"
+  category "net-dns"
+  
+  source "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.4.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libunistring"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

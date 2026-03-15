@@ -1,0 +1,19 @@
+nuclei "json-glib", "1.8.0" do
+  description "JSON library built on GLib"
+  homepage "https://wiki.gnome.org/Projects/JsonGlib"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://download.gnome.org/sources/json-glib/1.8/json-glib-1.8.0.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib"
+  build_depends "meson", "ninja", "gobject-introspection"
+  
+  build do
+    run "meson setup build --prefix=/ -Dintrospection=enabled"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

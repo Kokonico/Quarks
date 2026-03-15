@@ -1,0 +1,15 @@
+nuclei "medit", "1.0.0" do
+  description "medit - Micro Edit by Kokonico"
+  homepage "https://github.com/Kokonico/medit"
+  license "MIT"
+  category "app-editors"
+  
+  source "https://github.com/Kokonico/medit/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "make"
+    install "install -Dm755 medit ${DESTDIR}/bin/medit"
+  end
+end

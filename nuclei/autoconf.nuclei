@@ -1,0 +1,21 @@
+nuclei "autoconf", "2.72" do
+  description "Automatic configure script builder"
+  homepage "https://www.gnu.org/software/autoconf/"
+  license "GPL-3"
+  category "sys-devel"
+
+  source "https://ftp.gnu.org/gnu/autoconf/autoconf-2.72.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+
+  build_system :autotools
+  install_prefix "/usr"
+
+  build_depends "make"
+
+  build do
+    run "./configure --prefix=%{prefix}"
+    run "make -j%{jobs}"
+    install "make DESTDIR=%{destdir} install"
+  end
+end

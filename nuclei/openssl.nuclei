@@ -1,0 +1,16 @@
+nuclei "openssl", "3.2.0" do
+  description "Toolkit for SSL/TLS and crypto library"
+  homepage "https://www.openssl.org/"
+  license "Apache-2.0"
+  category "dev-libs"
+  
+  source "https://www.openssl.org/source/openssl-3.2.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "./config --prefix=/ --openssldir=/etc/ssl shared zlib"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

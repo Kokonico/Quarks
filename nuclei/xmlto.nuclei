@@ -1,0 +1,18 @@
+nuclei "xmlto", "0.0.28" do
+  description "Shell-script tool for converting XML files to various formats"
+  homepage "https://pagure.io/xmlto"
+  license "GPL-2.0"
+  category "app-text"
+  
+  source "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "docbook-xml", "docbook-xsl", "libxml2"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

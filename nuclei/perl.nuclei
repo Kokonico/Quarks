@@ -1,0 +1,16 @@
+nuclei "perl", "5.38.2" do
+  description "Practical Extraction and Report Language"
+  homepage "https://www.perl.org/"
+  license "Artistic-2.0"
+  category "dev-lang"
+  
+  source "https://www.cpan.org/src/5.0/perl-5.38.2.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "./Configure -des -Dprefix=/"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

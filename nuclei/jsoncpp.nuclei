@@ -1,0 +1,17 @@
+nuclei "jsoncpp", "1.9.5" do
+  description "C++ library for interacting with JSON"
+  homepage "https://github.com/open-source-parsers/jsoncpp"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://github.com/open-source-parsers/jsoncpp/archive/1.9.5.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "mkdir -p build"
+    run "cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/ -DBUILD_SHARED_LIBS=ON"
+    run "cd build && make"
+    install "cd build && make DESTDIR=${DESTDIR} install"
+  end
+end

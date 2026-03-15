@@ -1,0 +1,15 @@
+nuclei "libcap", "2.69" do
+  description "POSIX capabilities library"
+  homepage "https://sites.google.com/site/fullycapable/"
+  license "GPL-2.0"
+  category "sys-libs"
+  
+  source "https://kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.69.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "make prefix=/"
+    install "make DESTDIR=${DESTDIR} prefix=/ install"
+  end
+end

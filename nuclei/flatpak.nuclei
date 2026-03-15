@@ -1,0 +1,41 @@
+nuclei "flatpak", "1.16.3" do
+  description "Application sandboxing and distribution system for desktop and containerized apps"
+  homepage "https://flatpak.org/"
+  license "LGPL-2.1-or-later"
+  category "sys-apps"
+
+  source "https://github.com/flatpak/flatpak/releases/download/1.16.3/flatpak-1.16.3.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+
+  # runtime deps (names should match your repo package names)
+  depends "glib",
+          "ostree",
+          "bubblewrap",
+          "polkit",
+          "libportal",
+          "dbus",
+          "libarchive",
+          "curl"
+
+  # build deps
+  build_depends "meson",
+                "ninja",
+                "python3",
+                "pkg-config",
+                "gettext",
+                "gobject-introspection"
+
+  # Important: in newer meson setups, feature options want enabled/disabled/auto.
+  # Disable manpages to avoid doc toolchain headaches.
+  meson_args "--prefix=/usr",
+             "-Dman=disabled",
+             "-Dtests=false",
+             "-Dsystemd=disabled"
+
+  build do
+    run "meson setup build #{meson_args.join(' ')}"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} meson install -C build --no-rebuild"
+  end
+end

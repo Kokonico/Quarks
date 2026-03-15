@@ -1,0 +1,16 @@
+nuclei "sdl2", "2.28.5" do
+  description "Simple DirectMedia Layer 2"
+  homepage "https://www.libsdl.org/"
+  license "zlib"
+  category "media-libs"
+  
+  source "https://github.com/libsdl-org/SDL/releases/download/release-2.28.5/SDL2-2.28.5.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

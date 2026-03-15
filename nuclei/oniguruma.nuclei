@@ -1,0 +1,16 @@
+nuclei "oniguruma", "6.9.9" do
+  description "Regular expressions library"
+  homepage "https://github.com/kkos/oniguruma"
+  license "BSD"
+  category "dev-libs"
+  
+  source "https://github.com/kkos/oniguruma/releases/download/v6.9.9/onig-6.9.9.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

@@ -1,0 +1,18 @@
+nuclei "dtop", "1.0.0" do
+  description "DTOP - Linux TUI Process Manager"
+  homepage "https://github.com/RobertFlexx/DTOP"
+  license "MIT"
+  category "x11-wm"
+  
+  source "https://github.com/RobertFlexx/DTOP/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  # Desktop environments usually need X11 libraries
+  depends "xorg-server"
+  
+  build do
+    run "make"
+    install "install -Dm755 dtop ${DESTDIR}/bin/dtop"
+  end
+end

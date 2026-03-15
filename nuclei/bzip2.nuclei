@@ -1,0 +1,15 @@
+nuclei "bzip2", "1.0.8" do
+  description "High-quality data compressor"
+  homepage "https://sourceware.org/bzip2/"
+  license "BSD"
+  category "app-arch"
+  
+  source "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz",
+         checksum: "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269",
+         algorithm: "sha256"
+  
+  build do
+    run "make"
+    install "make PREFIX=${DESTDIR} install"
+  end
+end

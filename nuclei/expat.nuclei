@@ -1,0 +1,16 @@
+nuclei "expat", "2.5.0" do
+  description "XML parser library"
+  homepage "https://libexpat.github.io/"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://github.com/libexpat/libexpat/releases/download/R_2_5_0/expat-2.5.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

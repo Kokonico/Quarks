@@ -1,0 +1,15 @@
+nuclei "unzip", "6.0" do
+  description "Unpacker for .zip archives"
+  homepage "http://www.info-zip.org/UnZip.html"
+  license "BSD"
+  category "app-arch"
+  
+  source "https://downloads.sourceforge.net/infozip/unzip60.tar.gz",
+         checksum: "036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37",
+         algorithm: "sha256"
+  
+  build do
+    run "make -f unix/Makefile generic"
+    install "make -f unix/Makefile prefix=${DESTDIR} install"
+  end
+end

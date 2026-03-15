@@ -1,0 +1,20 @@
+nuclei "libxml2", "2.12.3" do
+  description "XML parsing library, version 2"
+  homepage "http://www.xmlsoft.org/"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://download.gnome.org/sources/libxml2/2.12/libxml2-2.12.3.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "zlib"
+  
+  configure "--without-python"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

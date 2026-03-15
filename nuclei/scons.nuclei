@@ -1,0 +1,16 @@
+nuclei "scons", "4.6.0" do
+  description "Software construction tool"
+  homepage "https://scons.org/"
+  license "MIT"
+  category "dev-util"
+  
+  source "https://sourceforge.net/projects/scons/files/scons/4.6.0/SCons-4.6.0.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "python3"
+  
+  build do
+    install "python3 setup.py install --root=${DESTDIR} --prefix=/"
+  end
+end

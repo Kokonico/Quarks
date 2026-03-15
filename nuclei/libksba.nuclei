@@ -1,0 +1,18 @@
+nuclei "libksba", "1.6.5" do
+  description "Library for working with X.509 certificates and CMS data"
+  homepage "https://www.gnupg.org/software/libksba/"
+  license "LGPL-3.0"
+  category "dev-libs"
+  
+  source "https://www.gnupg.org/ftp/gcrypt/libksba/libksba-1.6.5.tar.bz2",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libgpg-error"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

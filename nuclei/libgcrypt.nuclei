@@ -1,0 +1,18 @@
+nuclei "libgcrypt", "1.10.3" do
+  description "General purpose cryptographic library"
+  homepage "https://www.gnupg.org/software/libgcrypt/"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.3.tar.bz2",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libgpg-error"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

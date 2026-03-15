@@ -1,0 +1,15 @@
+nuclei "ripgrep", "14.0.3" do
+  description "Line-oriented search tool (faster grep)"
+  homepage "https://github.com/BurntSushi/ripgrep"
+  license "MIT"
+  category "sys-apps"
+  
+  source "https://github.com/BurntSushi/ripgrep/archive/14.0.3.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    run "cargo build --release"
+    install "install -Dm755 target/release/rg ${DESTDIR}/bin/rg"
+  end
+end

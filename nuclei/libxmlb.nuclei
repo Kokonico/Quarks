@@ -1,0 +1,19 @@
+nuclei "libxmlb", "0.3.14" do
+  description "Library to help create and query binary XML blobs"
+  homepage "https://github.com/hughsie/libxmlb"
+  license "LGPL-2.1"
+  category "dev-libs"
+  
+  source "https://github.com/hughsie/libxmlb/releases/download/0.3.14/libxmlb-0.3.14.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "glib", "xz"
+  build_depends "meson", "ninja", "gobject-introspection"
+  
+  build do
+    run "meson setup build --prefix=/"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

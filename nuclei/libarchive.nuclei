@@ -1,0 +1,30 @@
+nuclei "libarchive", "3.7.4" do
+  description "Multi-format archive and compression library"
+  homepage "https://www.libarchive.org/"
+  license "BSD-2-Clause"
+  category "sys-libs"
+
+  source "https://www.libarchive.org/downloads/libarchive-3.7.4.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+
+  # common compression/crypto backends libarchive will use if present
+  depends "zlib",
+          "bzip2",
+          "xz",
+          "zstd",
+          "openssl"
+
+  build_depends "pkg-config",
+                "make",
+                "gcc",
+                "autoconf",
+                "automake",
+                "libtool"
+
+  build do
+    run "./configure --prefix=/usr --disable-static"
+    run "make -j${JOBS:-$(nproc)}"
+    install "DESTDIR=${DESTDIR} make install"
+  end
+end

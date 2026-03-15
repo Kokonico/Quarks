@@ -1,0 +1,18 @@
+nuclei "pcre", "8.45" do
+  description "Perl Compatible Regular Expressions"
+  homepage "https://www.pcre.org/"
+  license "BSD"
+  category "dev-libs"
+  
+  source "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  configure "--enable-utf", "--enable-unicode-properties"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

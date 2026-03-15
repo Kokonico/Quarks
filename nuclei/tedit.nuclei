@@ -1,0 +1,16 @@
+nuclei "tedit", "1.0.0" do
+  description "Terminal-based text editor by RobertFlexx"
+  homepage "https://github.com/RobertFlexx/tedit"
+  license "MIT"
+  category "app-editors"
+  
+  source "https://github.com/RobertFlexx/tedit/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    # Assuming it's a C/C++ project with Makefile
+    run "make"
+    install "install -Dm755 tedit ${DESTDIR}/bin/tedit"
+  end
+end

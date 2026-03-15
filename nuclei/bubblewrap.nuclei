@@ -1,0 +1,19 @@
+nuclei "bubblewrap", "0.8.0" do
+  description "Unprivileged sandboxing tool"
+  homepage "https://github.com/containers/bubblewrap"
+  license "LGPL-2.0"
+  category "sys-apps"
+  
+  source "https://github.com/containers/bubblewrap/releases/download/v0.8.0/bubblewrap-0.8.0.tar.xz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  depends "libcap", "libseccomp"
+  build_depends "meson", "ninja"
+  
+  build do
+    run "meson setup build --prefix=/"
+    run "meson compile -C build"
+    install "meson install -C build --destdir ${DESTDIR}"
+  end
+end

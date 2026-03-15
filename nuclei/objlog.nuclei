@@ -1,0 +1,16 @@
+nuclei "objlog", "1.0.0" do
+  description "ObjLog - Object-oriented logging library by Kokonico"
+  homepage "https://github.com/Kokonico/ObjLog"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://github.com/Kokonico/ObjLog/archive/refs/heads/main.tar.gz",
+         checksum: "skip",
+         algorithm: "sha256"
+  
+  build do
+    # If it's a library, it might have different build steps
+    run "make"
+    install "make DESTDIR=${DESTDIR} PREFIX=/ install"
+  end
+end
