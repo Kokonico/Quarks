@@ -1,0 +1,19 @@
+{
+  "atom": "sys-apps/gawk",
+  "package_name": "gawk",
+  "category": "sys-apps",
+  "version": "5.3.0",
+  "description": "GNU awk pattern-matching language",
+  "homepage": "https://www.gnu.org/software/gawk/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/gawk/gawk-5.3.0.tar.gz",
+  "source_checksum": "378f8864ec21cfceaa048f7e1869ac9b4597b449087caf1eb55e440d30273336",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/gawk.nuclei",
+  "recipe_sha256": "bcd952d7f2e5335618e4f2ba5aa0ad146237265d45a8c77ce914e0a7a73f92be",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/gawk.nuclei",
+  "selected_from": "current"
+}

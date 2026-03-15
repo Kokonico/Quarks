@@ -1,0 +1,19 @@
+{
+  "atom": "dev-util/pkg-config",
+  "package_name": "pkg-config",
+  "category": "dev-util",
+  "version": "0.29.2",
+  "description": "Helper tool for compiling applications and libraries",
+  "homepage": "https://www.freedesktop.org/wiki/Software/pkg-config/",
+  "license": "GPL-2.0",
+  "build_system": ":make",
+  "source_url": "https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz",
+  "source_checksum": "6fc69c01688c9458a57eb9a1664c9aba372ccda420a02bf4429fe610e7e7d591",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/pkg-config.nuclei",
+  "recipe_sha256": "2710a61d41bba52a6f22d15629253730a167e3ba103829e82cce9fed3d7ba8cd",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/pkg-config.nuclei",
+  "selected_from": "current"
+}

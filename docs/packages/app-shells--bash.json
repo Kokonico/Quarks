@@ -1,0 +1,19 @@
+{
+  "atom": "app-shells/bash",
+  "package_name": "bash",
+  "category": "app-shells",
+  "version": "5.2",
+  "description": "The GNU Bourne Again shell",
+  "homepage": "https://www.gnu.org/software/bash/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/bash/bash-5.2.tar.gz",
+  "source_checksum": "a139c166df7ff4471c5e0733051642ee5556c1cc8a4a78f145583c5c81ab32fb",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/bash.nuclei",
+  "recipe_sha256": "a2e2d60a3d3f4b9b62d87e67a39f8cd6f1f60c99bfdac206b923f8034de89463",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/bash.nuclei",
+  "selected_from": "current"
+}

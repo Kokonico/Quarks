@@ -1,0 +1,19 @@
+{
+  "atom": "dev-libs/readline",
+  "package_name": "readline",
+  "category": "dev-libs",
+  "version": "8.2",
+  "description": "GNU readline library",
+  "homepage": "https://tiswww.case.edu/php/chet/readline/rltop.html",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/readline/readline-8.2.tar.gz",
+  "source_checksum": "3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/readline.nuclei",
+  "recipe_sha256": "46f4e732ba4d08db43ca85e6ed5c0cb0a6a91960fb3e49a56297525e8c14746f",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/readline.nuclei",
+  "selected_from": "current"
+}

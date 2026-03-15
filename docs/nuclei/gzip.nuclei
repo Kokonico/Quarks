@@ -1,0 +1,17 @@
+nuclei "gzip", "1.13" do
+  description "GNU compression utility"
+  homepage "https://www.gnu.org/software/gzip/"
+  license "GPL-3.0"
+  category "app-arch"
+  build_system :make
+  
+  source "https://ftp.gnu.org/gnu/gzip/gzip-1.13.tar.gz",
+         checksum: "20fc818aeebae87cdbf209d35141ad9d3cf312b35a5e6be61bfcfbf9eddd212a",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

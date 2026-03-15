@@ -1,0 +1,19 @@
+{
+  "atom": "sys-devel/m4",
+  "package_name": "m4",
+  "category": "sys-devel",
+  "version": "1.4.19",
+  "description": "GNU macro processor",
+  "homepage": "https://www.gnu.org/software/m4/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.gz",
+  "source_checksum": "3be4a26d825ffdfda52a56fc43246456989a3630093cced3fbddf4771ee58a70",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/m4.nuclei",
+  "recipe_sha256": "f4db58e89a763a799a738199317819df9794cea7c32c7b5cf22719747fb217b3",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/m4.nuclei",
+  "selected_from": "current"
+}

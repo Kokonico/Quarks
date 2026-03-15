@@ -1,0 +1,19 @@
+{
+  "atom": "sys-apps/grep",
+  "package_name": "grep",
+  "category": "sys-apps",
+  "version": "3.11",
+  "description": "GNU grep, egrep and fgrep",
+  "homepage": "https://www.gnu.org/software/grep/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/grep/grep-3.11.tar.gz",
+  "source_checksum": "1db2aedde89d0dea42b16d9528f894c8d15dae4e190b59aecc78f5a951276eab",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/grep.nuclei",
+  "recipe_sha256": "4b0377434d17d1af8a547ed57731fefafa50926ae75497e375a2613d177951c3",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/grep.nuclei",
+  "selected_from": "current"
+}

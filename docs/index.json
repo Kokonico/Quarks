@@ -1,0 +1,1086 @@
+{
+  "repo_name": "photon-main",
+  "generated_at": "2026-03-15T00:47:58.497848+00:00",
+  "package_count": 35,
+  "base_url": "",
+  "packages": [
+    {
+      "atom": "app/hello",
+      "package_name": "hello",
+      "category": "app",
+      "version": "2.12.1",
+      "description": "GNU Hello - prints a friendly greeting",
+      "homepage": "https://www.gnu.org/software/hello/",
+      "license": "GPL-3",
+      "build_system": ":autotools",
+      "source_url": "https://ftp.gnu.org/gnu/hello/hello-2.12.1.tar.gz",
+      "source_checksum": "8d99142afd92576f30b0cd7cb42a8dc6809998bc5d607d88761f512e26c7db20",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/hello.nuclei",
+      "recipe_sha256": "6f00b555df438452e0cf69787a305b53ceb5009be0a4eebe259ca8f320344329",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/hello.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app/htop",
+      "package_name": "htop",
+      "category": "app",
+      "version": "3.3.0",
+      "description": "Interactive process viewer",
+      "homepage": "https://htop.dev/",
+      "license": "GPL-2.0",
+      "build_system": ":make",
+      "source_url": "https://github.com/htop-dev/htop/releases/download/3.3.0/htop-3.3.0.tar.xz",
+      "source_checksum": "1e5cc328eee2bd1acff89f860e3179ea24b85df3ac483433f92a29977b14b045",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/htop.nuclei",
+      "recipe_sha256": "e5bf24d5b865cf1256022f11d6d4b92296f5a5c71780a34deb5ba1159dcb3a49",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/htop.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app/jq",
+      "package_name": "jq",
+      "category": "app",
+      "version": "1.6",
+      "description": "Command-line JSON processor",
+      "homepage": "https://stedolan.github.io/jq/",
+      "license": "MIT",
+      "build_system": ":make",
+      "source_url": "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-1.6.tar.gz",
+      "source_checksum": "5de8c8e29aaa3fb9cc6b47bb27299f271354ebb72514e3accadc7d38b5bbaa72",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/jq.nuclei",
+      "recipe_sha256": "48eef25fd6f35b91bc9ac34c3ad52d2340cf33139bcf7ea59a920b4835f6170c",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/jq.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app/tmux",
+      "package_name": "tmux",
+      "category": "app",
+      "version": "3.3a",
+      "description": "Terminal multiplexer",
+      "homepage": "https://github.com/tmux/tmux",
+      "license": "ISC",
+      "build_system": ":make",
+      "source_url": "https://github.com/tmux/tmux/releases/download/3.3a/tmux-3.3a.tar.gz",
+      "source_checksum": "e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21599bddec7aacb21",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/tmux.nuclei",
+      "recipe_sha256": "fec25622bdafa433e72be294f0c9d2cd7e0e81c4cc67919d521223220c85685e",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/tmux.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-arch/bzip2",
+      "package_name": "bzip2",
+      "category": "app-arch",
+      "version": "1.0.8",
+      "description": "High-quality data compressor",
+      "homepage": "https://sourceware.org/bzip2/",
+      "license": "BSD",
+      "build_system": ":make",
+      "source_url": "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz",
+      "source_checksum": "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/bzip2.nuclei",
+      "recipe_sha256": "c5b9ca0bf225385cceb3a4fed2e850344588f2d574f7a1b17c78fa4a8b83365a",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/bzip2.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-arch/gzip",
+      "package_name": "gzip",
+      "category": "app-arch",
+      "version": "1.13",
+      "description": "GNU compression utility",
+      "homepage": "https://www.gnu.org/software/gzip/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/gzip/gzip-1.13.tar.gz",
+      "source_checksum": "20fc818aeebae87cdbf209d35141ad9d3cf312b35a5e6be61bfcfbf9eddd212a",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/gzip.nuclei",
+      "recipe_sha256": "d32947d4bdd0edaba0875d8904aeb96f5e03f13496477528eb9fd0d70f689c71",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/gzip.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-arch/unzip",
+      "package_name": "unzip",
+      "category": "app-arch",
+      "version": "6.0",
+      "description": "Unpacker for .zip archives",
+      "homepage": "http://www.info-zip.org/UnZip.html",
+      "license": "BSD",
+      "build_system": ":make",
+      "source_url": "https://downloads.sourceforge.net/infozip/unzip60.tar.gz",
+      "source_checksum": "036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/unzip.nuclei",
+      "recipe_sha256": "c3277b58494c5fe0de3bbc708f39f18fb2e9064fa619828d11577e100a709cdf",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/unzip.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-arch/xz",
+      "package_name": "xz",
+      "category": "app-arch",
+      "version": "5.4.5",
+      "description": "Free general-purpose data compression software",
+      "homepage": "https://tukaani.org/xz/",
+      "license": "Public-Domain",
+      "build_system": ":make",
+      "source_url": "https://tukaani.org/xz/xz-5.4.5.tar.gz",
+      "source_checksum": "8ccf5fff868c006f29522e386fb4c6a1b66463fbca65a4cfc3c4bd596e895e79",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/xz.nuclei",
+      "recipe_sha256": "59a2a967bd431f6374c2b1c9eca7bbc9b077d51ffd36e0deecb388856633235b",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/xz.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-arch/zip",
+      "package_name": "zip",
+      "category": "app-arch",
+      "version": "3.0",
+      "description": "Compressor/archiver for creating and modifying zipfiles",
+      "homepage": "http://www.info-zip.org/Zip.html",
+      "license": "BSD",
+      "build_system": ":make",
+      "source_url": "https://downloads.sourceforge.net/infozip/zip30.tar.gz",
+      "source_checksum": "f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/zip.nuclei",
+      "recipe_sha256": "206617f77911bb9ac816aca1870776bfcbb5ce10164966a53b6f8c99b86f34a9",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/zip.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-editors/nano",
+      "package_name": "nano",
+      "category": "app-editors",
+      "version": "7.2",
+      "description": "Small, friendly text editor",
+      "homepage": "https://www.nano-editor.org/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://www.nano-editor.org/dist/v7/nano-7.2.tar.xz",
+      "source_checksum": "86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/nano.nuclei",
+      "recipe_sha256": "ebcb287f0796035e7f1ab8825c7df9c27eee68937e7969d5fac96d7f3eea8a6c",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/nano.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-misc/screen",
+      "package_name": "screen",
+      "category": "app-misc",
+      "version": "4.9.1",
+      "description": "Full-screen window manager that multiplexes a physical terminal",
+      "homepage": "https://www.gnu.org/software/screen/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/screen/screen-4.9.1.tar.gz",
+      "source_checksum": "26cef3e3c42571c0d484ad6faf110c5c15091fbf872b06fa7aa4766c7405ac69",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/screen.nuclei",
+      "recipe_sha256": "cee8c0b7df0ac6ca687342c837713e26598f876fb089d8a39ef2eca6ebaae8f5",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/screen.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-shells/bash",
+      "package_name": "bash",
+      "category": "app-shells",
+      "version": "5.2",
+      "description": "The GNU Bourne Again shell",
+      "homepage": "https://www.gnu.org/software/bash/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/bash/bash-5.2.tar.gz",
+      "source_checksum": "a139c166df7ff4471c5e0733051642ee5556c1cc8a4a78f145583c5c81ab32fb",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/bash.nuclei",
+      "recipe_sha256": "a2e2d60a3d3f4b9b62d87e67a39f8cd6f1f60c99bfdac206b923f8034de89463",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/bash.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "app-shells/zsh",
+      "package_name": "zsh",
+      "category": "app-shells",
+      "version": "5.9",
+      "description": "UNIX shell (command interpreter)",
+      "homepage": "https://www.zsh.org/",
+      "license": "MIT",
+      "build_system": ":make",
+      "source_url": "https://sourceforge.net/projects/zsh/files/zsh/5.9/zsh-5.9.tar.xz",
+      "source_checksum": "9b8d1ecedd5b5e81fbf1918e876752a7dd948e05c1a0dba10ab863842d45acd5",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/zsh.nuclei",
+      "recipe_sha256": "5e248c9254d61d754d2a3dafc3513611862d0317ef1358b8e7d715d41fb2e832",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/zsh.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-lang/ruby",
+      "package_name": "ruby",
+      "category": "dev-lang",
+      "version": "3.2.2",
+      "description": "An interpreted object-oriented programming language",
+      "homepage": "https://www.ruby-lang.org/",
+      "license": "Ruby",
+      "build_system": ":make",
+      "source_url": "https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.2.tar.gz",
+      "source_checksum": "96c57558871a6748de5bc9f274e93f4b5aad06cd8f37befa0e8d94e7b8a423bc",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/ruby.nuclei",
+      "recipe_sha256": "63b644d43f3b423c4fa00fe02bf6702f6a7fdf2e1262d4cc36e647b862b27b22",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/ruby.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-libs/gmp",
+      "package_name": "gmp",
+      "category": "dev-libs",
+      "version": "6.3.0",
+      "description": "GNU Multiple Precision Arithmetic Library",
+      "homepage": "https://gmplib.org/",
+      "license": "LGPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz",
+      "source_checksum": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/gmp.nuclei",
+      "recipe_sha256": "41a63510b02d4b446bd04aea73b7605f244e5e8d022c4685c50190c2ae08a885",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/gmp.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-libs/libevent",
+      "package_name": "libevent",
+      "category": "dev-libs",
+      "version": "2.1.12",
+      "description": "Event notification library",
+      "homepage": "https://libevent.org/",
+      "license": "BSD",
+      "build_system": ":make",
+      "source_url": "https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz",
+      "source_checksum": "92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/libevent.nuclei",
+      "recipe_sha256": "8cc89584e99688c9c29b80fca8a174049765e70a00929e681f187064cc7d7d22",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/libevent.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-libs/libiconv",
+      "package_name": "libiconv",
+      "category": "dev-libs",
+      "version": "1.17",
+      "description": "Character set conversion library",
+      "homepage": "https://www.gnu.org/software/libiconv/",
+      "license": "LGPL-2.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/libiconv/libiconv-1.17.tar.gz",
+      "source_checksum": "8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/libiconv.nuclei",
+      "recipe_sha256": "a782280d4b162630dadc2628eb5f8de9e135d9672eff78a0c4b86ffccd5bd309",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/libiconv.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-libs/mpfr",
+      "package_name": "mpfr",
+      "category": "dev-libs",
+      "version": "4.2.1",
+      "description": "Multiple-precision floating-point library",
+      "homepage": "https://www.mpfr.org/",
+      "license": "LGPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.1.tar.xz",
+      "source_checksum": "277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/mpfr.nuclei",
+      "recipe_sha256": "fbd918f35899c2e66de5f1297a6eb8eacc8b26b337c6eb5c1060af2e5b4988ad",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/mpfr.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-libs/popt",
+      "package_name": "popt",
+      "category": "dev-libs",
+      "version": "1.19",
+      "description": "Command line option parsing library",
+      "homepage": "http://ftp.rpm.org/popt/",
+      "license": "MIT",
+      "build_system": ":make",
+      "source_url": "http://ftp.rpm.org/popt/releases/popt-1.x/popt-1.19.tar.gz",
+      "source_checksum": "c25a4838fc8e4c1c8aacb8bd620edb3084a3d63bf8987fdad3ca2758c63240f9",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/popt.nuclei",
+      "recipe_sha256": "b22bd44ad778d40878e77b20e2f589a75478a3979a420b31b015a502c4bf69c1",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/popt.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-libs/readline",
+      "package_name": "readline",
+      "category": "dev-libs",
+      "version": "8.2",
+      "description": "GNU readline library",
+      "homepage": "https://tiswww.case.edu/php/chet/readline/rltop.html",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/readline/readline-8.2.tar.gz",
+      "source_checksum": "3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/readline.nuclei",
+      "recipe_sha256": "46f4e732ba4d08db43ca85e6ed5c0cb0a6a91960fb3e49a56297525e8c14746f",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/readline.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-libs/zlib",
+      "package_name": "zlib",
+      "category": "dev-libs",
+      "version": "1.3.1",
+      "description": "Standard compression library",
+      "homepage": "https://www.zlib.net/",
+      "license": "zlib",
+      "build_system": ":make",
+      "source_url": "https://www.zlib.net/zlib-1.3.1.tar.gz",
+      "source_checksum": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/zlib.nuclei",
+      "recipe_sha256": "b0618e1d8e3a4af4168ea3f266dd4d2414cdde24804e12a778f7725a57fc65d3",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/zlib.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-util/pkg-config",
+      "package_name": "pkg-config",
+      "category": "dev-util",
+      "version": "0.29.2",
+      "description": "Helper tool for compiling applications and libraries",
+      "homepage": "https://www.freedesktop.org/wiki/Software/pkg-config/",
+      "license": "GPL-2.0",
+      "build_system": ":make",
+      "source_url": "https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz",
+      "source_checksum": "6fc69c01688c9458a57eb9a1664c9aba372ccda420a02bf4429fe610e7e7d591",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/pkg-config.nuclei",
+      "recipe_sha256": "2710a61d41bba52a6f22d15629253730a167e3ba103829e82cce9fed3d7ba8cd",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/pkg-config.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "dev-vcs/git",
+      "package_name": "git",
+      "category": "dev-vcs",
+      "version": "2.53.0",
+      "description": "Fast, scalable, distributed revision control system",
+      "homepage": "https://git-scm.com/",
+      "license": "GPL-2.0",
+      "build_system": ":make",
+      "source_url": "https://www.kernel.org/pub/software/scm/git/git-2.53.0.tar.gz",
+      "source_checksum": "429dc0f5fe5f14109930cdbbb588c5d6ef5b8528910f0d738040744bebdc6275",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/git.nuclei",
+      "recipe_sha256": "8aa6184d045699ed1f1e101cf14c2138c2a4e729f3a9a089433e935b3f74beb5",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/git.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "lib/ncurses",
+      "package_name": "ncurses",
+      "category": "lib",
+      "version": "6.4",
+      "description": "System V Release 4.0 curses emulation library",
+      "homepage": "https://invisible-island.net/ncurses/",
+      "license": "MIT",
+      "build_system": ":make",
+      "source_url": "https://invisible-mirror.net/archives/ncurses/ncurses-6.4.tar.gz",
+      "source_checksum": "6931283d9ac87c5073f30b6290c4c75f21632bb4fc3603ac8100812bed248159",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/ncurses.nuclei",
+      "recipe_sha256": "0de05ad6b449ba56cd3c75015cba80dd626a25c9fa1f1671d64bb69d1b7ffd78",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/ncurses.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "net/curl",
+      "package_name": "curl",
+      "category": "net",
+      "version": "8.4.0",
+      "description": "Command line tool for transferring data with URLs",
+      "homepage": "https://curl.se/",
+      "license": "MIT",
+      "build_system": ":make",
+      "source_url": "https://curl.se/download/curl-8.4.0.tar.gz",
+      "source_checksum": "16c62a9c4af0f703d28bda6d7bbf37ba47055ad3414d70dec63e2e6336f2a82d",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/curl.nuclei",
+      "recipe_sha256": "d94dcb142e74aecbc72a3206bab26cb4b809d3e62dfe8d611f8ca91da71b8019",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/curl.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "net/wget",
+      "package_name": "wget",
+      "category": "net",
+      "version": "1.21.4",
+      "description": "Network utility to retrieve files from the Web",
+      "homepage": "https://www.gnu.org/software/wget/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz",
+      "source_checksum": "81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/wget.nuclei",
+      "recipe_sha256": "814fc19b9f576dc4eb9090016ba108f9f93632ef7b8b9a98873df49bdf8634b3",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/wget.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "net-misc/rsync",
+      "package_name": "rsync",
+      "category": "net-misc",
+      "version": "3.2.7",
+      "description": "Fast incremental file transfer utility",
+      "homepage": "https://rsync.samba.org/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://download.samba.org/pub/rsync/src/rsync-3.2.7.tar.gz",
+      "source_checksum": "4e7d9d3f6ed10878c58c5fb724a67dacf4b6aac7340b13e488fb2dc41346f2bb",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/rsync.nuclei",
+      "recipe_sha256": "74cce040162493c6d6cc5d86d912987f00c5c1132c115f1c151f5e334538bbe1",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/rsync.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-apps/gawk",
+      "package_name": "gawk",
+      "category": "sys-apps",
+      "version": "5.3.0",
+      "description": "GNU awk pattern-matching language",
+      "homepage": "https://www.gnu.org/software/gawk/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/gawk/gawk-5.3.0.tar.gz",
+      "source_checksum": "378f8864ec21cfceaa048f7e1869ac9b4597b449087caf1eb55e440d30273336",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/gawk.nuclei",
+      "recipe_sha256": "bcd952d7f2e5335618e4f2ba5aa0ad146237265d45a8c77ce914e0a7a73f92be",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/gawk.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-apps/grep",
+      "package_name": "grep",
+      "category": "sys-apps",
+      "version": "3.11",
+      "description": "GNU grep, egrep and fgrep",
+      "homepage": "https://www.gnu.org/software/grep/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/grep/grep-3.11.tar.gz",
+      "source_checksum": "1db2aedde89d0dea42b16d9528f894c8d15dae4e190b59aecc78f5a951276eab",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/grep.nuclei",
+      "recipe_sha256": "4b0377434d17d1af8a547ed57731fefafa50926ae75497e375a2613d177951c3",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/grep.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-apps/sed",
+      "package_name": "sed",
+      "category": "sys-apps",
+      "version": "4.9",
+      "description": "GNU stream editor",
+      "homepage": "https://www.gnu.org/software/sed/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/sed/sed-4.9.tar.gz",
+      "source_checksum": "6e226b732e1cd739464ad6862bd1a1aba42d7982922da7a53519631d24975181",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/sed.nuclei",
+      "recipe_sha256": "d1e44a691650f702794997c113bef4b28034af35cc4c9f5d5737886249e818d6",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/sed.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-devel/automake",
+      "package_name": "automake",
+      "category": "sys-devel",
+      "version": "1.16.5",
+      "description": "Tool for automatically generating Makefile.in files",
+      "homepage": "https://www.gnu.org/software/automake/",
+      "license": "GPL-2.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz",
+      "source_checksum": "07bd24ad08a64bc17250ce09ec56e921d6343903943e99ccf63bbf0705e34605",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/automake.nuclei",
+      "recipe_sha256": "5d4bf80a7f259edd5f28b65f7905d979f712c6257a5951dbea0874c154925c64",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/automake.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-devel/m4",
+      "package_name": "m4",
+      "category": "sys-devel",
+      "version": "1.4.19",
+      "description": "GNU macro processor",
+      "homepage": "https://www.gnu.org/software/m4/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.gz",
+      "source_checksum": "3be4a26d825ffdfda52a56fc43246456989a3630093cced3fbddf4771ee58a70",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/m4.nuclei",
+      "recipe_sha256": "f4db58e89a763a799a738199317819df9794cea7c32c7b5cf22719747fb217b3",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/m4.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-devel/make",
+      "package_name": "make",
+      "category": "sys-devel",
+      "version": "4.4.1",
+      "description": "GNU Make - controls the generation of executables",
+      "homepage": "https://www.gnu.org/software/make/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz",
+      "source_checksum": "dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/make.nuclei",
+      "recipe_sha256": "41de2cd98437b6a0a8f4064b889fdca8a7c51b4b4823b147b791908fa4a8de48",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/make.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-devel/patch",
+      "package_name": "patch",
+      "category": "sys-devel",
+      "version": "2.7.6",
+      "description": "Applies a diff file to an original",
+      "homepage": "https://www.gnu.org/software/patch/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.gz",
+      "source_checksum": "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/patch.nuclei",
+      "recipe_sha256": "3472ce0d7ebd0731ad2dfdaafe42cbb974f4c58a63177428e19ebacf3eaaba06",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/patch.nuclei",
+      "selected_from": "current"
+    },
+    {
+      "atom": "sys-libs/gdbm",
+      "package_name": "gdbm",
+      "category": "sys-libs",
+      "version": "1.23",
+      "description": "GNU database library",
+      "homepage": "https://www.gnu.org/software/gdbm/",
+      "license": "GPL-3.0",
+      "build_system": ":make",
+      "source_url": "https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz",
+      "source_checksum": "74b1081d21fff13ae4bd7c16e5d6e504a4c26f7cde1dca0d963a484174bbcacd",
+      "source_algorithm": "sha256",
+      "recipe_relpath": "nuclei/gdbm.nuclei",
+      "recipe_sha256": "c37e0131fc5bb6df39c6c223f253e5a183437c69ebcb967d28c499ac6ece487a",
+      "upstream_provider": "current-recipe",
+      "notes": "",
+      "origin_path": "nuclei/gdbm.nuclei",
+      "selected_from": "current"
+    }
+  ],
+  "excluded_count": 82,
+  "excluded": [
+    {
+      "path": "nuclei/appstream.nuclei",
+      "atom": "dev-libs/appstream",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/autoconf.nuclei",
+      "atom": "sys-devel/autoconf",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/bat.nuclei",
+      "atom": "sys-apps/bat",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/bison.nuclei",
+      "atom": "sys-devel/bison",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/bubblewrap.nuclei",
+      "atom": "sys-apps/bubblewrap",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/c-ares.nuclei",
+      "atom": "net-dns/c-ares",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/cmake.nuclei",
+      "atom": "dev-util/cmake",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/cmusic.nuclei",
+      "atom": "media-sound/cmusic",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/dbus.nuclei",
+      "atom": "sys-apps/dbus",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/docbook-xml.nuclei",
+      "atom": "app-text/docbook-xml",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/docbook-xsl.nuclei",
+      "atom": "app-text/docbook-xsl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/dtop.nuclei",
+      "atom": "x11-wm/dtop",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/duktape.nuclei",
+      "atom": "dev-lang/duktape",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/exa.nuclei",
+      "atom": "sys-apps/exa",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/expat.nuclei",
+      "atom": "dev-libs/expat",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/fastfetch.nuclei",
+      "atom": "app-misc/fastfetch",
+      "reason": "candidate rejected (no report item); current rejected (platform/binary asset rejected: fastfetch-dragonfly-amd64.tar.gz)"
+    },
+    {
+      "path": "nuclei/fd.nuclei",
+      "atom": "sys-apps/fd",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/fish.nuclei",
+      "atom": "app-shells/fish",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/flatpak.nuclei",
+      "atom": "sys-apps/flatpak",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/flex.nuclei",
+      "atom": "sys-devel/flex",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/fuse.nuclei",
+      "atom": "sys-fs/fuse",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/glib.nuclei",
+      "atom": "dev-libs/glib",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/gnupg.nuclei",
+      "atom": "app-crypt/gnupg",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/go.nuclei",
+      "atom": "dev-lang/go",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/gobject-introspection.nuclei",
+      "atom": "dev-libs/gobject-introspection",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/gpgme.nuclei",
+      "atom": "app-crypt/gpgme",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/json-glib.nuclei",
+      "atom": "dev-libs/json-glib",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/jsoncpp.nuclei",
+      "atom": "dev-libs/jsoncpp",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libarchive.nuclei",
+      "atom": "sys-libs/libarchive",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libassuan.nuclei",
+      "atom": "dev-libs/libassuan",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libcap.nuclei",
+      "atom": "sys-libs/libcap",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libffi.nuclei",
+      "atom": "dev-libs/libffi",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libgcrypt.nuclei",
+      "atom": "dev-libs/libgcrypt",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libgpg-error.nuclei",
+      "atom": "dev-libs/libgpg-error",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libidn2.nuclei",
+      "atom": "net-dns/libidn2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libksba.nuclei",
+      "atom": "dev-libs/libksba",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libpsl.nuclei",
+      "atom": "net-libs/libpsl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libseccomp.nuclei",
+      "atom": "sys-libs/libseccomp",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libsoup.nuclei",
+      "atom": "net-libs/libsoup",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libssh2.nuclei",
+      "atom": "net-libs/libssh2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libtermkey.nuclei",
+      "atom": "dev-libs/libtermkey",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libunistring.nuclei",
+      "atom": "dev-libs/libunistring",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libutempter.nuclei",
+      "atom": "sys-libs/libutempter",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libuv.nuclei",
+      "atom": "dev-libs/libuv",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libxml2.nuclei",
+      "atom": "dev-libs/libxml2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libxmlb.nuclei",
+      "atom": "dev-libs/libxmlb",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libyaml.nuclei",
+      "atom": "dev-libs/libyaml",
+      "reason": "candidate rejected (no report item); current rejected (asset filename does not look like package source: yaml-0.2.5.tar.gz)"
+    },
+    {
+      "path": "nuclei/lz4.nuclei",
+      "atom": "app-arch/lz4",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/medit.nuclei",
+      "atom": "app-editors/medit",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/meson.nuclei",
+      "atom": "dev-util/meson",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/micro.nuclei",
+      "atom": "app-editors/micro",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/neofetch.nuclei",
+      "atom": "app-misc/neofetch",
+      "reason": "candidate rejected (no report item); current rejected (asset filename does not look like package source: 7.1.0.tar.gz)"
+    },
+    {
+      "path": "nuclei/nghttp2.nuclei",
+      "atom": "net-libs/nghttp2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/ninja.nuclei",
+      "atom": "dev-util/ninja",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/npth.nuclei",
+      "atom": "dev-libs/npth",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/objlog.nuclei",
+      "atom": "dev-libs/objlog",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/oniguruma.nuclei",
+      "atom": "dev-libs/oniguruma",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/openssh.nuclei",
+      "atom": "net-misc/openssh",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/openssl.nuclei",
+      "atom": "dev-libs/openssl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/ostree.nuclei",
+      "atom": "sys-apps/ostree",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/pam.nuclei",
+      "atom": "sys-libs/pam",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/pcre.nuclei",
+      "atom": "dev-libs/pcre",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/pcre2.nuclei",
+      "atom": "dev-libs/pcre2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/perl.nuclei",
+      "atom": "dev-lang/perl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/polkit.nuclei",
+      "atom": "sys-auth/polkit",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/portaudio.nuclei",
+      "atom": "media-libs/portaudio",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/powder-sandbox.nuclei",
+      "atom": "games-simulation/powder-sandbox",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/python3.nuclei",
+      "atom": "dev-lang/python3",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/rhash.nuclei",
+      "atom": "app-crypt/rhash",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/ripgrep.nuclei",
+      "atom": "sys-apps/ripgrep",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/rsh.nuclei",
+      "atom": "app-shells/rsh",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/rust.nuclei",
+      "atom": "dev-lang/rust",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/scons.nuclei",
+      "atom": "dev-util/scons",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/sdl2.nuclei",
+      "atom": "media-libs/sdl2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/sqlite.nuclei",
+      "atom": "dev-db/sqlite",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/tedit.nuclei",
+      "atom": "app-editors/tedit",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/tree.nuclei",
+      "atom": "sys-apps/tree",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/vim.nuclei",
+      "atom": "app-editors/vim",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/xdg-dbus-proxy.nuclei",
+      "atom": "sys-apps/xdg-dbus-proxy",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/xmlto.nuclei",
+      "atom": "app-text/xmlto",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/yafp.nuclei",
+      "atom": "app-misc/yafp",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/zstd.nuclei",
+      "atom": "app-arch/zstd",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    }
+  ]
+}

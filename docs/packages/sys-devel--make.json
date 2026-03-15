@@ -1,0 +1,19 @@
+{
+  "atom": "sys-devel/make",
+  "package_name": "make",
+  "category": "sys-devel",
+  "version": "4.4.1",
+  "description": "GNU Make - controls the generation of executables",
+  "homepage": "https://www.gnu.org/software/make/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz",
+  "source_checksum": "dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/make.nuclei",
+  "recipe_sha256": "41de2cd98437b6a0a8f4064b889fdca8a7c51b4b4823b147b791908fa4a8de48",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/make.nuclei",
+  "selected_from": "current"
+}

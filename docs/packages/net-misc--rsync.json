@@ -1,0 +1,19 @@
+{
+  "atom": "net-misc/rsync",
+  "package_name": "rsync",
+  "category": "net-misc",
+  "version": "3.2.7",
+  "description": "Fast incremental file transfer utility",
+  "homepage": "https://rsync.samba.org/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://download.samba.org/pub/rsync/src/rsync-3.2.7.tar.gz",
+  "source_checksum": "4e7d9d3f6ed10878c58c5fb724a67dacf4b6aac7340b13e488fb2dc41346f2bb",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/rsync.nuclei",
+  "recipe_sha256": "74cce040162493c6d6cc5d86d912987f00c5c1132c115f1c151f5e334538bbe1",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/rsync.nuclei",
+  "selected_from": "current"
+}

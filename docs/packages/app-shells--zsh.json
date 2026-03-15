@@ -1,0 +1,19 @@
+{
+  "atom": "app-shells/zsh",
+  "package_name": "zsh",
+  "category": "app-shells",
+  "version": "5.9",
+  "description": "UNIX shell (command interpreter)",
+  "homepage": "https://www.zsh.org/",
+  "license": "MIT",
+  "build_system": ":make",
+  "source_url": "https://sourceforge.net/projects/zsh/files/zsh/5.9/zsh-5.9.tar.xz",
+  "source_checksum": "9b8d1ecedd5b5e81fbf1918e876752a7dd948e05c1a0dba10ab863842d45acd5",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/zsh.nuclei",
+  "recipe_sha256": "5e248c9254d61d754d2a3dafc3513611862d0317ef1358b8e7d715d41fb2e832",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/zsh.nuclei",
+  "selected_from": "current"
+}

@@ -1,0 +1,19 @@
+{
+  "atom": "sys-libs/gdbm",
+  "package_name": "gdbm",
+  "category": "sys-libs",
+  "version": "1.23",
+  "description": "GNU database library",
+  "homepage": "https://www.gnu.org/software/gdbm/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz",
+  "source_checksum": "74b1081d21fff13ae4bd7c16e5d6e504a4c26f7cde1dca0d963a484174bbcacd",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/gdbm.nuclei",
+  "recipe_sha256": "c37e0131fc5bb6df39c6c223f253e5a183437c69ebcb967d28c499ac6ece487a",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/gdbm.nuclei",
+  "selected_from": "current"
+}

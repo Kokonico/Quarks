@@ -1,0 +1,19 @@
+{
+  "atom": "sys-devel/automake",
+  "package_name": "automake",
+  "category": "sys-devel",
+  "version": "1.16.5",
+  "description": "Tool for automatically generating Makefile.in files",
+  "homepage": "https://www.gnu.org/software/automake/",
+  "license": "GPL-2.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.gz",
+  "source_checksum": "07bd24ad08a64bc17250ce09ec56e921d6343903943e99ccf63bbf0705e34605",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/automake.nuclei",
+  "recipe_sha256": "5d4bf80a7f259edd5f28b65f7905d979f712c6257a5951dbea0874c154925c64",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/automake.nuclei",
+  "selected_from": "current"
+}

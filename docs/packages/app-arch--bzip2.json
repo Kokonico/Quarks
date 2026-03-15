@@ -1,0 +1,19 @@
+{
+  "atom": "app-arch/bzip2",
+  "package_name": "bzip2",
+  "category": "app-arch",
+  "version": "1.0.8",
+  "description": "High-quality data compressor",
+  "homepage": "https://sourceware.org/bzip2/",
+  "license": "BSD",
+  "build_system": ":make",
+  "source_url": "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz",
+  "source_checksum": "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/bzip2.nuclei",
+  "recipe_sha256": "c5b9ca0bf225385cceb3a4fed2e850344588f2d574f7a1b17c78fa4a8b83365a",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/bzip2.nuclei",
+  "selected_from": "current"
+}

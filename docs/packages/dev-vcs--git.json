@@ -1,0 +1,19 @@
+{
+  "atom": "dev-vcs/git",
+  "package_name": "git",
+  "category": "dev-vcs",
+  "version": "2.53.0",
+  "description": "Fast, scalable, distributed revision control system",
+  "homepage": "https://git-scm.com/",
+  "license": "GPL-2.0",
+  "build_system": ":make",
+  "source_url": "https://www.kernel.org/pub/software/scm/git/git-2.53.0.tar.gz",
+  "source_checksum": "429dc0f5fe5f14109930cdbbb588c5d6ef5b8528910f0d738040744bebdc6275",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/git.nuclei",
+  "recipe_sha256": "8aa6184d045699ed1f1e101cf14c2138c2a4e729f3a9a089433e935b3f74beb5",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/git.nuclei",
+  "selected_from": "current"
+}

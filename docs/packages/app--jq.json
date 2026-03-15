@@ -1,0 +1,19 @@
+{
+  "atom": "app/jq",
+  "package_name": "jq",
+  "category": "app",
+  "version": "1.6",
+  "description": "Command-line JSON processor",
+  "homepage": "https://stedolan.github.io/jq/",
+  "license": "MIT",
+  "build_system": ":make",
+  "source_url": "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-1.6.tar.gz",
+  "source_checksum": "5de8c8e29aaa3fb9cc6b47bb27299f271354ebb72514e3accadc7d38b5bbaa72",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/jq.nuclei",
+  "recipe_sha256": "48eef25fd6f35b91bc9ac34c3ad52d2340cf33139bcf7ea59a920b4835f6170c",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/jq.nuclei",
+  "selected_from": "current"
+}

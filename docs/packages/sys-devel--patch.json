@@ -1,0 +1,19 @@
+{
+  "atom": "sys-devel/patch",
+  "package_name": "patch",
+  "category": "sys-devel",
+  "version": "2.7.6",
+  "description": "Applies a diff file to an original",
+  "homepage": "https://www.gnu.org/software/patch/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.gz",
+  "source_checksum": "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/patch.nuclei",
+  "recipe_sha256": "3472ce0d7ebd0731ad2dfdaafe42cbb974f4c58a63177428e19ebacf3eaaba06",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/patch.nuclei",
+  "selected_from": "current"
+}

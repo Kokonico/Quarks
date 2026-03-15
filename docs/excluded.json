@@ -1,0 +1,414 @@
+{
+  "excluded": [
+    {
+      "path": "nuclei/appstream.nuclei",
+      "atom": "dev-libs/appstream",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/autoconf.nuclei",
+      "atom": "sys-devel/autoconf",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/bat.nuclei",
+      "atom": "sys-apps/bat",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/bison.nuclei",
+      "atom": "sys-devel/bison",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/bubblewrap.nuclei",
+      "atom": "sys-apps/bubblewrap",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/c-ares.nuclei",
+      "atom": "net-dns/c-ares",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/cmake.nuclei",
+      "atom": "dev-util/cmake",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/cmusic.nuclei",
+      "atom": "media-sound/cmusic",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/dbus.nuclei",
+      "atom": "sys-apps/dbus",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/docbook-xml.nuclei",
+      "atom": "app-text/docbook-xml",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/docbook-xsl.nuclei",
+      "atom": "app-text/docbook-xsl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/dtop.nuclei",
+      "atom": "x11-wm/dtop",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/duktape.nuclei",
+      "atom": "dev-lang/duktape",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/exa.nuclei",
+      "atom": "sys-apps/exa",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/expat.nuclei",
+      "atom": "dev-libs/expat",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/fastfetch.nuclei",
+      "atom": "app-misc/fastfetch",
+      "reason": "candidate rejected (no report item); current rejected (platform/binary asset rejected: fastfetch-dragonfly-amd64.tar.gz)"
+    },
+    {
+      "path": "nuclei/fd.nuclei",
+      "atom": "sys-apps/fd",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/fish.nuclei",
+      "atom": "app-shells/fish",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/flatpak.nuclei",
+      "atom": "sys-apps/flatpak",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/flex.nuclei",
+      "atom": "sys-devel/flex",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/fuse.nuclei",
+      "atom": "sys-fs/fuse",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/glib.nuclei",
+      "atom": "dev-libs/glib",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/gnupg.nuclei",
+      "atom": "app-crypt/gnupg",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/go.nuclei",
+      "atom": "dev-lang/go",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/gobject-introspection.nuclei",
+      "atom": "dev-libs/gobject-introspection",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/gpgme.nuclei",
+      "atom": "app-crypt/gpgme",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/json-glib.nuclei",
+      "atom": "dev-libs/json-glib",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/jsoncpp.nuclei",
+      "atom": "dev-libs/jsoncpp",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libarchive.nuclei",
+      "atom": "sys-libs/libarchive",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libassuan.nuclei",
+      "atom": "dev-libs/libassuan",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libcap.nuclei",
+      "atom": "sys-libs/libcap",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libffi.nuclei",
+      "atom": "dev-libs/libffi",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libgcrypt.nuclei",
+      "atom": "dev-libs/libgcrypt",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libgpg-error.nuclei",
+      "atom": "dev-libs/libgpg-error",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libidn2.nuclei",
+      "atom": "net-dns/libidn2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libksba.nuclei",
+      "atom": "dev-libs/libksba",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libpsl.nuclei",
+      "atom": "net-libs/libpsl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libseccomp.nuclei",
+      "atom": "sys-libs/libseccomp",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libsoup.nuclei",
+      "atom": "net-libs/libsoup",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libssh2.nuclei",
+      "atom": "net-libs/libssh2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libtermkey.nuclei",
+      "atom": "dev-libs/libtermkey",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libunistring.nuclei",
+      "atom": "dev-libs/libunistring",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libutempter.nuclei",
+      "atom": "sys-libs/libutempter",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libuv.nuclei",
+      "atom": "dev-libs/libuv",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libxml2.nuclei",
+      "atom": "dev-libs/libxml2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libxmlb.nuclei",
+      "atom": "dev-libs/libxmlb",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/libyaml.nuclei",
+      "atom": "dev-libs/libyaml",
+      "reason": "candidate rejected (no report item); current rejected (asset filename does not look like package source: yaml-0.2.5.tar.gz)"
+    },
+    {
+      "path": "nuclei/lz4.nuclei",
+      "atom": "app-arch/lz4",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/medit.nuclei",
+      "atom": "app-editors/medit",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/meson.nuclei",
+      "atom": "dev-util/meson",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/micro.nuclei",
+      "atom": "app-editors/micro",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/neofetch.nuclei",
+      "atom": "app-misc/neofetch",
+      "reason": "candidate rejected (no report item); current rejected (asset filename does not look like package source: 7.1.0.tar.gz)"
+    },
+    {
+      "path": "nuclei/nghttp2.nuclei",
+      "atom": "net-libs/nghttp2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/ninja.nuclei",
+      "atom": "dev-util/ninja",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/npth.nuclei",
+      "atom": "dev-libs/npth",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/objlog.nuclei",
+      "atom": "dev-libs/objlog",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/oniguruma.nuclei",
+      "atom": "dev-libs/oniguruma",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/openssh.nuclei",
+      "atom": "net-misc/openssh",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/openssl.nuclei",
+      "atom": "dev-libs/openssl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/ostree.nuclei",
+      "atom": "sys-apps/ostree",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/pam.nuclei",
+      "atom": "sys-libs/pam",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/pcre.nuclei",
+      "atom": "dev-libs/pcre",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/pcre2.nuclei",
+      "atom": "dev-libs/pcre2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/perl.nuclei",
+      "atom": "dev-lang/perl",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/polkit.nuclei",
+      "atom": "sys-auth/polkit",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/portaudio.nuclei",
+      "atom": "media-libs/portaudio",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/powder-sandbox.nuclei",
+      "atom": "games-simulation/powder-sandbox",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/python3.nuclei",
+      "atom": "dev-lang/python3",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/rhash.nuclei",
+      "atom": "app-crypt/rhash",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/ripgrep.nuclei",
+      "atom": "sys-apps/ripgrep",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/rsh.nuclei",
+      "atom": "app-shells/rsh",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/rust.nuclei",
+      "atom": "dev-lang/rust",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/scons.nuclei",
+      "atom": "dev-util/scons",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/sdl2.nuclei",
+      "atom": "media-libs/sdl2",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/sqlite.nuclei",
+      "atom": "dev-db/sqlite",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/tedit.nuclei",
+      "atom": "app-editors/tedit",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/tree.nuclei",
+      "atom": "sys-apps/tree",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/vim.nuclei",
+      "atom": "app-editors/vim",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/xdg-dbus-proxy.nuclei",
+      "atom": "sys-apps/xdg-dbus-proxy",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/xmlto.nuclei",
+      "atom": "app-text/xmlto",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/yafp.nuclei",
+      "atom": "app-misc/yafp",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    },
+    {
+      "path": "nuclei/zstd.nuclei",
+      "atom": "app-arch/zstd",
+      "reason": "candidate rejected (no report item); current rejected (recipe missing/invalid checksum)"
+    }
+  ]
+}

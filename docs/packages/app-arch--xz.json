@@ -1,0 +1,19 @@
+{
+  "atom": "app-arch/xz",
+  "package_name": "xz",
+  "category": "app-arch",
+  "version": "5.4.5",
+  "description": "Free general-purpose data compression software",
+  "homepage": "https://tukaani.org/xz/",
+  "license": "Public-Domain",
+  "build_system": ":make",
+  "source_url": "https://tukaani.org/xz/xz-5.4.5.tar.gz",
+  "source_checksum": "8ccf5fff868c006f29522e386fb4c6a1b66463fbca65a4cfc3c4bd596e895e79",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/xz.nuclei",
+  "recipe_sha256": "59a2a967bd431f6374c2b1c9eca7bbc9b077d51ffd36e0deecb388856633235b",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/xz.nuclei",
+  "selected_from": "current"
+}

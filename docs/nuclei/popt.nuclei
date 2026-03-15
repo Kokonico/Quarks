@@ -1,0 +1,17 @@
+nuclei "popt", "1.19" do
+  description "Command line option parsing library"
+  homepage "http://ftp.rpm.org/popt/"
+  license "MIT"
+  category "dev-libs"
+  build_system :make
+  
+  source "http://ftp.rpm.org/popt/releases/popt-1.x/popt-1.19.tar.gz",
+         checksum: "c25a4838fc8e4c1c8aacb8bd620edb3084a3d63bf8987fdad3ca2758c63240f9",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

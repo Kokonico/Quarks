@@ -1,0 +1,19 @@
+{
+  "atom": "app-arch/unzip",
+  "package_name": "unzip",
+  "category": "app-arch",
+  "version": "6.0",
+  "description": "Unpacker for .zip archives",
+  "homepage": "http://www.info-zip.org/UnZip.html",
+  "license": "BSD",
+  "build_system": ":make",
+  "source_url": "https://downloads.sourceforge.net/infozip/unzip60.tar.gz",
+  "source_checksum": "036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/unzip.nuclei",
+  "recipe_sha256": "c3277b58494c5fe0de3bbc708f39f18fb2e9064fa619828d11577e100a709cdf",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/unzip.nuclei",
+  "selected_from": "current"
+}

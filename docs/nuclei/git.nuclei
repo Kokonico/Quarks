@@ -1,0 +1,19 @@
+nuclei "git", "2.53.0" do
+  description "Fast, scalable, distributed revision control system"
+  homepage "https://git-scm.com/"
+  license "GPL-2.0"
+  category "dev-vcs"
+  
+  source "https://www.kernel.org/pub/software/scm/git/git-2.53.0.tar.gz",
+         checksum: "429dc0f5fe5f14109930cdbbb588c5d6ef5b8528910f0d738040744bebdc6275",
+         algorithm: "sha256"
+  build_system :make
+  
+  configure "--without-tcltk"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

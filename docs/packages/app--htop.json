@@ -1,0 +1,19 @@
+{
+  "atom": "app/htop",
+  "package_name": "htop",
+  "category": "app",
+  "version": "3.3.0",
+  "description": "Interactive process viewer",
+  "homepage": "https://htop.dev/",
+  "license": "GPL-2.0",
+  "build_system": ":make",
+  "source_url": "https://github.com/htop-dev/htop/releases/download/3.3.0/htop-3.3.0.tar.xz",
+  "source_checksum": "1e5cc328eee2bd1acff89f860e3179ea24b85df3ac483433f92a29977b14b045",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/htop.nuclei",
+  "recipe_sha256": "e5bf24d5b865cf1256022f11d6d4b92296f5a5c71780a34deb5ba1159dcb3a49",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/htop.nuclei",
+  "selected_from": "current"
+}

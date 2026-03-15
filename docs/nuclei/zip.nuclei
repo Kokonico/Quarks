@@ -1,0 +1,16 @@
+nuclei "zip", "3.0" do
+  description "Compressor/archiver for creating and modifying zipfiles"
+  homepage "http://www.info-zip.org/Zip.html"
+  license "BSD"
+  category "app-arch"
+  build_system :make
+  
+  source "https://downloads.sourceforge.net/infozip/zip30.tar.gz",
+         checksum: "f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369",
+         algorithm: "sha256"
+  
+  build do
+    run "make -f unix/Makefile generic"
+    install "make -f unix/Makefile prefix=${DESTDIR} install"
+  end
+end

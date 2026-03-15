@@ -1,0 +1,19 @@
+{
+  "atom": "app-arch/gzip",
+  "package_name": "gzip",
+  "category": "app-arch",
+  "version": "1.13",
+  "description": "GNU compression utility",
+  "homepage": "https://www.gnu.org/software/gzip/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/gzip/gzip-1.13.tar.gz",
+  "source_checksum": "20fc818aeebae87cdbf209d35141ad9d3cf312b35a5e6be61bfcfbf9eddd212a",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/gzip.nuclei",
+  "recipe_sha256": "d32947d4bdd0edaba0875d8904aeb96f5e03f13496477528eb9fd0d70f689c71",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/gzip.nuclei",
+  "selected_from": "current"
+}

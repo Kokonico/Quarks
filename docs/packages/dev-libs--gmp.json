@@ -1,0 +1,19 @@
+{
+  "atom": "dev-libs/gmp",
+  "package_name": "gmp",
+  "category": "dev-libs",
+  "version": "6.3.0",
+  "description": "GNU Multiple Precision Arithmetic Library",
+  "homepage": "https://gmplib.org/",
+  "license": "LGPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz",
+  "source_checksum": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/gmp.nuclei",
+  "recipe_sha256": "41a63510b02d4b446bd04aea73b7605f244e5e8d022c4685c50190c2ae08a885",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/gmp.nuclei",
+  "selected_from": "current"
+}

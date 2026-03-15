@@ -1,0 +1,19 @@
+{
+  "atom": "app/tmux",
+  "package_name": "tmux",
+  "category": "app",
+  "version": "3.3a",
+  "description": "Terminal multiplexer",
+  "homepage": "https://github.com/tmux/tmux",
+  "license": "ISC",
+  "build_system": ":make",
+  "source_url": "https://github.com/tmux/tmux/releases/download/3.3a/tmux-3.3a.tar.gz",
+  "source_checksum": "e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21599bddec7aacb21",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/tmux.nuclei",
+  "recipe_sha256": "fec25622bdafa433e72be294f0c9d2cd7e0e81c4cc67919d521223220c85685e",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/tmux.nuclei",
+  "selected_from": "current"
+}

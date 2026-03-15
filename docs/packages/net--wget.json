@@ -1,0 +1,19 @@
+{
+  "atom": "net/wget",
+  "package_name": "wget",
+  "category": "net",
+  "version": "1.21.4",
+  "description": "Network utility to retrieve files from the Web",
+  "homepage": "https://www.gnu.org/software/wget/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz",
+  "source_checksum": "81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/wget.nuclei",
+  "recipe_sha256": "814fc19b9f576dc4eb9090016ba108f9f93632ef7b8b9a98873df49bdf8634b3",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/wget.nuclei",
+  "selected_from": "current"
+}

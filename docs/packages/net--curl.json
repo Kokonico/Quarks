@@ -1,0 +1,19 @@
+{
+  "atom": "net/curl",
+  "package_name": "curl",
+  "category": "net",
+  "version": "8.4.0",
+  "description": "Command line tool for transferring data with URLs",
+  "homepage": "https://curl.se/",
+  "license": "MIT",
+  "build_system": ":make",
+  "source_url": "https://curl.se/download/curl-8.4.0.tar.gz",
+  "source_checksum": "16c62a9c4af0f703d28bda6d7bbf37ba47055ad3414d70dec63e2e6336f2a82d",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/curl.nuclei",
+  "recipe_sha256": "d94dcb142e74aecbc72a3206bab26cb4b809d3e62dfe8d611f8ca91da71b8019",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/curl.nuclei",
+  "selected_from": "current"
+}

@@ -1,0 +1,19 @@
+{
+  "atom": "dev-libs/libiconv",
+  "package_name": "libiconv",
+  "category": "dev-libs",
+  "version": "1.17",
+  "description": "Character set conversion library",
+  "homepage": "https://www.gnu.org/software/libiconv/",
+  "license": "LGPL-2.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/libiconv/libiconv-1.17.tar.gz",
+  "source_checksum": "8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/libiconv.nuclei",
+  "recipe_sha256": "a782280d4b162630dadc2628eb5f8de9e135d9672eff78a0c4b86ffccd5bd309",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/libiconv.nuclei",
+  "selected_from": "current"
+}

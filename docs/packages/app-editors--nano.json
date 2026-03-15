@@ -1,0 +1,19 @@
+{
+  "atom": "app-editors/nano",
+  "package_name": "nano",
+  "category": "app-editors",
+  "version": "7.2",
+  "description": "Small, friendly text editor",
+  "homepage": "https://www.nano-editor.org/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://www.nano-editor.org/dist/v7/nano-7.2.tar.xz",
+  "source_checksum": "86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/nano.nuclei",
+  "recipe_sha256": "ebcb287f0796035e7f1ab8825c7df9c27eee68937e7969d5fac96d7f3eea8a6c",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/nano.nuclei",
+  "selected_from": "current"
+}

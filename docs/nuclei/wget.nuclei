@@ -1,0 +1,17 @@
+nuclei "wget", "1.21.4" do
+  description "Network utility to retrieve files from the Web"
+  homepage "https://www.gnu.org/software/wget/"
+  license "GPL-3.0"
+  category "net"
+  build_system :make
+  
+  source "https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz",
+         checksum: "81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c",
+         algorithm: "sha256"
+  
+  build do
+    configure "--with-ssl=openssl"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

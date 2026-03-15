@@ -1,0 +1,19 @@
+{
+  "atom": "app-arch/zip",
+  "package_name": "zip",
+  "category": "app-arch",
+  "version": "3.0",
+  "description": "Compressor/archiver for creating and modifying zipfiles",
+  "homepage": "http://www.info-zip.org/Zip.html",
+  "license": "BSD",
+  "build_system": ":make",
+  "source_url": "https://downloads.sourceforge.net/infozip/zip30.tar.gz",
+  "source_checksum": "f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/zip.nuclei",
+  "recipe_sha256": "206617f77911bb9ac816aca1870776bfcbb5ce10164966a53b6f8c99b86f34a9",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/zip.nuclei",
+  "selected_from": "current"
+}

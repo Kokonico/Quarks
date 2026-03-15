@@ -1,0 +1,19 @@
+{
+  "atom": "dev-lang/ruby",
+  "package_name": "ruby",
+  "category": "dev-lang",
+  "version": "3.2.2",
+  "description": "An interpreted object-oriented programming language",
+  "homepage": "https://www.ruby-lang.org/",
+  "license": "Ruby",
+  "build_system": ":make",
+  "source_url": "https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.2.tar.gz",
+  "source_checksum": "96c57558871a6748de5bc9f274e93f4b5aad06cd8f37befa0e8d94e7b8a423bc",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/ruby.nuclei",
+  "recipe_sha256": "63b644d43f3b423c4fa00fe02bf6702f6a7fdf2e1262d4cc36e647b862b27b22",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/ruby.nuclei",
+  "selected_from": "current"
+}

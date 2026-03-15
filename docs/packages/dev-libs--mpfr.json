@@ -1,0 +1,19 @@
+{
+  "atom": "dev-libs/mpfr",
+  "package_name": "mpfr",
+  "category": "dev-libs",
+  "version": "4.2.1",
+  "description": "Multiple-precision floating-point library",
+  "homepage": "https://www.mpfr.org/",
+  "license": "LGPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/mpfr/mpfr-4.2.1.tar.xz",
+  "source_checksum": "277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/mpfr.nuclei",
+  "recipe_sha256": "fbd918f35899c2e66de5f1297a6eb8eacc8b26b337c6eb5c1060af2e5b4988ad",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/mpfr.nuclei",
+  "selected_from": "current"
+}

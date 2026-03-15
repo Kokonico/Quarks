@@ -1,0 +1,19 @@
+{
+  "atom": "app-misc/screen",
+  "package_name": "screen",
+  "category": "app-misc",
+  "version": "4.9.1",
+  "description": "Full-screen window manager that multiplexes a physical terminal",
+  "homepage": "https://www.gnu.org/software/screen/",
+  "license": "GPL-3.0",
+  "build_system": ":make",
+  "source_url": "https://ftp.gnu.org/gnu/screen/screen-4.9.1.tar.gz",
+  "source_checksum": "26cef3e3c42571c0d484ad6faf110c5c15091fbf872b06fa7aa4766c7405ac69",
+  "source_algorithm": "sha256",
+  "recipe_relpath": "nuclei/screen.nuclei",
+  "recipe_sha256": "cee8c0b7df0ac6ca687342c837713e26598f876fb089d8a39ef2eca6ebaae8f5",
+  "upstream_provider": "current-recipe",
+  "notes": "",
+  "origin_path": "nuclei/screen.nuclei",
+  "selected_from": "current"
+}
