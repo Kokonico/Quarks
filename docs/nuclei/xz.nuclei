@@ -3,10 +3,9 @@ nuclei "xz", "5.4.5" do
   homepage "https://tukaani.org/xz/"
   license "Public-Domain"
   category "app-arch"
-  build_system :make
   
   source "https://tukaani.org/xz/xz-5.4.5.tar.gz",
-         checksum: "8ccf5fff868c006f29522e386fb4c6a1b66463fbca65a4cfc3c4bd596e895e79",
+         checksum: "135c90b934aee8fbc0d467de87a05cb70d627da36abe518c357a873709e5b7d6",
          algorithm: "sha256"
   
   build do

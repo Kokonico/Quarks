@@ -1,0 +1,19 @@
+nuclei "lmdb", "0.9.31" do
+  description "lmdb package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/LMDB/lmdb/archive/LMDB_0.9.31.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends []
+
+  build_depends 
+
+  build do
+    run "make -j$(nproc)"
+    run "make install prefix=/usr libdir=/usr/lib"
+  end
+end

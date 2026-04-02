@@ -1,0 +1,16 @@
+nuclei "iwd", "2.14" do
+  description "Internet Wireless Daemon"
+  homepage "https://iwd.wiki.kernel.org/"
+  license "GPL-2.0-or-later"
+  category "net-wireless"
+  
+  source "https://mirrors.edge.kernel.org/pub/linux/network/wireless/iwd-2.14.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build", "--prefix=/usr", "--sysconfdir=/etc"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

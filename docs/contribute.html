@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Contribute - Photon Package Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Contribute packages to Photon - the fast, lightweight package manager">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #f8f9fa;
+      --text: #1a1a1a;
+      --text-muted: #666666;
+      --link: #0066cc;
+      --border: #e0e0e0;
+      --code-bg: #1e1e1e;
+      --code-text: #d4d4d4;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --bg-alt: #161b22;
+        --text: #c9d1d9;
+        --text-muted: #8b949e;
+        --link: #58a6ff;
+        --border: #30363d;
+        --code-bg: #0d1117;
+        --code-text: #c9d1d9;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+    }
+    h1, h2, h3, h4 {
+      line-height: 1.3;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    h1 { font-size: 2rem; margin-top: 1rem; }
+    h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { font-size: 1.2rem; }
+    h4 { font-size: 1rem; margin-top: 1.5rem; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    p { margin: 1rem 0; }
+    nav {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+      font-weight: 500;
+    }
+    .muted { color: var(--text-muted); }
+    .code-block {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      white-space: pre;
+    }
+    .code-block code { background: none; padding: 0; color: inherit; }
+    code {
+      background: var(--bg-alt);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      font-size: 0.9em;
+    }
+    .card {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .card.warning { border-left: 4px solid #f0ad4e; }
+    .card.info { border-left: 4px solid #17a2b8; }
+    .card h3 { margin-top: 0; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th { background: var(--bg-alt); font-weight: 600; }
+    tr:nth-child(even) { background: var(--bg-alt); }
+    ul, ol { padding-left: 1.5rem; }
+    li { margin: 0.5rem 0; }
+    .example-label {
+      display: inline-block;
+      background: #28a745;
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Packages</a>
+  <a href="contribute.html">Contribute</a>
+  <a href="https://github.com/RobertFlexx/Photon">GitHub</a>
+</nav>
+
+<h1>Contribute Packages</h1>
+<p class="muted">Help expand the Photon ecosystem by submitting nuclei recipes for packages.</p>
+
+<div class="card info">
+  <strong>Quick Start:</strong> Create a <code>.nuclei</code> file, test it locally with <code>photon install ./your-recipe.nuclei</code>, then submit via GitHub PR.
+</div>
+
+<h2>Nuclei DSL Reference</h2>
+
+<h3>Basic Structure</h3>
+<div class="code-block"><code>nuclei "package-name", "1.0.0" do
+  description "What the package does"
+  homepage "https://example.com/"
+  license "MIT"
+  category "appcategory"
+  
+  source "https://example.com/package-1.0.0.tar.gz",
+         checksum: "sha256-checksum-here",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end</code></div>
+
+<h3>Required Fields</h3>
+<table>
+  <tr><th>Field</th><th>Description</th><th>Example</th></tr>
+  <tr><td><code>name</code></td><td>Package name (lowercase)</td><td><code>"gcc"</code></td></tr>
+  <tr><td><code>version</code></td><td>Package version</td><td><code>"13.2.0"</code></td></tr>
+  <tr><td><code>source</code></td><td>Download URL + checksum</td><td>See examples below</td></tr>
+  <tr><td><code>build</code></td><td>Build commands block</td><td>See examples below</td></tr>
+</table>
+
+<h3>Optional Fields</h3>
+<table>
+  <tr><th>Field</th><th>Description</th><th>Example</th></tr>
+  <tr><td><code>description</code></td><td>Short description</td><td><code>"GNU Compiler Collection"</code></td></tr>
+  <tr><td><code>homepage</code></td><td>Project website</td><td><code>"https://gcc.gnu.org/"</code></td></tr>
+  <tr><td><code>license</code></td><td>License (SPDX)</td><td><code>"GPL-3.0-or-later"</code></td></tr>
+  <tr><td><code>category</code></td><td>Package category</td><td><code>"sys-devel"</code></td></tr>
+  <tr><td><code>slot</code></td><td>Package slot</td><td><code>"0"</code> or <code>"2"</code></td></tr>
+  <tr><td><code>dependencies</code></td><td>Runtime deps</td><td><code>["dev-libs/glibc"]</code></td></tr>
+  <tr><td><code>use_flags</code></td><td>USE flags</td><td><code>["X", "ssl"]</code></td></tr>
+  <tr><td><code>blockers</code></td><td>Incompatible packages</td><td><code>["sys-devel/gcc:11"]</code></td></tr>
+</table>
+
+<h3>Build Commands</h3>
+<table>
+  <tr><th>Command</th><th>Description</th></tr>
+  <tr><td><code>configure</code></td><td>Run ./configure with common options</td></tr>
+  <tr><td><code>make</code></td><td>Run make with parallel jobs</td></tr>
+  <tr><td><code>cmake</code></td><td>Run cmake build system</td></tr>
+  <tr><td><code>meson</code></td><td>Run meson build system</td></tr>
+  <tr><td><code>run "cmd"</code></td><td>Run arbitrary shell command</td></tr>
+  <tr><td><code>install "cmd"</code></td><td>Run install command</td></tr>
+</table>
+
+<h3>Build System</h3>
+<div class="code-block"><code># Specify build system
+build_system :autotools   # ./configure (default)
+build_system :cmake       # cmake ..
+build_system :meson       # meson setup build
+build_system :make        # just make
+build_system :manual      # custom commands only</code></div>
+
+<h3>Dependencies</h3>
+<div class="code-block"><code>dependencies [
+  "dev-libs/glibc",
+  "dev-libs/gmp",
+  "sys-libs/ncurses"
+]
+
+build_dependencies [
+  "sys-devel/m4",
+  "sys-devel/binutils"
+]</code></div>
+
+<h3>Configure Options</h3>
+<div class="code-block"><code>configure \
+  "--prefix=/usr",
+  "--libdir=/usr/lib64",
+  "--sysconfdir=/etc",
+  "--localstatedir=/var"</code></div>
+
+<h3>Environment Variables</h3>
+<div class="code-block"><code>env {
+  "CFLAGS" => "-O2 -pipe",
+  "CXXFLAGS" => "-O2 -pipe",
+  "MAKEOPTS" => "-j$(nproc)"
+}</code></div>
+
+<h3>Post-Install Scripts</h3>
+<div class="code-block"><code>post_install do
+  run "ldconfig"
+  run "gtk-update-icon-cache -q /usr/share/icons/hicolor"
+  run "gdk-pixbuf-query-loaders --update-cache"
+end</code></div>
+
+<h3>Getting SHA256 Checksum</h3>
+<div class="code-block"><code># Download the source first, then:
+sha256sum package-1.0.0.tar.gz
+# Output: abc123...  package-1.0.0.tar.gz</code></div>
+
+<h2>Real Examples</h2>
+
+<h3>Autotools Package (wget)</h3>
+<div class="code-block"><code>nuclei "wget", "1.21.4" do
+  description "Network utility to retrieve files from the Web"
+  homepage "https://www.gnu.org/software/wget/"
+  license "GPL-3.0-or-later"
+  category "net-misc"
+  
+  dependencies ["net-libs/gnutls", "dev-libs/libidn2"]
+  
+  source "https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz",
+         checksum: "81542f5cefb8faacc39bbbc6c82ded80e3e4a88505ae72ea51df27525bcde04c",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end</code></div>
+
+<h3>CMake Package (cmake)</h3>
+<div class="code-block"><code>nuclei "cmake", "3.28.1" do
+  description "Cross-platform make system"
+  homepage "https://cmake.org/"
+  license "BSD-3-Clause"
+  category "dev-util"
+  
+  dependencies [
+    "dev-libs/libuv",
+    "app-arch/libarchive",
+    "net-misc/curl"
+  ]
+  
+  source "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1.tar.gz",
+         checksum: "15e94f83e647f7d620a140a7a5da76349fc47a1bfed66d0f5cdee8e7344079ad",
+         algorithm: "sha256"
+  
+  build do
+    cmake
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end</code></div>
+
+<h3>Meson Package (ninja)</h3>
+<div class="code-block"><code>nuclei "ninja", "1.11.1" do
+  description "Small build system with a focus on speed"
+  homepage "https://ninja-build.org/"
+  license "Apache-2.0"
+  category "dev-util"
+  
+  dependencies ["dev-lang/python3"]
+  
+  source "https://github.com/ninja-build/ninja/archive/refs/tags/v1.11.1.tar.gz",
+         checksum: "31747ae633213f1eda3842686f83c2aa1412e0f5691d1c14dbbcc67fe7400cea",
+         algorithm: "sha256"
+  
+  build_system :cmake
+  
+  build do
+    cmake
+    make
+    install "DESTDIR=${DESTDIR} make install"
+  end
+end</code></div>
+
+<h3>Package with USE Flags (vim)</h3>
+<div class="code-block"><code>nuclei "vim", "9.0.2116" do
+  description "Improved version of the vi editor"
+  homepage "https://www.vim.org/"
+  license "VIM"
+  category "app-editors"
+  
+  slot "0"
+  use_flags ["X", "gui", "perl", "python", "ruby", "tcl"]
+  
+  dependencies [
+    "lib/ncurses",
+    "dev-lang/python3",
+    "dev-lang/tcl"
+  ]
+  
+  source "https://github.com/vim/vim/archive/refs/tags/v9.0.2116.tar.gz",
+         checksum: "a79783d6e2a46ba446fc695cdb1aa26be511f9db4826aa40b57c89b0392c59ba",
+         algorithm: "sha256"
+  
+  build do
+    run "./configure",
+      "--prefix=/usr",
+      "--enable-gui=gtk3",
+      "--enable-perlinterp",
+      "--enable-python3interp",
+      "--enable-tclinterp",
+      "--with-tlib=ncurses"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+    install "ln -sf vim ${DESTDIR}/usr/bin/vi"
+  end
+end</code></div>
+
+<h3>Package with SLOT (gcc)</h3>
+<div class="code-block"><code>nuclei "gcc", "13.2.0" do
+  description "GNU Compiler Collection"
+  homepage "https://gcc.gnu.org/"
+  license "GPL-3.0-or-later"
+  category "sys-devel"
+  
+  slot "13"
+  
+  dependencies [
+    "sys-libs/glibc",
+    "dev-libs/gmp",
+    "dev-libs/mpfr",
+    "dev-libs/mpc",
+    "dev-libs/isl"
+  ]
+  
+  build_dependencies [
+    "sys-devel/m4",
+    "sys-devel/binutils"
+  ]
+  
+  source "https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz",
+         checksum: "...",
+         algorithm: "sha256"
+  
+  build do
+    run "mkdir -p build && cd build"
+    run "../configure",
+      "--prefix=/usr",
+      "--libdir=/usr/lib64",
+      "--enable-languages=c,c++",
+      "--disable-multilib"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+  
+  post_install do
+    run "ln -sf gcc ${DESTDIR}/usr/bin/cc"
+  end
+end</code></div>
+
+<div class="card warning">
+  <h3>Submission Guidelines</h3>
+  <ul>
+    <li>Test your recipe locally first: <code>photon install ./your-recipe.nuclei</code></li>
+    <li>Verify checksums match upstream source exactly</li>
+    <li>Use stable release URLs, not git/nightly unless requested</li>
+    <li>Include all dependencies (both runtime and build)</li>
+    <li>Test build dependencies are available in Photon</li>
+    <li>Keep descriptions under 100 characters</li>
+    <li>Use correct SPDX license identifiers</li>
+  </ul>
+</div>
+
+<h2>How to Submit</h2>
+
+<h3>Option 1: GitHub Pull Request</h3>
+<ol>
+  <li>Fork the <a href="https://github.com/RobertFlexx/Photon">Photon repository</a></li>
+  <li>Add your nuclei recipe to the <code>nuclei/</code> directory</li>
+  <li>Include the package in appropriate category subdirectory</li>
+  <li>Create a PR with package description and build notes</li>
+</ol>
+
+<h3>Option 2: GitHub Issue</h3>
+<p>Open an issue with:</p>
+<ul>
+  <li>Package name, version, and atom (e.g., <code>app-editors/vim</code>)</li>
+  <li>Upstream source URL</li>
+  <li>Your complete nuclei recipe</li>
+  <li>Build/test notes</li>
+</ul>
+
+<h2>Package Categories</h2>
+<table>
+  <tr><th>Category</th><th>Description</th><th>Examples</th></tr>
+  <tr><td><code>app-arch/</code></td><td>Archivers and compression</td><td>gzip, bzip2, xz, zip, p7zip</td></tr>
+  <tr><td><code>app-dicts/</code></td><td>Dictionaries</td><td>aspell, hunspell</td></tr>
+  <tr><td><code>app-editors/</code></td><td>Text editors</td><td>vim, nano, emacs, micro</td></tr>
+  <tr><td><code>app-emulation/</code></td><td>Emulators</td><td>qemu, virtualbox, dosbox</td></tr>
+  <tr><td><code>app-misc/</code></td><td>Miscellaneous apps</td><td>screen, tmux, htop</td></tr>
+  <tr><td><code>app-shells/</code></td><td>Shells</td><td>bash, zsh, fish, dash</td></tr>
+  <tr><td><code>app-text/</code></td><td>Text tools</td><td>less, man-db, groff</td></tr>
+  <tr><td><code>dev-db/</code></td><td>Databases</td><td>sqlite, postgresql, mariadb</td></tr>
+  <tr><td><code>dev-lang/</code></td><td>Programming languages</td><td>python, ruby, perl, go, rust</td></tr>
+  <tr><td><code>dev-libs/</code></td><td>Libraries</td><td>glib, openssl, boost</td></tr>
+  <tr><td><code>dev-util/</code></td><td>Development tools</td><td>cmake, meson, ninja, gdb</td></tr>
+  <tr><td><code>dev-vcs/</code></td><td>Version control</td><td>git, subversion, mercurial</td></tr>
+  <tr><td><code>games-*/</code></td><td>Games</td><td>Various game packages</td></tr>
+  <tr><td><code>gnome-*/</code></td><td>GNOME desktop</td><td>gtk, gedit, nautilus</td></tr>
+  <tr><td><code>kde-*/</code></td><td>KDE desktop</td><td>qt, kwin, dolphin</td></tr>
+  <tr><td><code>media-gfx/</code></td><td>Graphics</td><td>imagemagick, gimp, inkscape</td></tr>
+  <tr><td><code>media-libs/</code></td><td>Media libraries</td><td>alsa-lib, ffmpeg, sdl</td></tr>
+  <tr><td><code>media-sound/</code></td><td>Audio apps</td><td>mpv, audacity, cmus</td></tr>
+  <tr><td><code>net-dns/</code></td><td>DNS tools</td><td>bind, dnsmasq, resolvconf</td></tr>
+  <tr><td><code>net-firewall/</code></td><td>Firewalls</td><td>iptables, nftables, ufw</td></tr>
+  <tr><td><code>net-libs/</code></td><td>Network libraries</td><td>curl, libssh2, libuv</td></tr>
+  <tr><td><code>net-misc/</code></td><td>Network apps</td><td>openssh, wget, rsync</td></tr>
+  <tr><td><code>sys-apps/</code></td><td>System apps</td><td>systemd, util-linux, coreutils</td></tr>
+  <tr><td><code>sys-devel/</code></td><td>Development tools</td><td>gcc, binutils, make, m4</td></tr>
+  <tr><td><code>sys-fs/</code></td><td>Filesystem tools</td><td>e2fsprogs, btrfs-progs, fuse</td></tr>
+  <tr><td><code>sys-kernel/</code></td><td>Kernel packages</td><td>linux-firmware, dracut</td></tr>
+  <tr><td><code>sys-libs/</code></td><td>System libraries</td><td>glibc, pam, tinfo</td></tr>
+  <tr><td><code>x11-apps/</code></td><td>X11 applications</td><td>xterm, xrandr, xdpyinfo</td></tr>
+  <tr><td><code>x11-base/</code></td><td>X11 base</td><td>xorg-server, xorg-drivers</td></tr>
+  <tr><td><code>x11-libs/</code></td><td>X11 libraries</td><td>gtk+, cairo, pango</td></tr>
+  <tr><td><code>x11-misc/</code></td><td>X11 misc</td><td>lightdm, xdg-utils</td></tr>
+  <tr><td><code>x11-wm/</code></td><td>Window managers</td><td>sway, i3, openbox</td></tr>
+</table>
+
+<h2>Recipe Template</h2>
+<div class="code-block"><code>nuclei "PACKAGE_NAME", "VERSION" do
+  description "PACKAGE DESCRIPTION"
+  homepage "https://example.com/"
+  license "SPDX-LICENSE"
+  category "CATEGORY"
+  
+  # Runtime dependencies
+  dependencies [
+    "dev-libs/needed-lib"
+  ]
+  
+  # Build-time dependencies  
+  build_dependencies [
+    "sys-devel/m4"
+  ]
+  
+  source "https://example.com/package-VERSION.tar.gz",
+         checksum: "SHA256_CHECKSUM",
+         algorithm: "sha256"
+  
+  build do
+    configure
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end</code></div>
+
+<footer>
+  <p>Photon Package Manager &middot; <a href="https://github.com/RobertFlexx/Photon">GitHub</a></p>
+</footer>
+
+</body>
+</html>

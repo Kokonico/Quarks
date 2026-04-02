@@ -3,9 +3,8 @@ nuclei "patch", "2.7.6" do
   homepage "https://www.gnu.org/software/patch/"
   license "GPL-3.0"
   category "sys-devel"
-  build_system :make
   
-  source "https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.gz",
+  source "https://mirrors.kernel.org/gnu/patch/patch-2.7.6.tar.gz",
          checksum: "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
          algorithm: "sha256"
   

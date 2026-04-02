@@ -3,9 +3,8 @@ nuclei "gawk", "5.3.0" do
   homepage "https://www.gnu.org/software/gawk/"
   license "GPL-3.0"
   category "sys-apps"
-  build_system :make
   
-  source "https://ftp.gnu.org/gnu/gawk/gawk-5.3.0.tar.gz",
+  source "https://mirrors.kernel.org/gnu/gawk/gawk-5.3.0.tar.gz",
          checksum: "378f8864ec21cfceaa048f7e1869ac9b4597b449087caf1eb55e440d30273336",
          algorithm: "sha256"
   

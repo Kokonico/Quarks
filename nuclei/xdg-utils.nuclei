@@ -1,0 +1,20 @@
+nuclei "xdg-utils", "1.2.1" do
+  description "xdg-utils package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://portland.freedesktop.org/download/xdg-utils-1.2.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "libxml2", "sqlite"
+
+  build_depends "libxml2", "sqlite"
+
+  build do
+    run "./configure --prefix=/usr --mandir=/usr/share/man"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

@@ -32,6 +32,13 @@ module Photon
     attr_accessor :patches, :environment
     attr_accessor :build_system, :build_dir, :install_prefix
     attr_accessor :make_args, :cmake_args, :meson_args
+    attr_accessor :slot, :subslot
+    attr_accessor :blocks, :blocked_by
+    attr_accessor :use_dependencies, :provided_use
+    attr_accessor :required_use, :iuse
+    attr_accessor :provided_by
+    attr_accessor :src_uri, :homepage
+    attr_accessor :restrict
 
     def initialize(name)
       @name = name.to_s
@@ -63,6 +70,18 @@ module Photon
       @make_args = []
       @cmake_args = []
       @meson_args = []
+
+      @slot = nil
+      @subslot = nil
+      @blocks = []
+      @blocked_by = []
+      @use_dependencies = []
+      @provided_use = []
+      @required_use = []
+      @iuse = []
+      @provided_by = nil
+      @src_uri = nil
+      @restrict = []
     end
 
     def atom
@@ -96,7 +115,37 @@ module Photon
         install_prefix: @install_prefix,
         make_args: @make_args,
         cmake_args: @cmake_args,
-        meson_args: @meson_args
+        meson_args: @meson_args,
+        slot: @slot,
+        subslot: @subslot,
+        blocks: @blocks,
+        blocked_by: @blocked_by,
+        use_dependencies: @use_dependencies,
+        provided_use: @provided_use,
+        required_use: @required_use,
+        iuse: @iuse
+      }
+    end
+
+    def to_h
+      {
+        name: @name,
+        atom: atom,
+        version: @version,
+        full_name: full_name,
+        description: @description,
+        homepage: @homepage,
+        license: @license,
+        category: @category,
+        dependencies: @dependencies,
+        build_dependencies: @build_dependencies,
+        slot: @slot || "0",
+        subslot: @subslot,
+        blocks: @blocks,
+        use_dependencies: @use_dependencies,
+        iuse: @iuse,
+        sources: @sources,
+        build_system: @build_system.to_s
       }
     end
 
@@ -302,6 +351,71 @@ module Photon
     def install_prefix(v)
       ensure_pkg!
       @package.install_prefix = v.to_s
+      true
+    end
+
+    def slot(v, subslot = nil)
+      ensure_pkg!
+      @package.slot = v.to_s
+      @package.subslot = subslot.to_s if subslot
+      true
+    end
+
+    def subslot(v)
+      ensure_pkg!
+      @package.subslot = v.to_s
+      true
+    end
+
+    def blocks(*packages)
+      ensure_pkg!
+      @package.blocks.concat(norm_list(packages))
+      true
+    end
+
+    def blocked_by(*packages)
+      ensure_pkg!
+      @package.blocked_by.concat(norm_list(packages))
+      true
+    end
+
+    def use_dep(flag, *deps, condition: :enabled)
+      ensure_pkg!
+      @package.use_dependencies << {
+        flag: flag.to_s,
+        dependencies: norm_list(deps),
+        condition: condition
+      }
+      true
+    end
+
+    def iuse(*flags)
+      ensure_pkg!
+      @package.iuse.concat(norm_list(flags))
+      true
+    end
+
+    def required_use(*flags)
+      ensure_pkg!
+      @package.required_use.concat(norm_list(flags))
+      true
+    end
+
+    def provided_use(*flags)
+      ensure_pkg!
+      @package.provided_use.concat(norm_list(flags))
+      true
+    end
+
+    def provided_by(pkg)
+      ensure_pkg!
+      @package.provided_by = pkg.to_s
+      true
+    end
+
+    def restrict(*restrictions)
+      ensure_pkg!
+      @package.restrict.concat(norm_list(restrictions))
       true
     end
 

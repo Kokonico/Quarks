@@ -1,0 +1,16 @@
+nuclei "sway", "1.8.1" do
+  description "Wayland compositor inspired by i3"
+  homepage "https://swaywm.org/"
+  license "MIT"
+  category "x11-wm"
+  
+  source "https://github.com/swaywm/sway/archive/refs/tags/1.8.1.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build", "--prefix=/usr", "--sysconfdir=/etc"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

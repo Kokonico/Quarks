@@ -1,0 +1,20 @@
+nuclei "harfbuzz", "9.0.0" do
+  description "harfbuzz package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/harfbuzz/harfbuzz/releases/download/9.0.0/harfbuzz-9.0.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "glib", "cairo", "freetype", "graphite2", "icu", "autoconf", "automake", "libtool"
+
+  build_depends "meson", "ninja", "glib", "cairo", "freetype", "graphite2", "icu", "autoconf", "automake", "libtool"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

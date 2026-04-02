@@ -1,0 +1,21 @@
+nuclei "hunspell", "1.7.2" do
+  description "hunspell package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/hunspell/hunspell/releases/download/v1.7.2/hunspell-1.7.2.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "gettext", "ncurses"
+
+  build_depends "autoconf", "automake", "libtool", "gettext", "ncurses"
+
+  build do
+    run "autoreconf -fi"
+    run "./configure --prefix=/usr --with-ui --with-suppl"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

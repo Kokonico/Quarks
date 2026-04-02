@@ -1,0 +1,20 @@
+nuclei "libical", "3.0.18" do
+  description "libical package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/libical/libical/releases/download/v3.0.18/libical-3.0.18.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "glib", "icu", "libxml2"
+
+  build_depends "cmake", "ninja", "glib", "icu", "libxml2"
+
+  build do
+    run "cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

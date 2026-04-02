@@ -1,0 +1,20 @@
+nuclei "libpulse", "17.0" do
+  description "libpulse package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://freedesktop.org/software/pulseaudio/releases/pulseaudio-17.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "glib", "alsa-lib", "libx11", "libxext", "libxfixes", "libxrandr", "libxrender", "libxi", "libxcb", "libsndfile", "speexdsp", "orc", "libsamplerate", "soxr", "dbus", "libbluetooth", "openssl"
+
+  build_depends "meson", "ninja", "glib", "alsa-lib", "libx11", "libxext", "libxfixes", "libxrandr", "libxrender", "libxi", "libxcb", "libsndfile", "speexdsp", "orc", "libsamplerate", "soxr", "dbus", "libbluetooth", "openssl"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddaemon=false"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

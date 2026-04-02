@@ -1,0 +1,20 @@
+nuclei "libinput", "1.26.2" do
+  description "libinput package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.26.2/libinput-1.26.2.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "libudev", "libevdev", "mtdev", "libxkbcommon", "libx11"
+
+  build_depends "meson", "ninja", "libudev", "libevdev", "mtdev", "libxkbcommon", "libx11"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddocumentation=false"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

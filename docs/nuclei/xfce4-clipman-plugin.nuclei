@@ -1,0 +1,20 @@
+nuclei "xfce4-clipman-plugin", "1.6.6" do
+  description "xfce4-clipman-plugin package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/panel-plugins/xfce4-clipman-plugin/xfce4-clipman-plugin-1.6.6.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4panel", "xfconf", "libqrtr-glib", "libsecret"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4panel", "xfconf", "libqrtr-glib", "libsecret"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

@@ -1,0 +1,20 @@
+nuclei "libatasmart", "0.19" do
+  description "libatasmart package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://downloads.sourceforge.net/project/ata-smart-spec/ata-smart-spec-0.9.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "glib"
+
+  build_depends "glib"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

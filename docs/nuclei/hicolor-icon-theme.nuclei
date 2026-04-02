@@ -1,0 +1,19 @@
+nuclei "hicolor-icon-theme", "0.18" do
+  description "hicolor-icon-theme package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://icontheme.org/转移/hicolor-icon-theme-0.18.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends []
+
+  build_depends 
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make install"
+  end
+end

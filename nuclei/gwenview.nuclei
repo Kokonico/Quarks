@@ -1,0 +1,20 @@
+nuclei "gwenview", "24.05.0" do
+  description "gwenview package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.kde.org/stable/release-service/24.05.0/src/gwenview-24.05.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "kio", "kservice", "kcoreaddons", "kconfig", "kwidgetsaddons", "ktextwidgets", "kxmlgui", "kiconthemes", "kparts", "kdeclarative", "kimageformats", "qtimageformats", "libraw", "libexif", "lcms2", "libjpeg", "libpng", "eigen"
+
+  build_depends "cmake", "ninja", "kio", "kservice", "kcoreaddons", "kconfig", "kwidgetsaddons", "ktextwidgets", "kxmlgui", "kiconthemes", "kparts", "kdeclarative", "kimageformats", "qtimageformats", "libraw", "libexif", "lcms2", "libjpeg", "libpng", "eigen"
+
+  build do
+    run "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

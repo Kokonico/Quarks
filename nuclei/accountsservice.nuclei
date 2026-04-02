@@ -1,0 +1,20 @@
+nuclei "accountsservice", "23.08.5" do
+  description "accountsservice package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.freedesktop.org/accountsservice/accountsservice/-/archive/23.08.5/accountsservice-23.08.5.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "polkit", "dbus", "libx11"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "polkit", "dbus", "libx11"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

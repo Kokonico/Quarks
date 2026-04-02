@@ -3,9 +3,8 @@ nuclei "gdbm", "1.23" do
   homepage "https://www.gnu.org/software/gdbm/"
   license "GPL-3.0"
   category "sys-libs"
-  build_system :make
   
-  source "https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz",
+  source "https://mirrors.kernel.org/gnu/gdbm/gdbm-1.23.tar.gz",
          checksum: "74b1081d21fff13ae4bd7c16e5d6e504a4c26f7cde1dca0d963a484174bbcacd",
          algorithm: "sha256"
   

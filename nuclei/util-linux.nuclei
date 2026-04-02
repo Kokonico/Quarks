@@ -1,0 +1,16 @@
+nuclei "util-linux", "2.39.4" do
+  description "Miscellaneous system utilities"
+  homepage "https://github.com/karelzak/util-linux"
+  license "GPL-2.0-or-later"
+  category "sys-apps"
+  
+  source "https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v2.39/util-linux-2.39.4.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    configure "--prefix=/usr", "--libdir=/usr/lib64", "--sysconfdir=/etc"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

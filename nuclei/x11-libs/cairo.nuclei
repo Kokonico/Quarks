@@ -1,0 +1,16 @@
+nuclei "cairo", "1.18.0" do
+  description "2D graphics library"
+  homepage "https://cairographics.org/"
+  license "LGPL-2.1-or-later"
+  category "x11-libs"
+  
+  source "https://cairographics.org/releases/cairo-1.18.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build", "--prefix=/usr", "--libdir=/usr/lib64"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

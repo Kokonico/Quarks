@@ -1,0 +1,20 @@
+nuclei "xfce4-screensaver", "4.18.1" do
+  description "xfce4-screensaver package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/xfce/4.18/src/xfce4-screensaver-4.18.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4panel", "dbus-glib", "libx11", "libxext", "libxrandr", "libxscrnsaver", "libxfixes", "libxdamage", "libpulse", "libgl"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4panel", "dbus-glib", "libx11", "libxext", "libxrandr", "libxscrnsaver", "libxfixes", "libxdamage", "libpulse", "libgl"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

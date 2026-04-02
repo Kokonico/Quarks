@@ -1,0 +1,20 @@
+nuclei "xfce4-session", "4.18.1" do
+  description "xfce4-session package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/xfce/4.18/src/xfce4-session-4.18.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "xfconf", "libxfce4menu", "libwnck3", "polkit", "consolekit", "libsm", "libice", "libx11", "libgl"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "xfconf", "libxfce4menu", "libwnck3", "polkit", "consolekit", "libsm", "libice", "libx11", "libgl"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc --enable-polkit --enable-consolekit"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

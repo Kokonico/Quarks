@@ -4,7 +4,7 @@ nuclei "m4", "1.4.19" do
   license "GPL-3.0"
   category "sys-devel"
   
-  source "https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.gz",
+  source "https://mirrors.kernel.org/gnu/m4/m4-1.4.19.tar.gz",
          checksum: "3be4a26d825ffdfda52a56fc43246456989a3630093cced3fbddf4771ee58a70",
          algorithm: "sha256"
   

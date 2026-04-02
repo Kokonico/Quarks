@@ -1,0 +1,20 @@
+nuclei "libxshmfence", "1.3.2" do
+  description "libxshmfence package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.x.org/pub/individual/lib/libxshmfence-1.3.2.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "xorgproto"
+
+  build_depends "autoconf", "automake", "libtool", "xorgproto"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

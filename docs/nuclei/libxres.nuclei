@@ -1,0 +1,21 @@
+nuclei "libxres", "1.2.2" do
+  description "libxres package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.freedesktop.org/xorg/lib/libxres/-/archive/libXres-1.2.2/libXres-1.2.2.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "libx11"
+
+  build_depends "autoconf", "automake", "libtool", "libx11"
+
+  build do
+    run "autoreconf -fi"
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

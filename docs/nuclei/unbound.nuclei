@@ -1,0 +1,20 @@
+nuclei "unbound", "1.20.0" do
+  description "unbound package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://nlnetlabs.nl/downloads/unbound/unbound-1.20.0.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "expat", "libevent", "hiredis"
+
+  build_depends "autoconf", "automake", "libtool", "expat", "libevent", "hiredis"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc --with-libevent --with-libexpat --with-libhiredis --with-pythonmodule"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

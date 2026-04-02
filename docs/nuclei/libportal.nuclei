@@ -1,0 +1,20 @@
+nuclei "libportal", "0.7.1" do
+  description "libportal package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/flatpak/libportal/releases/download/0.7.1/libportal-0.7.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "gtk3", "gtk4", "qtbase"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "gtk3", "gtk4", "qtbase"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

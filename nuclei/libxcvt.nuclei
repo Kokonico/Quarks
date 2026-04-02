@@ -1,0 +1,20 @@
+nuclei "libxcvt", "0.1.2" do
+  description "libxcvt package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.x.org/pub/individual/lib/libxcvt-0.1.2.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja"
+
+  build_depends "meson", "ninja"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

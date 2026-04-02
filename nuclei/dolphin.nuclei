@@ -1,0 +1,20 @@
+nuclei "dolphin", "24.05.0" do
+  description "dolphin package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.kde.org/stable/release-service/24.05.0/src/dolphin-24.05.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "kio", "kservice", "kcoreaddons", "kconfig", "kwidgetsaddons", "ktextwidgets", "kxmlgui", "kbookmarks", "kfilemetadata", "kitemviews", "kitemmodels", "kparts", "kactivities", "knotifications", "kiconthemes", "kdeclarative", "kcmutils", "ki18n", "libbaloo", "kdbusaddons", "solid", "threadweaver", "phonon"
+
+  build_depends "cmake", "ninja", "kio", "kservice", "kcoreaddons", "kconfig", "kwidgetsaddons", "ktextwidgets", "kxmlgui", "kbookmarks", "kfilemetadata", "kitemviews", "kitemmodels", "kparts", "kactivities", "knotifications", "kiconthemes", "kdeclarative", "kcmutils", "ki18n", "libbaloo", "kdbusaddons", "solid", "threadweaver", "phonon"
+
+  build do
+    run "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

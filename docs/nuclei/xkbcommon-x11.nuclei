@@ -1,0 +1,20 @@
+nuclei "xkbcommon-x11", "1.7.0" do
+  description "xkbcommon-x11 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/xkbcommon/libxkbcommon/releases/download/libxkbcommon-1.7.0/libxkbcommon-1.7.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "libxkbcommon", "libxcb", "libx11"
+
+  build_depends "meson", "ninja", "libxkbcommon", "libxcb", "libx11"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddoc=false -Dx11=true"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

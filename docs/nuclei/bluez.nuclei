@@ -1,0 +1,20 @@
+nuclei "bluez", "6.7" do
+  description "bluez package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.kernel.org/pub/linux/bluetooth/bluez-6.7.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "dbus", "glib", "libical", "udev", "libusb"
+
+  build_depends "dbus", "glib", "libical", "udev", "libusb"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc --disable-systemd --disable-client"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

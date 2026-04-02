@@ -1,0 +1,20 @@
+nuclei "systemd", "255" do
+  description "System and service manager"
+  homepage "https://systemd.io/"
+  license "LGPL-2.1-or-later"
+  category "sys-system"
+  
+  slot "0"
+  
+  source "https://github.com/systemd/systemd-stable/archive/refs/tags/v255.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build_system :meson
+  
+  build do
+    meson "build", "--prefix=/usr", "--sysconfdir=/etc", "--localstatedir=/var"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

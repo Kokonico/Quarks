@@ -1,0 +1,20 @@
+nuclei "gtk3", "3.24.41" do
+  description "gtk3 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.gnome.org/sources/gtk+/3.24/gtk+-3.24.41.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "python3", "libxkbcommon", "libxkbcommon-x11", "libxcb", "libx11", "libxext", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxcursor", "libxinerama", "libxfixes", "libx11", "libxext", "libxdamage", "libxcomposite", "libxrandr", "libxcursor", "libxi", "libxinerama", "libx11", "libxext", "libxi", "libxcursor", "libx11", "libxext", "libxfixes", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxcursor", "libxinerama", "libx11", "libxext", "libxrandr", "libxrender", "gdk-pixbuf", "cairo", "pango", "atk", "libxkbcommon", "libxkbcommon-x11", "wayland", "wayland-protocols", "egl", "mesa", "libdrm", "libgl", "libgbm", "libepoxy", "colord", "libcups", "libxkbcommon", "libxkbcommon-x11", "libxkbcommon", "libx11", "libxext", "libxi", "libxcursor", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxcursor", "libxinerama", "gdk-pixbuf", "cairo", "pango", "atk", "libxkbcommon", "wayland", "egl", "mesa", "libcups", "iso-codes", "hicolor-icon-theme"
+
+  build_depends "meson", "ninja", "python3", "libxkbcommon", "libxkbcommon-x11", "libxcb", "libx11", "libxext", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxcursor", "libxinerama", "libxfixes", "libx11", "libxext", "libxdamage", "libxcomposite", "libxrandr", "libxcursor", "libxi", "libxinerama", "libx11", "libxext", "libxi", "libxcursor", "libx11", "libxext", "libxfixes", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxcursor", "libxinerama", "libx11", "libxext", "libxrandr", "libxrender", "gdk-pixbuf", "cairo", "pango", "atk", "libxkbcommon", "libxkbcommon-x11", "wayland", "wayland-protocols", "egl", "mesa", "libdrm", "libgl", "libgbm", "libepoxy", "colord", "libcups", "libxkbcommon", "libxkbcommon-x11", "libxkbcommon", "libx11", "libxext", "libxi", "libxcursor", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxcursor", "libxinerama", "gdk-pixbuf", "cairo", "pango", "atk", "libxkbcommon", "wayland", "egl", "mesa", "libcups", "iso-codes", "hicolor-icon-theme"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddocumentation=false"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

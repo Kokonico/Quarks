@@ -1,0 +1,16 @@
+nuclei "grub", "2.12" do
+  description "GNU GRUB boot loader"
+  homepage "https://www.gnu.org/software/grub/"
+  license "GPL-3.0-or-later"
+  category "sys-boot"
+  
+  source "https://ftp.gnu.org/gnu/grub/grub-2.12.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    configure "--prefix=/usr", "--sysconfdir=/etc", "--disable-silent-rules"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

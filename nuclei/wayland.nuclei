@@ -1,0 +1,16 @@
+nuclei "wayland", "1.22.0" do
+  description "Display server protocol and reference implementation"
+  homepage "https://wayland.freedesktop.org/"
+  license "MIT"
+  category "dev-libs"
+  
+  source "https://wayland.freedesktop.org/releases/wayland-1.22.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build", "--prefix=/usr", "--libdir=/usr/lib64"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

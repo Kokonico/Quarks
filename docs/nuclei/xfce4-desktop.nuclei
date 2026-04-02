@@ -1,0 +1,20 @@
+nuclei "xfce4-desktop", "4.18.1" do
+  description "xfce4-desktop package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/xfce/4.18/src/xfce4-desktop-4.18.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "libxfce4menu", "xfconf", "libwnck3", "libx11", "exo", "garcon", "libnotify", "libsecret", "gdk-pixbuf", "libjpeg", "libpng"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "libxfce4menu", "xfconf", "libwnck3", "libx11", "exo", "garcon", "libnotify", "libsecret", "gdk-pixbuf", "libjpeg", "libpng"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc --enable-libwnck"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

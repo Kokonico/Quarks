@@ -1,0 +1,20 @@
+nuclei "libcanberra", "0.30" do
+  description "libcanberra package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://freedesktop.org/software/libcanberra/releases/libcanberra-0.30.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "glib", "alsa-lib", "libpulse", "libx11", "libxext", "libvorbis", "ogg"
+
+  build_depends "meson", "ninja", "glib", "alsa-lib", "libpulse", "libx11", "libxext", "libvorbis", "ogg"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

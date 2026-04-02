@@ -1,0 +1,20 @@
+nuclei "xfwm4", "4.18.1" do
+  description "xfwm4 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/xfce/4.18/src/xfwm4-4.18.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "libxfce4menu", "xfconf", "libwnck3", "libx11", "libxext", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxpresent", "libxscrnsaver", "libxvmc", "libxxf86vm", "libice", "libsm", "libdrm", "mesa", "libgl", "librsvg", "gdk-pixbuf", "wayland", "xcb-util", "xcb-util-image", "xcb-util-keysyms"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "libxfce4menu", "xfconf", "libwnck3", "libx11", "libxext", "libxrandr", "libxrender", "libxdamage", "libxcomposite", "libxfixes", "libxpresent", "libxscrnsaver", "libxvmc", "libxxf86vm", "libice", "libsm", "libdrm", "mesa", "libgl", "librsvg", "gdk-pixbuf", "wayland", "xcb-util", "xcb-util-image", "xcb-util-keysyms"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc --enable-startup-notification --enable-compositor"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

@@ -1,0 +1,20 @@
+nuclei "libpciaccess", "0.18.1" do
+  description "libpciaccess package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.x.org/pub/individual/lib/libpciaccess-0.18.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "zlib"
+
+  build_depends "autoconf", "automake", "libtool", "zlib"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

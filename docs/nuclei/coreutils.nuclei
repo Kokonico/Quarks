@@ -1,0 +1,16 @@
+nuclei "coreutils", "9.4" do
+  description "GNU core utilities"
+  homepage "https://www.gnu.org/software/coreutils/"
+  license "GPL-3.0-or-later"
+  category "sys-apps"
+  
+  source "https://ftp.gnu.org/gnu/coreutils/coreutils-9.4.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    configure "--prefix=/usr", "--libdir=/usr/lib64"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

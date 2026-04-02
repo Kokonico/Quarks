@@ -1,0 +1,20 @@
+nuclei "gsettings-desktop-schemas", "46.1" do
+  description "gsettings-desktop-schemas package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnome.org/pub/gnome/sources/gsettings-desktop-schemas/46/gsettings-desktop-schemas-46.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "glib"
+
+  build_depends "meson", "ninja", "glib"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

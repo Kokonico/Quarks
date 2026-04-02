@@ -1,0 +1,20 @@
+nuclei "libfribidi", "1.0.15" do
+  description "libfribidi package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/fribidi/fribidi/releases/download/v1.0.15/fribidi-1.0.15.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja"
+
+  build_depends "meson", "ninja"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

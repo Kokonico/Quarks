@@ -1,0 +1,20 @@
+nuclei "graphite2", "1.3.14" do
+  description "graphite2 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/silnrsi/graphite/releases/download/1.3.14/graphite2-1.3.14.tgz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja"
+
+  build_depends "cmake", "ninja"
+
+  build do
+    run "cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

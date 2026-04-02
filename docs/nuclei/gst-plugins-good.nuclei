@@ -1,0 +1,20 @@
+nuclei "gst-plugins-good", "1.24.5" do
+  description "gst-plugins-good package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnome.org/pub/gnome/sources/gst-plugins-good/1.24/gst-plugins-good-1.24.5.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "gstreamer", "gst-plugins-base", "libx11", "libxext", "libxdamage", "libxfixes", "libxrandr", "libxrender", "libxcomposite", "libx11", "libpng", "libjpeg", "libwebp", "cairo", "gdk-pixbuf", "flac", "speex", "mpg123", "libsoup3", "libpulse", "alsa-lib", "orc"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "gstreamer", "gst-plugins-base", "libx11", "libxext", "libxdamage", "libxfixes", "libxrandr", "libxrender", "libxcomposite", "libx11", "libpng", "libjpeg", "libwebp", "cairo", "gdk-pixbuf", "flac", "speex", "mpg123", "libsoup3", "libpulse", "alsa-lib", "orc"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

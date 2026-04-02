@@ -1,0 +1,20 @@
+nuclei "libpcre2", "10.44" do
+  description "libpcre2 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.44/pcre2-10.44.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool"
+
+  build_depends "autoconf", "automake", "libtool"
+
+  build do
+    run "./configure --prefix=/usr --enable-jit"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

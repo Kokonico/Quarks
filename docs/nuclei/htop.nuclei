@@ -3,10 +3,9 @@ nuclei "htop", "3.3.0" do
   homepage "https://htop.dev/"
   license "GPL-2.0"
   category "app"
-  build_system :make
   
   source "https://github.com/htop-dev/htop/releases/download/3.3.0/htop-3.3.0.tar.xz",
-         checksum: "1e5cc328eee2bd1acff89f860e3179ea24b85df3ac483433f92a29977b14b045",
+         checksum: "a69acf9b42ff592c4861010fce7d8006805f0d6ef0e8ee647a6ee6e59b743d5c",
          algorithm: "sha256"
   
   build do

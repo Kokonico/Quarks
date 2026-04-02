@@ -1,0 +1,20 @@
+nuclei "alsa-lib", "1.2.12" do
+  description "alsa-lib package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.alsa-project.org/pub/lib/alsa-lib-1.2.12.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "python3", "alsa-topology", "alsa-ucm-conf"
+
+  build_depends "python3", "alsa-topology", "alsa-ucm-conf"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

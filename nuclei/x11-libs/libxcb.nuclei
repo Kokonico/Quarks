@@ -1,0 +1,16 @@
+nuclei "libxcb", "1.16" do
+  description "X C bindings"
+  homepage "https://xcb.freedesktop.org/"
+  license "MIT"
+  category "x11-libs"
+  
+  source "https://xcb.freedesktop.org/archive/libxcb-1.16.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    configure "--prefix=/usr", "--libdir=/usr/lib64"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

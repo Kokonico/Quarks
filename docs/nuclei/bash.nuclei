@@ -3,9 +3,8 @@ nuclei "bash", "5.2" do
   homepage "https://www.gnu.org/software/bash/"
   license "GPL-3.0"
   category "app-shells"
-  build_system :make
   
-  source "https://ftp.gnu.org/gnu/bash/bash-5.2.tar.gz",
+  source "https://mirrors.kernel.org/gnu/bash/bash-5.2.tar.gz",
          checksum: "a139c166df7ff4471c5e0733051642ee5556c1cc8a4a78f145583c5c81ab32fb",
          algorithm: "sha256"
   

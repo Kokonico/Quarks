@@ -1,0 +1,20 @@
+nuclei "libndp", "1.8" do
+  description "libndp package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/jpirko/libndp/releases/download/v1.8/libndp-1.8.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends []
+
+  build_depends 
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

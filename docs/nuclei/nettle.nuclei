@@ -1,0 +1,20 @@
+nuclei "nettle", "3.10" do
+  description "nettle package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "gmp"
+
+  build_depends "autoconf", "automake", "libtool", "gmp"
+
+  build do
+    run "./configure --prefix=/usr --enable-static"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

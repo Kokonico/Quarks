@@ -1,0 +1,20 @@
+nuclei "libblockdev", "3.1.1" do
+  description "libblockdev package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/storaged-project/libblockdev/releases/download/3.1.1/libblockdev-3.1.1.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "libnvme", "libbytesize", "lvm2", "libkmod", "libudev"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "libnvme", "libbytesize", "lvm2", "libkmod", "libudev"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddocumentation=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

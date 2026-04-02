@@ -1,0 +1,20 @@
+nuclei "iso-codes", "4.16.0" do
+  description "iso-codes package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/nicowillis/iso-codes/releases/download/v4.16.0/iso-codes-4.16.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "gettext", "python3"
+
+  build_depends "gettext", "python3"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

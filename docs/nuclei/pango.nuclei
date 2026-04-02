@@ -1,0 +1,20 @@
+nuclei "pango", "1.52.2" do
+  description "pango package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnome.org/pub/gnome/sources/pango/1.52/pango-1.52.2.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "cairo", "harfbuzz", "fribidi", "libxft"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "cairo", "harfbuzz", "fribidi", "libxft"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

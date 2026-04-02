@@ -1,0 +1,22 @@
+nuclei "qtbase", "6.7.0" do
+  description "Qt base libraries for Qt6"
+  homepage "https://qt.io"
+  license "LGPL-3.0"
+  category "dev-qt"
+
+  source "https://download.qt.io/official_releases/qt/6.7/6.7.0/submodules/qtbase-everywhere-src-6.7.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  build_depends "cmake", "ninja", "perl", "python3", "libxcb", "libxkbcommon", "xcb-util", "xcb-util-image",
+                "xcb-util-keysyms", "xcb-util-renderutil", "xcb-util-wm", "libxfixes", "libxrandr",
+                "libxrender", "libx11", "libxi", "libxcursor", "libxext", "libxdamage", "libxcomposite",
+                "opengl", "mesa", "egl", "dbus", "freetype", "fontconfig", "libjpeg", "libpng", "zlib",
+                "sqlite", "libinput", "libudev", "tslib", "libb2", "double-conversion", "md4c"
+
+  build do
+    run "./configure -prefix /usr -confirm-license -opensource -nomake examples -nomake tests -release"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

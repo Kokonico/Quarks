@@ -1,0 +1,20 @@
+nuclei "kio", "6.7.0" do
+  description "kio package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.kde.org/stable/frameworks/6.7/kio-6.7.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "kconfig", "kcoreaddons", "kwidgetsaddons", "kwindowsystem", "kservice", "kdbusaddons", "kpackage", "solid", "acl", "libattr", "libxslt", "libxml2"
+
+  build_depends "cmake", "ninja", "kconfig", "kcoreaddons", "kwidgetsaddons", "kwindowsystem", "kservice", "kdbusaddons", "kpackage", "solid", "acl", "libattr", "libxslt", "libxml2"
+
+  build do
+    run "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

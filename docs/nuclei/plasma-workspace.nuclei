@@ -1,0 +1,20 @@
+nuclei "plasma-workspace", "6.1.0" do
+  description "plasma-workspace package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.kde.org/stable/plasma/6.1.0/plasma-workspace-6.1.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "kcoreaddons", "kdbusaddons", "kio", "kservice", "kwindowsystem", "kwayland", "plasma-framework", "kdeclarative", "kactivities", "kpackage", "kscreenlocker", "ksync", "kuserfeedback", "knotifications", "kwallet", "krunner", "layer-shell-qt", "bluez-qt", "libkscreen", "libksysguard", "xdg-desktop-portal", "xdg-utils", "libxcb", "libxkbcommon", "libx11", "libxrandr", "libxrender", "libxext", "libxcursor", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxres", "libxvmc", "libxxf86vm", "libgl", "mesa", "libinput", "udev", "libudev", "fontconfig", "freetype", "icu", "libcanberra", "alsa-lib", "pipewire", "libpulse", "libxkbcommon-x11", "qcoro", "kidletime"
+
+  build_depends "cmake", "ninja", "kcoreaddons", "kdbusaddons", "kio", "kservice", "kwindowsystem", "kwayland", "plasma-framework", "kdeclarative", "kactivities", "kpackage", "kscreenlocker", "ksync", "kuserfeedback", "knotifications", "kwallet", "krunner", "layer-shell-qt", "bluez-qt", "libkscreen", "libksysguard", "xdg-desktop-portal", "xdg-utils", "libxcb", "libxkbcommon", "libx11", "libxrandr", "libxrender", "libxext", "libxcursor", "libxdamage", "libxcomposite", "libxfixes", "libxi", "libxres", "libxvmc", "libxxf86vm", "libgl", "mesa", "libinput", "udev", "libudev", "fontconfig", "freetype", "icu", "libcanberra", "alsa-lib", "pipewire", "libpulse", "libxkbcommon-x11", "qcoro", "kidletime"
+
+  build do
+    run "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

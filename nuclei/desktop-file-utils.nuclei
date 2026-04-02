@@ -1,0 +1,20 @@
+nuclei "desktop-file-utils", "0.27" do
+  description "desktop-file-utils package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.27.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "gobject-introspection", "glib"
+
+  build_depends "autoconf", "automake", "libtool", "gobject-introspection", "glib"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

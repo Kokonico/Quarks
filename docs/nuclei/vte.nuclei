@@ -1,0 +1,20 @@
+nuclei "vte", "0.76.4" do
+  description "vte package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.gnome.org/GNOME/vte/-/archive/0.76.4/vte-0.76.4.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "gtk4", "glib", "libx11", "libxext", "libxv", "pcre2", "fribidi", "gnutls", "icu"
+
+  build_depends "meson", "ninja", "gobject-introspection", "gtk4", "glib", "libx11", "libxext", "libxv", "pcre2", "fribidi", "gnutls", "icu"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Dgnutls=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

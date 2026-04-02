@@ -1,0 +1,20 @@
+nuclei "xfce4-whiskermenu-plugin", "2.8.3" do
+  description "xfce4-whiskermenu-plugin package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/panel-plugins/xfce4-whiskermenu-plugin/xfce4-whiskermenu-plugin-2.8.3.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "gtk3", "libxfce4util", "libxfce4panel", "garcon", "exo", "libwnck3"
+
+  build_depends "cmake", "gtk3", "libxfce4util", "libxfce4panel", "garcon", "exo", "libwnck3"
+
+  build do
+    run "cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

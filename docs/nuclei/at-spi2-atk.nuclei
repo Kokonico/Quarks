@@ -1,0 +1,20 @@
+nuclei "at-spi2-atk", "2.38.0" do
+  description "at-spi2-atk package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnome.org/pub/gnome/sources/at-spi2-atk/2.38/at-spi2-atk-2.38.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "atk", "at-spi2-core", "libxml2"
+
+  build_depends "meson", "ninja", "gobject-introspection", "atk", "at-spi2-core", "libxml2"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

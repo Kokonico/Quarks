@@ -1,0 +1,20 @@
+nuclei "libqmi", "1.34.0" do
+  description "libqmi package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.freedesktop.org/software/libqmi/libqmi-1.34.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "libmbim"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "libmbim"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

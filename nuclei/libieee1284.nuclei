@@ -1,0 +1,20 @@
+nuclei "libieee1284", "0.2.11" do
+  description "libieee1284 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://downloads.sourceforge.net/project/linux-ieee1284/linux-ieee1284/0.2.11/libieee1284-0.2.11.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "libusb"
+
+  build_depends "libusb"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

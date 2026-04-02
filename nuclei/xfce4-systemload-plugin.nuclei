@@ -1,0 +1,20 @@
+nuclei "xfce4-systemload-plugin", "1.3.2" do
+  description "xfce4-systemload-plugin package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/panel-plugins/xfce4-systemload-plugin/xfce4-systemload-plugin-1.3.2.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4panel", "libxfce4ui"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4panel", "libxfce4ui"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

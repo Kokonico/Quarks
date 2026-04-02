@@ -1,0 +1,20 @@
+nuclei "plasma-desktop", "6.1.0" do
+  description "plasma-desktop package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.kde.org/stable/plasma/6.1.0/plasma-desktop-6.1.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "kconfig", "kcoreaddons", "kdbusaddons", "kio", "kservice", "kwindowsystem", "kglobalaccel", "kinit", "knotifications", "ktextwidgets", "kxmlgui", "plasma-workspace", "plasma-framework", "kdeclarative", "kcmutils", "kactivitymanagerd", "xorg-server", "libxcb", "libxkbcommon", "libxkbcommon-x11", "libx11", "libxext", "libxi", "libxcursor", "libxdamage", "libxfixes", "libxrandr", "libxrender", "libxcomposite", "libinput", "libwacom", "tslib", "mesa", "libgl", "fontconfig", "freetype", "libxcvt", "libxv", "libxvmc", "libxfixes", "libxtst", "libsm", "libice", "xcb-util", "xcb-util-image", "xcb-util-keysyms", "xcb-util-renderutil", "xcb-util-wm", "libepoxy", "mtdev", "udev", "libudev"
+
+  build_depends "cmake", "ninja", "kconfig", "kcoreaddons", "kdbusaddons", "kio", "kservice", "kwindowsystem", "kglobalaccel", "kinit", "knotifications", "ktextwidgets", "kxmlgui", "plasma-workspace", "plasma-framework", "kdeclarative", "kcmutils", "kactivitymanagerd", "xorg-server", "libxcb", "libxkbcommon", "libxkbcommon-x11", "libx11", "libxext", "libxi", "libxcursor", "libxdamage", "libxfixes", "libxrandr", "libxrender", "libxcomposite", "libinput", "libwacom", "tslib", "mesa", "libgl", "fontconfig", "freetype", "libxcvt", "libxv", "libxvmc", "libxfixes", "libxtst", "libsm", "libice", "xcb-util", "xcb-util-image", "xcb-util-keysyms", "xcb-util-renderutil", "xcb-util-wm", "libepoxy", "mtdev", "udev", "libudev"
+
+  build do
+    run "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

@@ -3,7 +3,6 @@ nuclei "pkg-config", "0.29.2" do
   homepage "https://www.freedesktop.org/wiki/Software/pkg-config/"
   license "GPL-2.0"
   category "dev-util"
-  build_system :make
   
   source "https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz",
          checksum: "6fc69c01688c9458a57eb9a1664c9aba372ccda420a02bf4429fe610e7e7d591",

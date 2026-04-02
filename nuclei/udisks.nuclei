@@ -1,0 +1,20 @@
+nuclei "udisks", "2.10.1" do
+  description "udisks package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/storaged-project/udisks/releases/download/udisks-2.10.1/udisks-2.10.1.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "glib", "gsettings-desktop-schemas", "parted", "lvm2", "libatasmart", "libxslt"
+
+  build_depends "meson", "ninja", "glib", "gsettings-desktop-schemas", "parted", "lvm2", "libatasmart", "libxslt"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

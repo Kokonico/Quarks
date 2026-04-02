@@ -1,0 +1,20 @@
+nuclei "kwin", "6.1.0" do
+  description "kwin package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.kde.org/stable/plasma/6.1.0/kwin-6.1.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "kcoreaddons", "kwindowsystem", "kwayland", "kscreenlocker", "kpackage", "knotifications", "plasma-framework", "qtdeclarative", "qtwayland", "libxcb", "libxkbcommon", "libxkbcommon-x11", "libx11", "libxext", "libxrender", "libxi", "libxcursor", "libxdamage", "libxcomposite", "libxfixes", "libxrandr", "libxres", "libepoxy", "mesa", "libdrm", "libgl", "egl", "libinput", "libxcb-shape", "libxcb-xfixes", "libxcb-cursor", "wayland", "wayland-protocols", "xcb-util", "xcb-util-image", "xcb-util-keysyms", "xcb-util-renderutil", "xcb-util-wm", "fontconfig", "freetype", "libcanberra"
+
+  build_depends "cmake", "ninja", "kcoreaddons", "kwindowsystem", "kwayland", "kscreenlocker", "kpackage", "knotifications", "plasma-framework", "qtdeclarative", "qtwayland", "libxcb", "libxkbcommon", "libxkbcommon-x11", "libx11", "libxext", "libxrender", "libxi", "libxcursor", "libxdamage", "libxcomposite", "libxfixes", "libxrandr", "libxres", "libepoxy", "mesa", "libdrm", "libgl", "egl", "libinput", "libxcb-shape", "libxcb-xfixes", "libxcb-cursor", "wayland", "wayland-protocols", "xcb-util", "xcb-util-image", "xcb-util-keysyms", "xcb-util-renderutil", "xcb-util-wm", "fontconfig", "freetype", "libcanberra"
+
+  build do
+    run "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

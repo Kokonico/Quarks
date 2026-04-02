@@ -1,0 +1,20 @@
+nuclei "p11-kit", "0.25.3" do
+  description "p11-kit package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/p11-glue/p11-kit/releases/download/0.25.3/p11-kit-0.25.3.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "libtasn1", "gnutls", "libffi"
+
+  build_depends "meson", "ninja", "libtasn1", "gnutls", "libffi"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtrust_path=/etc/ssl/certs"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

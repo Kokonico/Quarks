@@ -7,6 +7,7 @@ require "net/http"
 require "uri"
 require "photon/env"
 require "photon/package"
+require "photon/web_repo"
 
 module Photon
   class Repository
@@ -71,7 +72,14 @@ module Photon
         "/usr/local/share/photon/nuclei"
       ])
 
-      remote_urls = remote_env.empty? ? [] : remote_env.split(":").map(&:strip)
+      web_repos = WebRepoManager.load_repos
+      remote_urls = []
+
+      if remote_env.empty? && web_repos.any?
+        remote_urls = web_repos.values.sort_by(&:priority).map(&:manifest_url)
+      else
+        remote_urls = remote_env.split(":").map(&:strip) unless remote_env.empty?
+      end
 
       [
         *local_paths.map { |path| Source.new(type: :local, location: File.expand_path(path), name: File.basename(path)) },
@@ -134,8 +142,23 @@ module Photon
       @errors.clear
       @warnings.clear
       @scanned = false
+
+      sync_web_repos
       scan_all(refresh_remote: true)
       list_atoms.length
+    end
+
+    def sync_web_repos(force: false, verify: true)
+      web_repos = WebRepoManager.load_repos
+      return if web_repos.empty?
+
+      results = WebRepoManager.sync_all(force: force, verify: verify, offline_ok: true)
+
+      results[:errors].each do |error|
+        @warnings << "Web repo sync: #{error}"
+      end
+
+      results[:results]
     end
 
     private
@@ -314,11 +337,26 @@ module Photon
     end
 
     def load_remote_manifest(source, refresh: false)
+      web_repos = WebRepoManager.load_repos
+      repo_name = infer_repo_name_from_url(source.location)
+
+      if web_repos.key?(repo_name)
+        return load_from_web_repo(web_repos[repo_name], refresh: refresh)
+      end
+
       cache_path = remote_cache_path(source.location)
 
       if refresh || !File.exist?(cache_path)
-        body = fetch_url(source.location)
-        File.write(cache_path, body)
+        begin
+          body = fetch_url(source.location)
+          File.write(cache_path, body)
+        rescue => e
+          @errors << "Failed to fetch #{source.location}: #{e.message}"
+          if File.exist?(cache_path)
+            return JSON.parse(File.read(cache_path))
+          end
+          return nil
+        end
       end
 
       JSON.parse(File.read(cache_path))
@@ -326,8 +364,26 @@ module Photon
       @errors << "Invalid repository manifest #{source.location}: #{e.message}"
       nil
     rescue => e
-      @errors << "Failed to fetch #{source.location}: #{e.message}"
+      @errors << "Failed to load manifest #{source.location}: #{e.message}"
       nil
+    end
+
+    def load_from_web_repo(repo, refresh: false)
+      manifest_data = WebRepoManager.fetch_manifest(repo, use_cache: !refresh, verify: true)
+      manifest_data
+    rescue => e
+      @warnings << "Web repo '#{repo.name}' fetch failed: #{e.message}"
+      WebRepoManager.load_cached_manifest(repo.name)
+    end
+
+    def infer_repo_name_from_url(url)
+      uri = URI.parse(url)
+      host = uri.host || "unknown"
+      path = uri.path.to_s.gsub("/", "_").gsub(".json", "").strip
+      path = "main" if path.empty?
+      "#{host}_#{path}"
+    rescue
+      "unknown"
     end
 
     def remote_cache_path(url)

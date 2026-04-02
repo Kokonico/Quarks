@@ -4,7 +4,7 @@ nuclei "libiconv", "1.17" do
   license "LGPL-2.0"
   category "dev-libs"
   
-  source "https://ftp.gnu.org/gnu/libiconv/libiconv-1.17.tar.gz",
+  source "https://mirrors.kernel.org/gnu/libiconv/libiconv-1.17.tar.gz",
          checksum: "8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313",
          algorithm: "sha256"
   

@@ -1,0 +1,20 @@
+nuclei "xapian", "1.4.26" do
+  description "xapian package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://oligarchy.co.uk/xapian/1.4.26/xapian-core-1.4.26.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool"
+
+  build_depends "autoconf", "automake", "libtool"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

@@ -1,0 +1,20 @@
+nuclei "libgeocode-glib", "3.26.4" do
+  description "libgeocode-glib package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.gnome.org/sources/libgeocode-glib/3.26/libgeocode-glib-3.26.4.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "libsoup3", "libxml2", "json-glib"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "libsoup3", "libxml2", "json-glib"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

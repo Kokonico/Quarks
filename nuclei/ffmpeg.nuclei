@@ -1,0 +1,20 @@
+nuclei "ffmpeg", "7.0.1" do
+  description "ffmpeg package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ffmpeg.org/releases/ffmpeg-7.0.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "nasm", "yasm", "pkg-config", "libaom", "libdav1d", "libvpx", "libx264", "libx265", "libvorbis", "libopus", "libmp3lame", "libass", "libfreetype", "libfontconfig", "libfribidi", "libxvid", "libtheora", "libwebp", "libxcb", "libxcb-shape", "libxcb-xfixes", "openssl", "bzip2", "zlib", "zstd", "liblzma"
+
+  build_depends "nasm", "yasm", "pkg-config", "libaom", "libdav1d", "libvpx", "libx264", "libx265", "libvorbis", "libopus", "libmp3lame", "libass", "libfreetype", "libfontconfig", "libfribidi", "libxvid", "libtheora", "libwebp", "libxcb", "libxcb-shape", "libxcb-xfixes", "openssl", "bzip2", "zlib", "zstd", "liblzma"
+
+  build do
+    run "./configure --prefix=/usr --enable-shared --enable-gpl --disable-doc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

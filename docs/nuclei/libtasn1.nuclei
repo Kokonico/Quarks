@@ -1,0 +1,20 @@
+nuclei "libtasn1", "4.19.0" do
+  description "libtasn1 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.19.0.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool"
+
+  build_depends "autoconf", "automake", "libtool"
+
+  build do
+    run "./configure --prefix=/usr --enable-static"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

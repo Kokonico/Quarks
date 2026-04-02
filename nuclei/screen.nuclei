@@ -4,7 +4,7 @@ nuclei "screen", "4.9.1" do
   license "GPL-3.0"
   category "app-misc"
   
-  source "https://ftp.gnu.org/gnu/screen/screen-4.9.1.tar.gz",
+  source "https://mirrors.kernel.org/gnu/screen/screen-4.9.1.tar.gz",
          checksum: "26cef3e3c42571c0d484ad6faf110c5c15091fbf872b06fa7aa4766c7405ac69",
          algorithm: "sha256"
   

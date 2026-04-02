@@ -1,0 +1,20 @@
+nuclei "xfce4-battery-plugin", "1.1.5" do
+  description "xfce4-battery-plugin package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/panel-plugins/xfce4-battery-plugin/xfce4-battery-plugin-1.1.5.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "libxfce4panel", "upower"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "libxfce4panel", "upower"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

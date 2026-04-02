@@ -1,0 +1,21 @@
+nuclei "sane-backends", "1.2.1" do
+  description "sane-backends package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.com/sane-project/backends/-/archive/REL_1_2_1/backends-REL_1_2_1.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "pkg-config", "libusb", "libjpeg", "libtiff", "libv4l", "avahi", "libx11", "libxext"
+
+  build_depends "autoconf", "automake", "libtool", "pkg-config", "libusb", "libjpeg", "libtiff", "libv4l", "avahi", "libx11", "libxext"
+
+  build do
+    run "autoreconf -fi"
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

@@ -1,0 +1,20 @@
+nuclei "upower", "1.90.4" do
+  description "upower package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.freedesktop.org/upower/upower/-/archive/v1.90.4/upower-v1.90.4.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "glib", "libgudev", "libudev", "polkit", "dbus"
+
+  build_depends "meson", "ninja", "glib", "libgudev", "libudev", "polkit", "dbus"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Dman=false"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

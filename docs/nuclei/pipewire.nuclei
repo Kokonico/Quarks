@@ -1,0 +1,20 @@
+nuclei "pipewire", "1.2.1" do
+  description "pipewire package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.2.1/pipewire-1.2.1.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "glib", "alsa-lib", "libx11", "libxext", "libpulse", "dbus", "libbluetooth", "libcanberra", "libsdl2", "libva", "libvulkan", "sbc", "libldac", "libfreeaptx", "ldacbt", "opus", "sbc", "libusb", "libusb-compat", "v4l-utils"
+
+  build_depends "meson", "ninja", "glib", "alsa-lib", "libx11", "libxext", "libpulse", "dbus", "libbluetooth", "libcanberra", "libsdl2", "libva", "libvulkan", "sbc", "libldac", "libfreeaptx", "ldacbt", "opus", "sbc", "libusb", "libusb-compat", "v4l-utils"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddocs=disabled -Dman=false"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

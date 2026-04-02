@@ -1,0 +1,21 @@
+nuclei "NetworkManager", "1.46.0" do
+  description "Network connection management daemon"
+  homepage "https://networkmanager.dev/"
+  license "GPL-2.0-or-later"
+  category "net-misc"
+  
+  slot "0"
+  
+  source "https://download.gnome.org/sources/NetworkManager/1.46/NetworkManager-1.46.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build",
+      "--prefix=/usr",
+      "--sysconfdir=/etc",
+      "--localstatedir=/var"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

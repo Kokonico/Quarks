@@ -1,0 +1,20 @@
+nuclei "libsoup3", "3.4.4" do
+  description "libsoup3 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.gnome.org/sources/libsoup/3.4/libsoup-3.4.4.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "libxml2", "sqlite", "libpsl", "brotli", "nghttp2", "openssl"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "libxml2", "sqlite", "libpsl", "brotli", "nghttp2", "openssl"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

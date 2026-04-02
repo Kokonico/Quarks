@@ -1,0 +1,20 @@
+nuclei "ristretto", "0.13.1" do
+  description "ristretto package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/apps/ristretto/ristretto-0.13.1.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "tumbler", "libx11", "gdk-pixbuf", "libjpeg", "libpng"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4ui", "tumbler", "libx11", "gdk-pixbuf", "libjpeg", "libpng"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

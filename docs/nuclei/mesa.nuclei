@@ -1,0 +1,23 @@
+nuclei "mesa", "24.0.7" do
+  description "OpenGL graphics library"
+  homepage "https://www.mesa3d.org/"
+  license "MIT AND SGI-B-2.0"
+  category "media-libs"
+  
+  slot "0"
+  
+  source "https://mesa.freedesktop.org/archive/mesa-24.0.7.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build",
+      "--prefix=/usr",
+      "--libdir=/usr/lib64",
+      "-Ddri=true",
+      "-Dgallium=true",
+      "-Dllvm=true"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

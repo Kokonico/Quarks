@@ -1,0 +1,16 @@
+nuclei "gdk-pixbuf", "2.42.10" do
+  description "Image loading library"
+  homepage "https://gtk.org/"
+  license "LGPL-2.0-or-later"
+  category "x11-libs"
+  
+  source "https://download.gnome.org/sources/gdk-pixbuf/2.42/gdk-pixbuf-2.42.10.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build", "--prefix=/usr", "--libdir=/usr/lib64"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

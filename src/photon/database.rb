@@ -313,14 +313,84 @@ module Photon
     end
 
     def migrate!
+      current_version = get_schema_version
+
+      migrations.each do |version, migration|
+        next if version <= current_version
+
+        transaction do
+          migration.call(@db)
+        end
+        write_schema_version(version)
+      end
+
+      unless current_version == SCHEMA_VERSION
+        create_missing_tables!
+        create_missing_indexes!
+      end
+
+      write_schema_version(SCHEMA_VERSION)
+      @db.execute("PRAGMA user_version = #{SCHEMA_VERSION};") rescue nil
+      true
+    end
+
+    def get_schema_version
+      @db.get_first_value("SELECT value FROM meta WHERE key='schema_version'").to_i rescue 0
+    end
+
+    MIGRATIONS = {
+      1 => -> db {
+        db.execute(<<~SQL)
+          CREATE TABLE IF NOT EXISTS packages(
+            name TEXT PRIMARY KEY,
+            version TEXT NOT NULL,
+            atom TEXT,
+            category TEXT,
+            installed_at INTEGER,
+            install_time REAL,
+            metadata_json TEXT
+          );
+        SQL
+      },
+      2 => -> db {
+        db.execute(<<~SQL)
+          CREATE TABLE IF NOT EXISTS files(
+            path TEXT PRIMARY KEY,
+            package_name TEXT NOT NULL,
+            FOREIGN KEY(package_name) REFERENCES packages(name) ON DELETE CASCADE
+          );
+        SQL
+      },
+      3 => -> db {
+        db.execute(<<~SQL)
+          CREATE TABLE IF NOT EXISTS world(
+            atom TEXT PRIMARY KEY
+          );
+        SQL
+      },
+      4 => -> db {
+        db.execute(<<~SQL)
+          CREATE INDEX IF NOT EXISTS idx_files_pkg ON files(package_name);
+          CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
+          CREATE INDEX IF NOT EXISTS idx_packages_atom ON packages(atom);
+          CREATE INDEX IF NOT EXISTS idx_packages_name ON packages(name);
+        SQL
+      }
+    }.freeze
+
+    def migrations
+      MIGRATIONS
+    end
+
+    def create_missing_tables!
       create_meta_table!
       create_packages_table!
       create_files_table!
       create_world_table!
+    end
+
+    def create_missing_indexes!
       create_indexes!
-      write_schema_version(SCHEMA_VERSION)
-      @db.execute("PRAGMA user_version = #{SCHEMA_VERSION};") rescue nil
-      true
     end
 
     def create_meta_table!

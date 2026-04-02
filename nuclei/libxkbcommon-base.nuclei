@@ -1,0 +1,20 @@
+nuclei "libxkbcommon", "1.7.0" do
+  description "libxkbcommon package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/xkbcommon/libxkbcommon/releases/download/libxkbcommon-1.7.0/libxkbcommon-1.7.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "wayland", "libxcb", "libxml2"
+
+  build_depends "meson", "ninja", "wayland", "libxcb", "libxml2"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddoc=false -Dx11=false"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

@@ -1,0 +1,20 @@
+nuclei "libadwaita", "1.5.0" do
+  description "libadwaita package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://gitlab.gnome.org/GNOME/libadwaita/-/archive/1.5.0/libadwaita-1.5.0.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "gtk4", "meson"
+
+  build_depends "meson", "ninja", "gobject-introspection", "gtk4", "meson"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Dpublic-header=true"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

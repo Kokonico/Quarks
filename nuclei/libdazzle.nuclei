@@ -1,0 +1,20 @@
+nuclei "libdazzle", "3.54.0" do
+  description "libdazzle package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.gnome.org/sources/libdazzle/3.54/libdazzle-3.54.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "gtk3"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "gtk3"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

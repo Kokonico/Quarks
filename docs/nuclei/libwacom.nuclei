@@ -1,0 +1,20 @@
+nuclei "libwacom", "2.10.0" do
+  description "libwacom package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/linuxwacom/libwacom/releases/download/libwacom-2.10.0/libwacom-2.10.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "libx11", "libinput", "libudev", "twelvft"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "libx11", "libinput", "libudev", "twelvft"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Ddocumentation=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

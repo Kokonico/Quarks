@@ -1,0 +1,20 @@
+nuclei "gst-plugins-bad", "1.24.5" do
+  description "gst-plugins-bad package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnome.org/pub/gnome/sources/gst-plugins-bad/1.24/gst-plugins-bad-1.24.5.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "gstreamer", "gst-plugins-base", "orc"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "gstreamer", "gst-plugins-base", "orc"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

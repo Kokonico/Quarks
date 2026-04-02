@@ -1,0 +1,20 @@
+nuclei "gstreamer", "1.24.5" do
+  description "gstreamer package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnome.org/pub/gnome/sources/gstreamer/1.24/gstreamer-1.24.5.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "libcap", "libx11", "libxext", "libxdamage", "libxfixes", "libxrandr", "orc"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "libcap", "libx11", "libxext", "libxdamage", "libxfixes", "libxrandr", "orc"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

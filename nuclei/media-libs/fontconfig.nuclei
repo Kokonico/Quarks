@@ -1,0 +1,16 @@
+nuclei "fontconfig", "2.15.0" do
+  description "Font configuration and customization library"
+  homepage "https://fontconfig.org/"
+  license "MIT"
+  category "media-libs"
+  
+  source "https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    configure "--prefix=/usr", "--libdir=/usr/lib64", "--sysconfdir=/etc"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

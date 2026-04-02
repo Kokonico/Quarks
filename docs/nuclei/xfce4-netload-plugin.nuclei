@@ -1,0 +1,20 @@
+nuclei "xfce4-netload-plugin", "1.4.1" do
+  description "xfce4-netload-plugin package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/panel-plugins/xfce4-netload-plugin/xfce4-netload-plugin-1.4.1.tar.bz2",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "libxfce4panel"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "libxfce4panel"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

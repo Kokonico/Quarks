@@ -1,0 +1,20 @@
+nuclei "gnutls", "3.8.7.1" do
+  description "gnutls package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-3.8.7.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "texinfo", "nettle", "gmp", "libidn2", "libseccomp", "unbound", "libtasn1", "p11-kit"
+
+  build_depends "autoconf", "automake", "libtool", "texinfo", "nettle", "gmp", "libidn2", "libseccomp", "unbound", "libtasn1", "p11-kit"
+
+  build do
+    run "./configure --prefix=/usr --enable-static"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

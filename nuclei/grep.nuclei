@@ -4,8 +4,8 @@ nuclei "grep", "3.11" do
   license "GPL-3.0"
   category "sys-apps"
   
-  source "https://ftp.gnu.org/gnu/grep/grep-3.11.tar.gz",
-         checksum: "1db2aedde89d0dea42b16d9528f894c8d15dae4e190b59aecc78f5a951276eab",
+  source "https://mirrors.kernel.org/gnu/grep/grep-3.11.tar.gz",
+         checksum: "1f31014953e71c3cddcedb97692ad7620cb9d6d04fbdc19e0d8dd836f87622bb",
          algorithm: "sha256"
   
   build do

@@ -1,0 +1,20 @@
+nuclei "enchant2", "2.6.9" do
+  description "enchant2 package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/AbiWord/enchant/releases/download/v2.6.9/enchant-2.6.9.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "glib", "hunspell"
+
+  build_depends "glib", "hunspell"
+
+  build do
+    run "./configure --prefix=/usr --disable-voikko"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

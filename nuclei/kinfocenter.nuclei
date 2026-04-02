@@ -1,0 +1,20 @@
+nuclei "kinfocenter", "6.1.0" do
+  description "kinfocenter package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://download.kde.org/stable/plasma/6.1.0/kinfocenter-6.1.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "cmake", "ninja", "kcoreaddons", "kio", "kservice", "kwidgetsaddons", "kxmlgui", "kiconthemes", "ki18n", "libpciaccess", "libx11", "libxi", "libxcursor", "mesa"
+
+  build_depends "cmake", "ninja", "kcoreaddons", "kio", "kservice", "kwidgetsaddons", "kxmlgui", "kiconthemes", "ki18n", "libpciaccess", "libx11", "libxi", "libxcursor", "mesa"
+
+  build do
+    run "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr"
+    run "cmake --build build -j$(nproc)"
+    run "cmake --install build"
+  end
+end

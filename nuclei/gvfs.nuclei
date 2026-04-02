@@ -1,0 +1,20 @@
+nuclei "gvfs", "1.54.0" do
+  description "gvfs package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://ftp.gnome.org/pub/gnome/sources/gvfs/1.54/gvfs-1.54.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "meson", "ninja", "gobject-introspection", "glib", "gtk3", "dbus", "libusb", "libsecret", "libarchive", "libfuse3", "libcdio", "libiscsi", "libsmbclient", "libgphoto2", "afpfs-ng", "libnfs", "fuse3"
+
+  build_depends "meson", "ninja", "gobject-introspection", "glib", "gtk3", "dbus", "libusb", "libsecret", "libarchive", "libfuse3", "libcdio", "libiscsi", "libsmbclient", "libgphoto2", "afpfs-ng", "libnfs", "fuse3"
+
+  build do
+    run "meson setup build --prefix=/usr --sysconfdir=/etc -Dtests=disabled -Dadmin=disabled"
+    run "meson compile -C build"
+    run "meson install -C build"
+  end
+end

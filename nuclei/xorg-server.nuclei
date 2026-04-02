@@ -1,0 +1,20 @@
+nuclei "xorg-server", "21.1.11" do
+  description "X.Org X server"
+  homepage "https://www.x.org/"
+  license "MIT"
+  category "x11-base"
+  
+  slot "0"
+  
+  source "https://xorg.freedesktop.org/archive/individual/xserver/xorg-server-21.1.11.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    meson "build",
+      "--prefix=/usr",
+      "--sysconfdir=/etc"
+    run "ninja -C build"
+    install "DESTDIR=${DESTDIR} ninja -C build install"
+  end
+end

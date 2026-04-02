@@ -1,0 +1,20 @@
+nuclei "cups", "2.4.10" do
+  description "cups package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://github.com/OpenPrinting/cups/releases/download/v2.4.10/cups-2.4.10-source.tar.gz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "pkg-config", "zlib", "libusb", "libpng", "libjpeg", "libtiff", "avahi", "dbus", "pam", "openssl", "acl", "libx11", "libxext", "libxrandr", "libxrender", "libcups"
+
+  build_depends "autoconf", "automake", "libtool", "pkg-config", "zlib", "libusb", "libpng", "libjpeg", "libtiff", "avahi", "dbus", "pam", "openssl", "acl", "libx11", "libxext", "libxrandr", "libxrender", "libcups"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-libpaper --enable-threads"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

@@ -1,0 +1,20 @@
+nuclei "thunar-volman", "4.18.1" do
+  description "thunar-volman package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://archive.xfce.org/xfce/4.18/src/thunar-volman-4.18.1.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "intltool", "gtk3", "libxfce4util", "thunarx", "gvfs", "libgudev", "libnotify"
+
+  build_depends "intltool", "gtk3", "libxfce4util", "thunarx", "gvfs", "libgudev", "libnotify"
+
+  build do
+    run "./configure --prefix=/usr --sysconfdir=/etc"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end

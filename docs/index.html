@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>photon-main</title>
+  <title>Photon Packages</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root { color-scheme: dark light; }
@@ -12,230 +12,2077 @@
     .muted { opacity: .75; }
     .card { border: 1px solid rgba(127,127,127,.3); border-radius: 12px; padding: 1rem; margin: 1rem 0; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1rem; }
-    a { text-decoration: none; }
+    a { text-decoration: none; color: inherit; }
     a:hover { text-decoration: underline; }
+    nav { display: flex; gap: 1.5rem; padding: 1rem 0; border-bottom: 1px solid #eee; margin-bottom: 1rem; }
+    nav a:hover { text-decoration: none; }
+    .search { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
 
-    <h1>photon-main</h1>
-    <p class="muted">Static Photon web repo</p>
-    <div class="card">
-      <p><strong>Photon index URL:</strong></p>
-      <pre><code>https://github.com/RobertFlexx/Photon/blob/main/docs/index.json</code></pre>
-      <p class="muted">Generated 2026-03-15T00:47:58.498408+00:00</p>
-    </div>
-    <div class="grid">
-        <div class="card">
-          <h3>app/hello</h3>
-          <div class="muted">Version 2.12.1</div>
-          <p>GNU Hello - prints a friendly greeting</p>
-          <div><a href="nuclei/hello.nuclei">recipe</a> · <a href="packages/app--hello.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app/htop</h3>
-          <div class="muted">Version 3.3.0</div>
-          <p>Interactive process viewer</p>
-          <div><a href="nuclei/htop.nuclei">recipe</a> · <a href="packages/app--htop.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app/jq</h3>
-          <div class="muted">Version 1.6</div>
-          <p>Command-line JSON processor</p>
-          <div><a href="nuclei/jq.nuclei">recipe</a> · <a href="packages/app--jq.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app/tmux</h3>
-          <div class="muted">Version 3.3a</div>
-          <p>Terminal multiplexer</p>
-          <div><a href="nuclei/tmux.nuclei">recipe</a> · <a href="packages/app--tmux.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-arch/bzip2</h3>
-          <div class="muted">Version 1.0.8</div>
-          <p>High-quality data compressor</p>
-          <div><a href="nuclei/bzip2.nuclei">recipe</a> · <a href="packages/app-arch--bzip2.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-arch/gzip</h3>
-          <div class="muted">Version 1.13</div>
-          <p>GNU compression utility</p>
-          <div><a href="nuclei/gzip.nuclei">recipe</a> · <a href="packages/app-arch--gzip.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-arch/unzip</h3>
-          <div class="muted">Version 6.0</div>
-          <p>Unpacker for .zip archives</p>
-          <div><a href="nuclei/unzip.nuclei">recipe</a> · <a href="packages/app-arch--unzip.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-arch/xz</h3>
-          <div class="muted">Version 5.4.5</div>
-          <p>Free general-purpose data compression software</p>
-          <div><a href="nuclei/xz.nuclei">recipe</a> · <a href="packages/app-arch--xz.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-arch/zip</h3>
-          <div class="muted">Version 3.0</div>
-          <p>Compressor/archiver for creating and modifying zipfiles</p>
-          <div><a href="nuclei/zip.nuclei">recipe</a> · <a href="packages/app-arch--zip.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-editors/nano</h3>
-          <div class="muted">Version 7.2</div>
-          <p>Small, friendly text editor</p>
-          <div><a href="nuclei/nano.nuclei">recipe</a> · <a href="packages/app-editors--nano.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-misc/screen</h3>
-          <div class="muted">Version 4.9.1</div>
-          <p>Full-screen window manager that multiplexes a physical terminal</p>
-          <div><a href="nuclei/screen.nuclei">recipe</a> · <a href="packages/app-misc--screen.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-shells/bash</h3>
-          <div class="muted">Version 5.2</div>
-          <p>The GNU Bourne Again shell</p>
-          <div><a href="nuclei/bash.nuclei">recipe</a> · <a href="packages/app-shells--bash.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>app-shells/zsh</h3>
-          <div class="muted">Version 5.9</div>
-          <p>UNIX shell (command interpreter)</p>
-          <div><a href="nuclei/zsh.nuclei">recipe</a> · <a href="packages/app-shells--zsh.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-lang/ruby</h3>
-          <div class="muted">Version 3.2.2</div>
-          <p>An interpreted object-oriented programming language</p>
-          <div><a href="nuclei/ruby.nuclei">recipe</a> · <a href="packages/dev-lang--ruby.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-libs/gmp</h3>
-          <div class="muted">Version 6.3.0</div>
-          <p>GNU Multiple Precision Arithmetic Library</p>
-          <div><a href="nuclei/gmp.nuclei">recipe</a> · <a href="packages/dev-libs--gmp.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-libs/libevent</h3>
-          <div class="muted">Version 2.1.12</div>
-          <p>Event notification library</p>
-          <div><a href="nuclei/libevent.nuclei">recipe</a> · <a href="packages/dev-libs--libevent.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-libs/libiconv</h3>
-          <div class="muted">Version 1.17</div>
-          <p>Character set conversion library</p>
-          <div><a href="nuclei/libiconv.nuclei">recipe</a> · <a href="packages/dev-libs--libiconv.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-libs/mpfr</h3>
-          <div class="muted">Version 4.2.1</div>
-          <p>Multiple-precision floating-point library</p>
-          <div><a href="nuclei/mpfr.nuclei">recipe</a> · <a href="packages/dev-libs--mpfr.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-libs/popt</h3>
-          <div class="muted">Version 1.19</div>
-          <p>Command line option parsing library</p>
-          <div><a href="nuclei/popt.nuclei">recipe</a> · <a href="packages/dev-libs--popt.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-libs/readline</h3>
-          <div class="muted">Version 8.2</div>
-          <p>GNU readline library</p>
-          <div><a href="nuclei/readline.nuclei">recipe</a> · <a href="packages/dev-libs--readline.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-libs/zlib</h3>
-          <div class="muted">Version 1.3.1</div>
-          <p>Standard compression library</p>
-          <div><a href="nuclei/zlib.nuclei">recipe</a> · <a href="packages/dev-libs--zlib.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-util/pkg-config</h3>
-          <div class="muted">Version 0.29.2</div>
-          <p>Helper tool for compiling applications and libraries</p>
-          <div><a href="nuclei/pkg-config.nuclei">recipe</a> · <a href="packages/dev-util--pkg-config.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>dev-vcs/git</h3>
-          <div class="muted">Version 2.53.0</div>
-          <p>Fast, scalable, distributed revision control system</p>
-          <div><a href="nuclei/git.nuclei">recipe</a> · <a href="packages/dev-vcs--git.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>lib/ncurses</h3>
-          <div class="muted">Version 6.4</div>
-          <p>System V Release 4.0 curses emulation library</p>
-          <div><a href="nuclei/ncurses.nuclei">recipe</a> · <a href="packages/lib--ncurses.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>net/curl</h3>
-          <div class="muted">Version 8.4.0</div>
-          <p>Command line tool for transferring data with URLs</p>
-          <div><a href="nuclei/curl.nuclei">recipe</a> · <a href="packages/net--curl.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>net/wget</h3>
-          <div class="muted">Version 1.21.4</div>
-          <p>Network utility to retrieve files from the Web</p>
-          <div><a href="nuclei/wget.nuclei">recipe</a> · <a href="packages/net--wget.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>net-misc/rsync</h3>
-          <div class="muted">Version 3.2.7</div>
-          <p>Fast incremental file transfer utility</p>
-          <div><a href="nuclei/rsync.nuclei">recipe</a> · <a href="packages/net-misc--rsync.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-apps/gawk</h3>
-          <div class="muted">Version 5.3.0</div>
-          <p>GNU awk pattern-matching language</p>
-          <div><a href="nuclei/gawk.nuclei">recipe</a> · <a href="packages/sys-apps--gawk.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-apps/grep</h3>
-          <div class="muted">Version 3.11</div>
-          <p>GNU grep, egrep and fgrep</p>
-          <div><a href="nuclei/grep.nuclei">recipe</a> · <a href="packages/sys-apps--grep.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-apps/sed</h3>
-          <div class="muted">Version 4.9</div>
-          <p>GNU stream editor</p>
-          <div><a href="nuclei/sed.nuclei">recipe</a> · <a href="packages/sys-apps--sed.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-devel/automake</h3>
-          <div class="muted">Version 1.16.5</div>
-          <p>Tool for automatically generating Makefile.in files</p>
-          <div><a href="nuclei/automake.nuclei">recipe</a> · <a href="packages/sys-devel--automake.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-devel/m4</h3>
-          <div class="muted">Version 1.4.19</div>
-          <p>GNU macro processor</p>
-          <div><a href="nuclei/m4.nuclei">recipe</a> · <a href="packages/sys-devel--m4.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-devel/make</h3>
-          <div class="muted">Version 4.4.1</div>
-          <p>GNU Make - controls the generation of executables</p>
-          <div><a href="nuclei/make.nuclei">recipe</a> · <a href="packages/sys-devel--make.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-devel/patch</h3>
-          <div class="muted">Version 2.7.6</div>
-          <p>Applies a diff file to an original</p>
-          <div><a href="nuclei/patch.nuclei">recipe</a> · <a href="packages/sys-devel--patch.json">metadata</a></div>
-        </div>
-        <div class="card">
-          <h3>sys-libs/gdbm</h3>
-          <div class="muted">Version 1.23</div>
-          <p>GNU database library</p>
-          <div><a href="nuclei/gdbm.nuclei">recipe</a> · <a href="packages/sys-libs--gdbm.json">metadata</a></div>
-        </div></div>
-    
+<nav>
+  <strong>Photon</strong>
+  <a href="index.html">Packages</a>
+  <a href="contribute.html">Contribute</a>
+</nav>
+
+  <h1>photon-main</h1>
+  <p class="muted">Static Photon web repo - 339 packages</p>
+
+  <input type="text" class="search" id="search" placeholder="Search packages..." oninput="filterPackages()">
+
+  <div class="grid" id="packages">
+<div class="card" data-name="app-arch/bzip2">
+  <h3>app-arch/bzip2</h3>
+  <div class="muted">Version 1.0.8</div>
+  <p>High-quality data compressor</p>
+  <div><a href="nuclei/bzip2.nuclei">recipe</a> &middot; <a href="packages/app-arch--bzip2.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-arch/gzip">
+  <h3>app-arch/gzip</h3>
+  <div class="muted">Version 1.13</div>
+  <p>GNU compression utility</p>
+  <div><a href="nuclei/gzip.nuclei">recipe</a> &middot; <a href="packages/app-arch--gzip.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-arch/lz4">
+  <h3>app-arch/lz4</h3>
+  <div class="muted">Version 1.9.4</div>
+  <p>Extremely fast compression algorithm</p>
+  <div><a href="nuclei/lz4.nuclei">recipe</a> &middot; <a href="packages/app-arch--lz4.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-arch/unzip">
+  <h3>app-arch/unzip</h3>
+  <div class="muted">Version 6.0</div>
+  <p>Unpacker for .zip archives</p>
+  <div><a href="nuclei/unzip.nuclei">recipe</a> &middot; <a href="packages/app-arch--unzip.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-arch/xz">
+  <h3>app-arch/xz</h3>
+  <div class="muted">Version 5.4.5</div>
+  <p>Free general-purpose data compression software</p>
+  <div><a href="nuclei/xz.nuclei">recipe</a> &middot; <a href="packages/app-arch--xz.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-arch/zip">
+  <h3>app-arch/zip</h3>
+  <div class="muted">Version 3.0</div>
+  <p>Compressor/archiver for creating and modifying zipfiles</p>
+  <div><a href="nuclei/zip.nuclei">recipe</a> &middot; <a href="packages/app-arch--zip.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-arch/zstd">
+  <h3>app-arch/zstd</h3>
+  <div class="muted">Version 1.5.5</div>
+  <p>Fast real-time compression algorithm</p>
+  <div><a href="nuclei/zstd.nuclei">recipe</a> &middot; <a href="packages/app-arch--zstd.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-crypt/gnupg">
+  <h3>app-crypt/gnupg</h3>
+  <div class="muted">Version 2.4.3</div>
+  <p>GNU Privacy Guard - PGP encryption and signing tools</p>
+  <div><a href="nuclei/gnupg.nuclei">recipe</a> &middot; <a href="packages/app-crypt--gnupg.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-crypt/gpgme">
+  <h3>app-crypt/gpgme</h3>
+  <div class="muted">Version 1.23.2</div>
+  <p>GnuPG Made Easy - library for accessing GnuPG</p>
+  <div><a href="nuclei/gpgme.nuclei">recipe</a> &middot; <a href="packages/app-crypt--gpgme.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-crypt/rhash">
+  <h3>app-crypt/rhash</h3>
+  <div class="muted">Version 1.4.4</div>
+  <p>Utility for computing hash sums and magnet links</p>
+  <div><a href="nuclei/rhash.nuclei">recipe</a> &middot; <a href="packages/app-crypt--rhash.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-editors/medit">
+  <h3>app-editors/medit</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>medit - Micro Edit by Kokonico</p>
+  <div><a href="nuclei/medit.nuclei">recipe</a> &middot; <a href="packages/app-editors--medit.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-editors/micro">
+  <h3>app-editors/micro</h3>
+  <div class="muted">Version 2.0.13</div>
+  <p>Modern and intuitive terminal-based text editor</p>
+  <div><a href="nuclei/micro.nuclei">recipe</a> &middot; <a href="packages/app-editors--micro.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-editors/nano">
+  <h3>app-editors/nano</h3>
+  <div class="muted">Version 7.2</div>
+  <p>Small, friendly text editor</p>
+  <div><a href="nuclei/nano.nuclei">recipe</a> &middot; <a href="packages/app-editors--nano.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-editors/tedit">
+  <h3>app-editors/tedit</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>Terminal-based text editor by RobertFlexx</p>
+  <div><a href="nuclei/tedit.nuclei">recipe</a> &middot; <a href="packages/app-editors--tedit.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-editors/vim">
+  <h3>app-editors/vim</h3>
+  <div class="muted">Version 9.0</div>
+  <p>Highly configurable text editor</p>
+  <div><a href="nuclei/vim.nuclei">recipe</a> &middot; <a href="packages/app-editors--vim.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-misc/fastfetch">
+  <h3>app-misc/fastfetch</h3>
+  <div class="muted">Version 2.60.0</div>
+  <p>Fast system information tool written in C</p>
+  <div><a href="nuclei/fastfetch.nuclei">recipe</a> &middot; <a href="packages/app-misc--fastfetch.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-misc/neofetch">
+  <h3>app-misc/neofetch</h3>
+  <div class="muted">Version 7.1.0</div>
+  <p>Fast, highly customizable system info script</p>
+  <div><a href="nuclei/neofetch.nuclei">recipe</a> &middot; <a href="packages/app-misc--neofetch.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-misc/screen">
+  <h3>app-misc/screen</h3>
+  <div class="muted">Version 4.9.1</div>
+  <p>Full-screen window manager that multiplexes a physical terminal</p>
+  <div><a href="nuclei/screen.nuclei">recipe</a> &middot; <a href="packages/app-misc--screen.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-misc/yafp">
+  <h3>app-misc/yafp</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>YAFP - Yet Another Fetch Program</p>
+  <div><a href="nuclei/yafp.nuclei">recipe</a> &middot; <a href="packages/app-misc--yafp.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-shells/bash">
+  <h3>app-shells/bash</h3>
+  <div class="muted">Version 5.2</div>
+  <p>The GNU Bourne Again shell</p>
+  <div><a href="nuclei/bash.nuclei">recipe</a> &middot; <a href="packages/app-shells--bash.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-shells/fish">
+  <h3>app-shells/fish</h3>
+  <div class="muted">Version 3.6.4</div>
+  <p>User friendly command line shell</p>
+  <div><a href="nuclei/fish.nuclei">recipe</a> &middot; <a href="packages/app-shells--fish.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-shells/rsh">
+  <h3>app-shells/rsh</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>RSH - Robert's Shell, a custom Unix shell</p>
+  <div><a href="nuclei/rsh.nuclei">recipe</a> &middot; <a href="packages/app-shells--rsh.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-shells/zsh">
+  <h3>app-shells/zsh</h3>
+  <div class="muted">Version 5.9</div>
+  <p>UNIX shell (command interpreter)</p>
+  <div><a href="nuclei/zsh.nuclei">recipe</a> &middot; <a href="packages/app-shells--zsh.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-text/docbook-xml">
+  <h3>app-text/docbook-xml</h3>
+  <div class="muted">Version 4.5</div>
+  <p>DocBook XML DTD</p>
+  <div><a href="nuclei/docbook-xml.nuclei">recipe</a> &middot; <a href="packages/app-text--docbook-xml.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-text/docbook-xsl">
+  <h3>app-text/docbook-xsl</h3>
+  <div class="muted">Version 1.79.2</div>
+  <p>DocBook XSL Stylesheets</p>
+  <div><a href="nuclei/docbook-xsl.nuclei">recipe</a> &middot; <a href="packages/app-text--docbook-xsl.json">metadata</a></div>
+</div>
+<div class="card" data-name="app-text/xmlto">
+  <h3>app-text/xmlto</h3>
+  <div class="muted">Version 0.0.28</div>
+  <p>Shell-script tool for converting XML files to various formats</p>
+  <div><a href="nuclei/xmlto.nuclei">recipe</a> &middot; <a href="packages/app-text--xmlto.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ModemManager">
+  <h3>app/ModemManager</h3>
+  <div class="muted">Version 1.22.0</div>
+  <p>ModemManager package</p>
+  <div><a href="nuclei/modemmanager.nuclei">recipe</a> &middot; <a href="packages/app--ModemManager.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/accountsservice">
+  <h3>app/accountsservice</h3>
+  <div class="muted">Version 23.08.5</div>
+  <p>accountsservice package</p>
+  <div><a href="nuclei/accountsservice.nuclei">recipe</a> &middot; <a href="packages/app--accountsservice.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/alsa-lib">
+  <h3>app/alsa-lib</h3>
+  <div class="muted">Version 1.2.12</div>
+  <p>alsa-lib package</p>
+  <div><a href="nuclei/alsa-lib.nuclei">recipe</a> &middot; <a href="packages/app--alsa-lib.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ark">
+  <h3>app/ark</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>ark package</p>
+  <div><a href="nuclei/ark.nuclei">recipe</a> &middot; <a href="packages/app--ark.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/at-spi2-atk">
+  <h3>app/at-spi2-atk</h3>
+  <div class="muted">Version 2.38.0</div>
+  <p>at-spi2-atk package</p>
+  <div><a href="nuclei/at-spi2-atk.nuclei">recipe</a> &middot; <a href="packages/app--at-spi2-atk.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/at-spi2-core">
+  <h3>app/at-spi2-core</h3>
+  <div class="muted">Version 2.52.0</div>
+  <p>at-spi2-core package</p>
+  <div><a href="nuclei/at-spi2-core.nuclei">recipe</a> &middot; <a href="packages/app--at-spi2-core.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/atk">
+  <h3>app/atk</h3>
+  <div class="muted">Version 2.52.0</div>
+  <p>atk package</p>
+  <div><a href="nuclei/atk.nuclei">recipe</a> &middot; <a href="packages/app--atk.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/attica">
+  <h3>app/attica</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>attica package</p>
+  <div><a href="nuclei/attica.nuclei">recipe</a> &middot; <a href="packages/app--attica.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/bluedevil">
+  <h3>app/bluedevil</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>bluedevil package</p>
+  <div><a href="nuclei/bluedevil.nuclei">recipe</a> &middot; <a href="packages/app--bluedevil.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/bluez">
+  <h3>app/bluez</h3>
+  <div class="muted">Version 6.7</div>
+  <p>bluez package</p>
+  <div><a href="nuclei/bluez.nuclei">recipe</a> &middot; <a href="packages/app--bluez.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/bluez-qt">
+  <h3>app/bluez-qt</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>bluez-qt package</p>
+  <div><a href="nuclei/bluez-qt.nuclei">recipe</a> &middot; <a href="packages/app--bluez-qt.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/breeze-gtk">
+  <h3>app/breeze-gtk</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>breeze-gtk package</p>
+  <div><a href="nuclei/breeze-gtk.nuclei">recipe</a> &middot; <a href="packages/app--breeze-gtk.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/breeze-icons">
+  <h3>app/breeze-icons</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>breeze-icons package</p>
+  <div><a href="nuclei/breeze-icons.nuclei">recipe</a> &middot; <a href="packages/app--breeze-icons.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/cups">
+  <h3>app/cups</h3>
+  <div class="muted">Version 2.4.10</div>
+  <p>cups package</p>
+  <div><a href="nuclei/cups.nuclei">recipe</a> &middot; <a href="packages/app--cups.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/dconf">
+  <h3>app/dconf</h3>
+  <div class="muted">Version 0.40.0</div>
+  <p>dconf package</p>
+  <div><a href="nuclei/dconf.nuclei">recipe</a> &middot; <a href="packages/app--dconf.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/desktop-file-utils">
+  <h3>app/desktop-file-utils</h3>
+  <div class="muted">Version 0.27</div>
+  <p>desktop-file-utils package</p>
+  <div><a href="nuclei/desktop-file-utils.nuclei">recipe</a> &middot; <a href="packages/app--desktop-file-utils.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/discover">
+  <h3>app/discover</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>discover package</p>
+  <div><a href="nuclei/discover.nuclei">recipe</a> &middot; <a href="packages/app--discover.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/dolphin">
+  <h3>app/dolphin</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>dolphin package</p>
+  <div><a href="nuclei/dolphin.nuclei">recipe</a> &middot; <a href="packages/app--dolphin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/dragon">
+  <h3>app/dragon</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>dragon package</p>
+  <div><a href="nuclei/dragon.nuclei">recipe</a> &middot; <a href="packages/app--dragon.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/enchant2">
+  <h3>app/enchant2</h3>
+  <div class="muted">Version 2.6.9</div>
+  <p>enchant2 package</p>
+  <div><a href="nuclei/enchant2.nuclei">recipe</a> &middot; <a href="packages/app--enchant2.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/exo">
+  <h3>app/exo</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>exo package</p>
+  <div><a href="nuclei/exo.nuclei">recipe</a> &middot; <a href="packages/app--exo.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ffmpeg">
+  <h3>app/ffmpeg</h3>
+  <div class="muted">Version 7.0.1</div>
+  <p>ffmpeg package</p>
+  <div><a href="nuclei/ffmpeg.nuclei">recipe</a> &middot; <a href="packages/app--ffmpeg.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/garcon">
+  <h3>app/garcon</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>garcon package</p>
+  <div><a href="nuclei/garcon.nuclei">recipe</a> &middot; <a href="packages/app--garcon.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/glade">
+  <h3>app/glade</h3>
+  <div class="muted">Version 3.40.0</div>
+  <p>glade package</p>
+  <div><a href="nuclei/glade.nuclei">recipe</a> &middot; <a href="packages/app--glade.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gnutls">
+  <h3>app/gnutls</h3>
+  <div class="muted">Version 3.8.7.1</div>
+  <p>gnutls package</p>
+  <div><a href="nuclei/gnutls.nuclei">recipe</a> &middot; <a href="packages/app--gnutls.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/graphene">
+  <h3>app/graphene</h3>
+  <div class="muted">Version 1.10.8</div>
+  <p>graphene package</p>
+  <div><a href="nuclei/graphene.nuclei">recipe</a> &middot; <a href="packages/app--graphene.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/graphite2">
+  <h3>app/graphite2</h3>
+  <div class="muted">Version 1.3.14</div>
+  <p>graphite2 package</p>
+  <div><a href="nuclei/graphite2.nuclei">recipe</a> &middot; <a href="packages/app--graphite2.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gsettings-desktop-schemas">
+  <h3>app/gsettings-desktop-schemas</h3>
+  <div class="muted">Version 46.1</div>
+  <p>gsettings-desktop-schemas package</p>
+  <div><a href="nuclei/gsettings-desktop-schemas.nuclei">recipe</a> &middot; <a href="packages/app--gsettings-desktop-schemas.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gst-plugins-bad">
+  <h3>app/gst-plugins-bad</h3>
+  <div class="muted">Version 1.24.5</div>
+  <p>gst-plugins-bad package</p>
+  <div><a href="nuclei/gst-plugins-bad.nuclei">recipe</a> &middot; <a href="packages/app--gst-plugins-bad.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gst-plugins-base">
+  <h3>app/gst-plugins-base</h3>
+  <div class="muted">Version 1.24.5</div>
+  <p>gst-plugins-base package</p>
+  <div><a href="nuclei/gst-plugins-base.nuclei">recipe</a> &middot; <a href="packages/app--gst-plugins-base.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gst-plugins-good">
+  <h3>app/gst-plugins-good</h3>
+  <div class="muted">Version 1.24.5</div>
+  <p>gst-plugins-good package</p>
+  <div><a href="nuclei/gst-plugins-good.nuclei">recipe</a> &middot; <a href="packages/app--gst-plugins-good.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gstreamer">
+  <h3>app/gstreamer</h3>
+  <div class="muted">Version 1.24.5</div>
+  <p>gstreamer package</p>
+  <div><a href="nuclei/gstreamer.nuclei">recipe</a> &middot; <a href="packages/app--gstreamer.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gtk-layer-shell">
+  <h3>app/gtk-layer-shell</h3>
+  <div class="muted">Version 0.8.2</div>
+  <p>gtk-layer-shell package</p>
+  <div><a href="nuclei/gtk-layer-shell.nuclei">recipe</a> &middot; <a href="packages/app--gtk-layer-shell.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gtk3">
+  <h3>app/gtk3</h3>
+  <div class="muted">Version 3.24.41</div>
+  <p>gtk3 package</p>
+  <div><a href="nuclei/gtk3.nuclei">recipe</a> &middot; <a href="packages/app--gtk3.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gtk4">
+  <h3>app/gtk4</h3>
+  <div class="muted">Version 4.14.0</div>
+  <p>gtk4 package</p>
+  <div><a href="nuclei/gtk4.nuclei">recipe</a> &middot; <a href="packages/app--gtk4.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gvfs">
+  <h3>app/gvfs</h3>
+  <div class="muted">Version 1.54.0</div>
+  <p>gvfs package</p>
+  <div><a href="nuclei/gvfs.nuclei">recipe</a> &middot; <a href="packages/app--gvfs.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/gwenview">
+  <h3>app/gwenview</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>gwenview package</p>
+  <div><a href="nuclei/gwenview.nuclei">recipe</a> &middot; <a href="packages/app--gwenview.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/harfbuzz">
+  <h3>app/harfbuzz</h3>
+  <div class="muted">Version 9.0.0</div>
+  <p>harfbuzz package</p>
+  <div><a href="nuclei/harfbuzz.nuclei">recipe</a> &middot; <a href="packages/app--harfbuzz.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/hello">
+  <h3>app/hello</h3>
+  <div class="muted">Version 2.12.1</div>
+  <p>GNU Hello - prints a friendly greeting</p>
+  <div><a href="nuclei/hello.nuclei">recipe</a> &middot; <a href="packages/app--hello.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/hicolor-icon-theme">
+  <h3>app/hicolor-icon-theme</h3>
+  <div class="muted">Version 0.18</div>
+  <p>hicolor-icon-theme package</p>
+  <div><a href="nuclei/hicolor-icon-theme.nuclei">recipe</a> &middot; <a href="packages/app--hicolor-icon-theme.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/htop">
+  <h3>app/htop</h3>
+  <div class="muted">Version 3.3.0</div>
+  <p>Interactive process viewer</p>
+  <div><a href="nuclei/htop.nuclei">recipe</a> &middot; <a href="packages/app--htop.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/hunspell">
+  <h3>app/hunspell</h3>
+  <div class="muted">Version 1.7.2</div>
+  <p>hunspell package</p>
+  <div><a href="nuclei/hunspell.nuclei">recipe</a> &middot; <a href="packages/app--hunspell.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/icu">
+  <h3>app/icu</h3>
+  <div class="muted">Version 75.1</div>
+  <p>icu package</p>
+  <div><a href="nuclei/icu.nuclei">recipe</a> &middot; <a href="packages/app--icu.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/iso-codes">
+  <h3>app/iso-codes</h3>
+  <div class="muted">Version 4.16.0</div>
+  <p>iso-codes package</p>
+  <div><a href="nuclei/iso-codes.nuclei">recipe</a> &middot; <a href="packages/app--iso-codes.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/jq">
+  <h3>app/jq</h3>
+  <div class="muted">Version 1.6</div>
+  <p>Command-line JSON processor</p>
+  <div><a href="nuclei/jq.nuclei">recipe</a> &middot; <a href="packages/app--jq.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kactivities">
+  <h3>app/kactivities</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kactivities package</p>
+  <div><a href="nuclei/kactivities.nuclei">recipe</a> &middot; <a href="packages/app--kactivities.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kactivitymanagerd">
+  <h3>app/kactivitymanagerd</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>kactivitymanagerd package</p>
+  <div><a href="nuclei/kactivitymanagerd.nuclei">recipe</a> &middot; <a href="packages/app--kactivitymanagerd.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/karchive">
+  <h3>app/karchive</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>karchive package</p>
+  <div><a href="nuclei/karchive.nuclei">recipe</a> &middot; <a href="packages/app--karchive.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kate">
+  <h3>app/kate</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>kate package</p>
+  <div><a href="nuclei/kate.nuclei">recipe</a> &middot; <a href="packages/app--kate.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kauth">
+  <h3>app/kauth</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kauth package</p>
+  <div><a href="nuclei/kauth.nuclei">recipe</a> &middot; <a href="packages/app--kauth.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kbookmarks">
+  <h3>app/kbookmarks</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kbookmarks package</p>
+  <div><a href="nuclei/kbookmarks.nuclei">recipe</a> &middot; <a href="packages/app--kbookmarks.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kcmutils">
+  <h3>app/kcmutils</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kcmutils package</p>
+  <div><a href="nuclei/kcmutils.nuclei">recipe</a> &middot; <a href="packages/app--kcmutils.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kcodecs">
+  <h3>app/kcodecs</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kcodecs package</p>
+  <div><a href="nuclei/kcodecs.nuclei">recipe</a> &middot; <a href="packages/app--kcodecs.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kcolorscheme">
+  <h3>app/kcolorscheme</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kcolorscheme package</p>
+  <div><a href="nuclei/kcolorscheme.nuclei">recipe</a> &middot; <a href="packages/app--kcolorscheme.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kcompletion">
+  <h3>app/kcompletion</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kcompletion package</p>
+  <div><a href="nuclei/kcompletion.nuclei">recipe</a> &middot; <a href="packages/app--kcompletion.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kconfig">
+  <h3>app/kconfig</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kconfig package</p>
+  <div><a href="nuclei/kconfig.nuclei">recipe</a> &middot; <a href="packages/app--kconfig.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kconfigwidgets">
+  <h3>app/kconfigwidgets</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kconfigwidgets package</p>
+  <div><a href="nuclei/kconfigwidgets.nuclei">recipe</a> &middot; <a href="packages/app--kconfigwidgets.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kcoreaddons">
+  <h3>app/kcoreaddons</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kcoreaddons package</p>
+  <div><a href="nuclei/kcoreaddons.nuclei">recipe</a> &middot; <a href="packages/app--kcoreaddons.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kcrash">
+  <h3>app/kcrash</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kcrash package</p>
+  <div><a href="nuclei/kcrash.nuclei">recipe</a> &middot; <a href="packages/app--kcrash.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kdbusaddons">
+  <h3>app/kdbusaddons</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kdbusaddons package</p>
+  <div><a href="nuclei/kdbusaddons.nuclei">recipe</a> &middot; <a href="packages/app--kdbusaddons.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kdeclarative">
+  <h3>app/kdeclarative</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kdeclarative package</p>
+  <div><a href="nuclei/kdeclarative.nuclei">recipe</a> &middot; <a href="packages/app--kdeclarative.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kdecoration">
+  <h3>app/kdecoration</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>kdecoration package</p>
+  <div><a href="nuclei/kdecoration.nuclei">recipe</a> &middot; <a href="packages/app--kdecoration.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kded">
+  <h3>app/kded</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kded package</p>
+  <div><a href="nuclei/kded.nuclei">recipe</a> &middot; <a href="packages/app--kded.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kdoctools">
+  <h3>app/kdoctools</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kdoctools package</p>
+  <div><a href="nuclei/kdoctools.nuclei">recipe</a> &middot; <a href="packages/app--kdoctools.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kfilemetadata">
+  <h3>app/kfilemetadata</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kfilemetadata package</p>
+  <div><a href="nuclei/kfilemetadata.nuclei">recipe</a> &middot; <a href="packages/app--kfilemetadata.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kgamma5">
+  <h3>app/kgamma5</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>kgamma5 package</p>
+  <div><a href="nuclei/kgamma5.nuclei">recipe</a> &middot; <a href="packages/app--kgamma5.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kglobalaccel">
+  <h3>app/kglobalaccel</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kglobalaccel package</p>
+  <div><a href="nuclei/kglobalaccel.nuclei">recipe</a> &middot; <a href="packages/app--kglobalaccel.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kguiaddons">
+  <h3>app/kguiaddons</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kguiaddons package</p>
+  <div><a href="nuclei/kguiaddons.nuclei">recipe</a> &middot; <a href="packages/app--kguiaddons.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ki18n">
+  <h3>app/ki18n</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>ki18n package</p>
+  <div><a href="nuclei/ki18n.nuclei">recipe</a> &middot; <a href="packages/app--ki18n.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kiconthemes">
+  <h3>app/kiconthemes</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kiconthemes package</p>
+  <div><a href="nuclei/kiconthemes.nuclei">recipe</a> &middot; <a href="packages/app--kiconthemes.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kidletime">
+  <h3>app/kidletime</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kidletime package</p>
+  <div><a href="nuclei/kidletime.nuclei">recipe</a> &middot; <a href="packages/app--kidletime.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kimageformats">
+  <h3>app/kimageformats</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kimageformats package</p>
+  <div><a href="nuclei/kimageformats.nuclei">recipe</a> &middot; <a href="packages/app--kimageformats.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kinfocenter">
+  <h3>app/kinfocenter</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>kinfocenter package</p>
+  <div><a href="nuclei/kinfocenter.nuclei">recipe</a> &middot; <a href="packages/app--kinfocenter.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kinit">
+  <h3>app/kinit</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kinit package</p>
+  <div><a href="nuclei/kinit.nuclei">recipe</a> &middot; <a href="packages/app--kinit.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kio">
+  <h3>app/kio</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kio package</p>
+  <div><a href="nuclei/kio.nuclei">recipe</a> &middot; <a href="packages/app--kio.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kitemmodels">
+  <h3>app/kitemmodels</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kitemmodels package</p>
+  <div><a href="nuclei/kitemmodels.nuclei">recipe</a> &middot; <a href="packages/app--kitemmodels.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kitemviews">
+  <h3>app/kitemviews</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kitemviews package</p>
+  <div><a href="nuclei/kitemviews.nuclei">recipe</a> &middot; <a href="packages/app--kitemviews.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kjobwidgets">
+  <h3>app/kjobwidgets</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kjobwidgets package</p>
+  <div><a href="nuclei/kjobwidgets.nuclei">recipe</a> &middot; <a href="packages/app--kjobwidgets.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/knewstuff">
+  <h3>app/knewstuff</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>knewstuff package</p>
+  <div><a href="nuclei/knewstuff.nuclei">recipe</a> &middot; <a href="packages/app--knewstuff.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/knotifications">
+  <h3>app/knotifications</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>knotifications package</p>
+  <div><a href="nuclei/knotifications.nuclei">recipe</a> &middot; <a href="packages/app--knotifications.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/knotifyconfig">
+  <h3>app/knotifyconfig</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>knotifyconfig package</p>
+  <div><a href="nuclei/knotifyconfig.nuclei">recipe</a> &middot; <a href="packages/app--knotifyconfig.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/konsole">
+  <h3>app/konsole</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>konsole package</p>
+  <div><a href="nuclei/konsole.nuclei">recipe</a> &middot; <a href="packages/app--konsole.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kpackage">
+  <h3>app/kpackage</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kpackage package</p>
+  <div><a href="nuclei/kpackage.nuclei">recipe</a> &middot; <a href="packages/app--kpackage.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kparts">
+  <h3>app/kparts</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kparts package</p>
+  <div><a href="nuclei/kparts.nuclei">recipe</a> &middot; <a href="packages/app--kparts.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kpty">
+  <h3>app/kpty</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kpty package</p>
+  <div><a href="nuclei/kpty.nuclei">recipe</a> &middot; <a href="packages/app--kpty.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/krunner">
+  <h3>app/krunner</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>krunner package</p>
+  <div><a href="nuclei/krunner.nuclei">recipe</a> &middot; <a href="packages/app--krunner.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kscreen">
+  <h3>app/kscreen</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>kscreen package</p>
+  <div><a href="nuclei/kscreen.nuclei">recipe</a> &middot; <a href="packages/app--kscreen.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kscreenlocker">
+  <h3>app/kscreenlocker</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>kscreenlocker package</p>
+  <div><a href="nuclei/kscreenlocker.nuclei">recipe</a> &middot; <a href="packages/app--kscreenlocker.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kservice">
+  <h3>app/kservice</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kservice package</p>
+  <div><a href="nuclei/kservice.nuclei">recipe</a> &middot; <a href="packages/app--kservice.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ksyntaxhighlighting">
+  <h3>app/ksyntaxhighlighting</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>ksyntaxhighlighting package</p>
+  <div><a href="nuclei/ksyntaxhighlighting.nuclei">recipe</a> &middot; <a href="packages/app--ksyntaxhighlighting.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ktexteditor">
+  <h3>app/ktexteditor</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>ktexteditor package</p>
+  <div><a href="nuclei/ktexteditor.nuclei">recipe</a> &middot; <a href="packages/app--ktexteditor.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ktextwidgets">
+  <h3>app/ktextwidgets</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>ktextwidgets package</p>
+  <div><a href="nuclei/ktextwidgets.nuclei">recipe</a> &middot; <a href="packages/app--ktextwidgets.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kwallet">
+  <h3>app/kwallet</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kwallet package</p>
+  <div><a href="nuclei/kwallet.nuclei">recipe</a> &middot; <a href="packages/app--kwallet.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kwayland">
+  <h3>app/kwayland</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kwayland package</p>
+  <div><a href="nuclei/kwayland.nuclei">recipe</a> &middot; <a href="packages/app--kwayland.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kwidgetsaddons">
+  <h3>app/kwidgetsaddons</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kwidgetsaddons package</p>
+  <div><a href="nuclei/kwidgetsaddons.nuclei">recipe</a> &middot; <a href="packages/app--kwidgetsaddons.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kwin">
+  <h3>app/kwin</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>kwin package</p>
+  <div><a href="nuclei/kwin.nuclei">recipe</a> &middot; <a href="packages/app--kwin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kwindowsystem">
+  <h3>app/kwindowsystem</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kwindowsystem package</p>
+  <div><a href="nuclei/kwindowsystem.nuclei">recipe</a> &middot; <a href="packages/app--kwindowsystem.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/kxmlgui">
+  <h3>app/kxmlgui</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>kxmlgui package</p>
+  <div><a href="nuclei/kxmlgui.nuclei">recipe</a> &middot; <a href="packages/app--kxmlgui.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/layer-shell-qt">
+  <h3>app/layer-shell-qt</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>layer-shell-qt package</p>
+  <div><a href="nuclei/layer-shell-qt.nuclei">recipe</a> &middot; <a href="packages/app--layer-shell-qt.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libadwaita">
+  <h3>app/libadwaita</h3>
+  <div class="muted">Version 1.5.0</div>
+  <p>libadwaita package</p>
+  <div><a href="nuclei/libadwaita.nuclei">recipe</a> &middot; <a href="packages/app--libadwaita.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libatasmart">
+  <h3>app/libatasmart</h3>
+  <div class="muted">Version 0.19</div>
+  <p>libatasmart package</p>
+  <div><a href="nuclei/libatasmart.nuclei">recipe</a> &middot; <a href="packages/app--libatasmart.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libbaloo">
+  <h3>app/libbaloo</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>libbaloo package</p>
+  <div><a href="nuclei/libbaloo.nuclei">recipe</a> &middot; <a href="packages/app--libbaloo.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libblockdev">
+  <h3>app/libblockdev</h3>
+  <div class="muted">Version 3.1.1</div>
+  <p>libblockdev package</p>
+  <div><a href="nuclei/libblockdev.nuclei">recipe</a> &middot; <a href="packages/app--libblockdev.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libcanberra">
+  <h3>app/libcanberra</h3>
+  <div class="muted">Version 0.30</div>
+  <p>libcanberra package</p>
+  <div><a href="nuclei/libcanberra.nuclei">recipe</a> &middot; <a href="packages/app--libcanberra.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libdazzle">
+  <h3>app/libdazzle</h3>
+  <div class="muted">Version 3.54.0</div>
+  <p>libdazzle package</p>
+  <div><a href="nuclei/libdazzle.nuclei">recipe</a> &middot; <a href="packages/app--libdazzle.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libfribidi">
+  <h3>app/libfribidi</h3>
+  <div class="muted">Version 1.0.15</div>
+  <p>libfribidi package</p>
+  <div><a href="nuclei/libfribidi.nuclei">recipe</a> &middot; <a href="packages/app--libfribidi.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libgeocode-glib">
+  <h3>app/libgeocode-glib</h3>
+  <div class="muted">Version 3.26.4</div>
+  <p>libgeocode-glib package</p>
+  <div><a href="nuclei/libgeocode-glib.nuclei">recipe</a> &middot; <a href="packages/app--libgeocode-glib.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libical">
+  <h3>app/libical</h3>
+  <div class="muted">Version 3.0.18</div>
+  <p>libical package</p>
+  <div><a href="nuclei/libical.nuclei">recipe</a> &middot; <a href="packages/app--libical.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libieee1284">
+  <h3>app/libieee1284</h3>
+  <div class="muted">Version 0.2.11</div>
+  <p>libieee1284 package</p>
+  <div><a href="nuclei/libieee1284.nuclei">recipe</a> &middot; <a href="packages/app--libieee1284.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libinput">
+  <h3>app/libinput</h3>
+  <div class="muted">Version 1.26.2</div>
+  <p>libinput package</p>
+  <div><a href="nuclei/libinput.nuclei">recipe</a> &middot; <a href="packages/app--libinput.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libkscreen">
+  <h3>app/libkscreen</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>libkscreen package</p>
+  <div><a href="nuclei/libkscreen.nuclei">recipe</a> &middot; <a href="packages/app--libkscreen.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libksysguard">
+  <h3>app/libksysguard</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>libksysguard package</p>
+  <div><a href="nuclei/libksysguard.nuclei">recipe</a> &middot; <a href="packages/app--libksysguard.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libmbim">
+  <h3>app/libmbim</h3>
+  <div class="muted">Version 1.30.0</div>
+  <p>libmbim package</p>
+  <div><a href="nuclei/libmbim.nuclei">recipe</a> &middot; <a href="packages/app--libmbim.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libndp">
+  <h3>app/libndp</h3>
+  <div class="muted">Version 1.8</div>
+  <p>libndp package</p>
+  <div><a href="nuclei/libndp.nuclei">recipe</a> &middot; <a href="packages/app--libndp.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libnotify">
+  <h3>app/libnotify</h3>
+  <div class="muted">Version 0.8.3</div>
+  <p>libnotify package</p>
+  <div><a href="nuclei/libnotify.nuclei">recipe</a> &middot; <a href="packages/app--libnotify.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libpciaccess">
+  <h3>app/libpciaccess</h3>
+  <div class="muted">Version 0.18.1</div>
+  <p>libpciaccess package</p>
+  <div><a href="nuclei/libpciaccess.nuclei">recipe</a> &middot; <a href="packages/app--libpciaccess.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libpcre2">
+  <h3>app/libpcre2</h3>
+  <div class="muted">Version 10.44</div>
+  <p>libpcre2 package</p>
+  <div><a href="nuclei/libpcre2.nuclei">recipe</a> &middot; <a href="packages/app--libpcre2.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libportal">
+  <h3>app/libportal</h3>
+  <div class="muted">Version 0.7.1</div>
+  <p>libportal package</p>
+  <div><a href="nuclei/libportal.nuclei">recipe</a> &middot; <a href="packages/app--libportal.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libpulse">
+  <h3>app/libpulse</h3>
+  <div class="muted">Version 17.0</div>
+  <p>libpulse package</p>
+  <div><a href="nuclei/libpulse.nuclei">recipe</a> &middot; <a href="packages/app--libpulse.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libqmi">
+  <h3>app/libqmi</h3>
+  <div class="muted">Version 1.34.0</div>
+  <p>libqmi package</p>
+  <div><a href="nuclei/libqmi.nuclei">recipe</a> &middot; <a href="packages/app--libqmi.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libsecret">
+  <h3>app/libsecret</h3>
+  <div class="muted">Version 0.21.4</div>
+  <p>libsecret package</p>
+  <div><a href="nuclei/libsecret.nuclei">recipe</a> &middot; <a href="packages/app--libsecret.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libsoup3">
+  <h3>app/libsoup3</h3>
+  <div class="muted">Version 3.4.4</div>
+  <p>libsoup3 package</p>
+  <div><a href="nuclei/libsoup3.nuclei">recipe</a> &middot; <a href="packages/app--libsoup3.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libtasn1">
+  <h3>app/libtasn1</h3>
+  <div class="muted">Version 4.19.0</div>
+  <p>libtasn1 package</p>
+  <div><a href="nuclei/libtasn1.nuclei">recipe</a> &middot; <a href="packages/app--libtasn1.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libwacom">
+  <h3>app/libwacom</h3>
+  <div class="muted">Version 2.10.0</div>
+  <p>libwacom package</p>
+  <div><a href="nuclei/libwacom.nuclei">recipe</a> &middot; <a href="packages/app--libwacom.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libwnck3">
+  <h3>app/libwnck3</h3>
+  <div class="muted">Version 43.0</div>
+  <p>libwnck3 package</p>
+  <div><a href="nuclei/libwnck3.nuclei">recipe</a> &middot; <a href="packages/app--libwnck3.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxcvt">
+  <h3>app/libxcvt</h3>
+  <div class="muted">Version 0.1.2</div>
+  <p>libxcvt package</p>
+  <div><a href="nuclei/libxcvt.nuclei">recipe</a> &middot; <a href="packages/app--libxcvt.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxfce4menu">
+  <h3>app/libxfce4menu</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>libxfce4menu package</p>
+  <div><a href="nuclei/libxfce4menu.nuclei">recipe</a> &middot; <a href="packages/app--libxfce4menu.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxfce4panel">
+  <h3>app/libxfce4panel</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>libxfce4panel package</p>
+  <div><a href="nuclei/libxfce4panel.nuclei">recipe</a> &middot; <a href="packages/app--libxfce4panel.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxfce4ui">
+  <h3>app/libxfce4ui</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>libxfce4ui package</p>
+  <div><a href="nuclei/libxfce4ui.nuclei">recipe</a> &middot; <a href="packages/app--libxfce4ui.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxfce4util">
+  <h3>app/libxfce4util</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>libxfce4util package</p>
+  <div><a href="nuclei/libxfce4util.nuclei">recipe</a> &middot; <a href="packages/app--libxfce4util.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxft">
+  <h3>app/libxft</h3>
+  <div class="muted">Version 2.3.8</div>
+  <p>libxft package</p>
+  <div><a href="nuclei/libxft.nuclei">recipe</a> &middot; <a href="packages/app--libxft.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxkbcommon">
+  <h3>app/libxkbcommon</h3>
+  <div class="muted">Version 1.7.0</div>
+  <p>libxkbcommon package</p>
+  <div><a href="nuclei/libxkbcommon-base.nuclei">recipe</a> &middot; <a href="packages/app--libxkbcommon.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxkbcommon">
+  <h3>app/libxkbcommon</h3>
+  <div class="muted">Version 1.7.0</div>
+  <p>libxkbcommon package</p>
+  <div><a href="nuclei/libxkbcommon-desktop.nuclei">recipe</a> &middot; <a href="packages/app--libxkbcommon.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxkbcommon">
+  <h3>app/libxkbcommon</h3>
+  <div class="muted">Version 1.7.0</div>
+  <p>libxkbcommon package</p>
+  <div><a href="nuclei/libxkbcommon.nuclei">recipe</a> &middot; <a href="packages/app--libxkbcommon.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxklavier">
+  <h3>app/libxklavier</h3>
+  <div class="muted">Version 5.4</div>
+  <p>libxklavier package</p>
+  <div><a href="nuclei/libxklavier.nuclei">recipe</a> &middot; <a href="packages/app--libxklavier.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxpresent">
+  <h3>app/libxpresent</h3>
+  <div class="muted">Version 1.4.0</div>
+  <p>libxpresent package</p>
+  <div><a href="nuclei/libxpresent.nuclei">recipe</a> &middot; <a href="packages/app--libxpresent.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxres">
+  <h3>app/libxres</h3>
+  <div class="muted">Version 1.2.2</div>
+  <p>libxres package</p>
+  <div><a href="nuclei/libxres.nuclei">recipe</a> &middot; <a href="packages/app--libxres.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxscrnsaver">
+  <h3>app/libxscrnsaver</h3>
+  <div class="muted">Version 1.2.4</div>
+  <p>libxscrnsaver package</p>
+  <div><a href="nuclei/libxscrnsaver.nuclei">recipe</a> &middot; <a href="packages/app--libxscrnsaver.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxshmfence">
+  <h3>app/libxshmfence</h3>
+  <div class="muted">Version 1.3.2</div>
+  <p>libxshmfence package</p>
+  <div><a href="nuclei/libxshmfence.nuclei">recipe</a> &middot; <a href="packages/app--libxshmfence.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/libxvmc">
+  <h3>app/libxvmc</h3>
+  <div class="muted">Version 1.0.13</div>
+  <p>libxvmc package</p>
+  <div><a href="nuclei/libxvmc.nuclei">recipe</a> &middot; <a href="packages/app--libxvmc.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/lmdb">
+  <h3>app/lmdb</h3>
+  <div class="muted">Version 0.9.31</div>
+  <p>lmdb package</p>
+  <div><a href="nuclei/lmdb.nuclei">recipe</a> &middot; <a href="packages/app--lmdb.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/milou">
+  <h3>app/milou</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>milou package</p>
+  <div><a href="nuclei/milou.nuclei">recipe</a> &middot; <a href="packages/app--milou.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/mousepad">
+  <h3>app/mousepad</h3>
+  <div class="muted">Version 0.6.2</div>
+  <p>mousepad package</p>
+  <div><a href="nuclei/mousepad.nuclei">recipe</a> &middot; <a href="packages/app--mousepad.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/nettle">
+  <h3>app/nettle</h3>
+  <div class="muted">Version 3.10</div>
+  <p>nettle package</p>
+  <div><a href="nuclei/nettle.nuclei">recipe</a> &middot; <a href="packages/app--nettle.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/networkmanager">
+  <h3>app/networkmanager</h3>
+  <div class="muted">Version 1.46.0</div>
+  <p>networkmanager package</p>
+  <div><a href="nuclei/networkmanager.nuclei">recipe</a> &middot; <a href="packages/app--networkmanager.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/okular">
+  <h3>app/okular</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>okular package</p>
+  <div><a href="nuclei/okular.nuclei">recipe</a> &middot; <a href="packages/app--okular.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/oxygen">
+  <h3>app/oxygen</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>oxygen package</p>
+  <div><a href="nuclei/oxygen.nuclei">recipe</a> &middot; <a href="packages/app--oxygen.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/p11-kit">
+  <h3>app/p11-kit</h3>
+  <div class="muted">Version 0.25.3</div>
+  <p>p11-kit package</p>
+  <div><a href="nuclei/p11-kit.nuclei">recipe</a> &middot; <a href="packages/app--p11-kit.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/pango">
+  <h3>app/pango</h3>
+  <div class="muted">Version 1.52.2</div>
+  <p>pango package</p>
+  <div><a href="nuclei/pango.nuclei">recipe</a> &middot; <a href="packages/app--pango.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/phonon">
+  <h3>app/phonon</h3>
+  <div class="muted">Version 4.12.0</div>
+  <p>phonon package</p>
+  <div><a href="nuclei/phonon.nuclei">recipe</a> &middot; <a href="packages/app--phonon.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/phonon-qt6">
+  <h3>app/phonon-qt6</h3>
+  <div class="muted">Version 4.12.0</div>
+  <p>phonon-qt6 package</p>
+  <div><a href="nuclei/phonon-qt6.nuclei">recipe</a> &middot; <a href="packages/app--phonon-qt6.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/pipewire">
+  <h3>app/pipewire</h3>
+  <div class="muted">Version 1.2.1</div>
+  <p>pipewire package</p>
+  <div><a href="nuclei/pipewire.nuclei">recipe</a> &middot; <a href="packages/app--pipewire.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/plasma-browser-integration">
+  <h3>app/plasma-browser-integration</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>plasma-browser-integration package</p>
+  <div><a href="nuclei/plasma-browser-integration.nuclei">recipe</a> &middot; <a href="packages/app--plasma-browser-integration.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/plasma-desktop">
+  <h3>app/plasma-desktop</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>plasma-desktop package</p>
+  <div><a href="nuclei/plasma-desktop.nuclei">recipe</a> &middot; <a href="packages/app--plasma-desktop.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/plasma-firewall">
+  <h3>app/plasma-firewall</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>plasma-firewall package</p>
+  <div><a href="nuclei/plasma-firewall.nuclei">recipe</a> &middot; <a href="packages/app--plasma-firewall.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/plasma-framework">
+  <h3>app/plasma-framework</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>plasma-framework package</p>
+  <div><a href="nuclei/plasma-framework.nuclei">recipe</a> &middot; <a href="packages/app--plasma-framework.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/plasma-integration">
+  <h3>app/plasma-integration</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>plasma-integration package</p>
+  <div><a href="nuclei/plasma-integration.nuclei">recipe</a> &middot; <a href="packages/app--plasma-integration.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/plasma-systemmonitor">
+  <h3>app/plasma-systemmonitor</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>plasma-systemmonitor package</p>
+  <div><a href="nuclei/plasma-systemmonitor.nuclei">recipe</a> &middot; <a href="packages/app--plasma-systemmonitor.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/plasma-workspace">
+  <h3>app/plasma-workspace</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>plasma-workspace package</p>
+  <div><a href="nuclei/plasma-workspace.nuclei">recipe</a> &middot; <a href="packages/app--plasma-workspace.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/polkit-kde-agent-1">
+  <h3>app/polkit-kde-agent-1</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>polkit-kde-agent-1 package</p>
+  <div><a href="nuclei/polkit-kde-agent-1.nuclei">recipe</a> &middot; <a href="packages/app--polkit-kde-agent-1.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/polkit-qt-1">
+  <h3>app/polkit-qt-1</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>polkit-qt-1 package</p>
+  <div><a href="nuclei/polkit-qt-1.nuclei">recipe</a> &middot; <a href="packages/app--polkit-qt-1.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/powerdevil">
+  <h3>app/powerdevil</h3>
+  <div class="muted">Version 6.1.0</div>
+  <p>powerdevil package</p>
+  <div><a href="nuclei/powerdevil.nuclei">recipe</a> &middot; <a href="packages/app--powerdevil.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/ristretto">
+  <h3>app/ristretto</h3>
+  <div class="muted">Version 0.13.1</div>
+  <p>ristretto package</p>
+  <div><a href="nuclei/ristretto.nuclei">recipe</a> &middot; <a href="packages/app--ristretto.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/sane-backends">
+  <h3>app/sane-backends</h3>
+  <div class="muted">Version 1.2.1</div>
+  <p>sane-backends package</p>
+  <div><a href="nuclei/sane-backends.nuclei">recipe</a> &middot; <a href="packages/app--sane-backends.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/solid">
+  <h3>app/solid</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>solid package</p>
+  <div><a href="nuclei/solid.nuclei">recipe</a> &middot; <a href="packages/app--solid.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/sonnet">
+  <h3>app/sonnet</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>sonnet package</p>
+  <div><a href="nuclei/sonnet.nuclei">recipe</a> &middot; <a href="packages/app--sonnet.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/spectacle">
+  <h3>app/spectacle</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>spectacle package</p>
+  <div><a href="nuclei/spectacle.nuclei">recipe</a> &middot; <a href="packages/app--spectacle.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/syndication">
+  <h3>app/syndication</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>syndication package</p>
+  <div><a href="nuclei/syndication.nuclei">recipe</a> &middot; <a href="packages/app--syndication.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/syntax-highlighting">
+  <h3>app/syntax-highlighting</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>syntax-highlighting package</p>
+  <div><a href="nuclei/syntax-highlighting.nuclei">recipe</a> &middot; <a href="packages/app--syntax-highlighting.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/systemsettings">
+  <h3>app/systemsettings</h3>
+  <div class="muted">Version 24.05.0</div>
+  <p>systemsettings package</p>
+  <div><a href="nuclei/systemsettings.nuclei">recipe</a> &middot; <a href="packages/app--systemsettings.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/threadweaver">
+  <h3>app/threadweaver</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>threadweaver package</p>
+  <div><a href="nuclei/threadweaver.nuclei">recipe</a> &middot; <a href="packages/app--threadweaver.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/thunar">
+  <h3>app/thunar</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>thunar package</p>
+  <div><a href="nuclei/thunar.nuclei">recipe</a> &middot; <a href="packages/app--thunar.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/thunar-volman">
+  <h3>app/thunar-volman</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>thunar-volman package</p>
+  <div><a href="nuclei/thunar-volman.nuclei">recipe</a> &middot; <a href="packages/app--thunar-volman.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/thunarx">
+  <h3>app/thunarx</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>thunarx package</p>
+  <div><a href="nuclei/thunarx.nuclei">recipe</a> &middot; <a href="packages/app--thunarx.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/tmux">
+  <h3>app/tmux</h3>
+  <div class="muted">Version 3.3a</div>
+  <p>Terminal multiplexer</p>
+  <div><a href="nuclei/tmux.nuclei">recipe</a> &middot; <a href="packages/app--tmux.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/tumbler">
+  <h3>app/tumbler</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>tumbler package</p>
+  <div><a href="nuclei/tumbler.nuclei">recipe</a> &middot; <a href="packages/app--tumbler.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/udisks">
+  <h3>app/udisks</h3>
+  <div class="muted">Version 2.10.1</div>
+  <p>udisks package</p>
+  <div><a href="nuclei/udisks.nuclei">recipe</a> &middot; <a href="packages/app--udisks.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/udisks2">
+  <h3>app/udisks2</h3>
+  <div class="muted">Version 2.10.1</div>
+  <p>udisks2 package</p>
+  <div><a href="nuclei/udisks2.nuclei">recipe</a> &middot; <a href="packages/app--udisks2.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/unbound">
+  <h3>app/unbound</h3>
+  <div class="muted">Version 1.20.0</div>
+  <p>unbound package</p>
+  <div><a href="nuclei/unbound.nuclei">recipe</a> &middot; <a href="packages/app--unbound.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/upower">
+  <h3>app/upower</h3>
+  <div class="muted">Version 1.90.4</div>
+  <p>upower package</p>
+  <div><a href="nuclei/upower.nuclei">recipe</a> &middot; <a href="packages/app--upower.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/vte">
+  <h3>app/vte</h3>
+  <div class="muted">Version 0.76.4</div>
+  <p>vte package</p>
+  <div><a href="nuclei/vte.nuclei">recipe</a> &middot; <a href="packages/app--vte.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xapian">
+  <h3>app/xapian</h3>
+  <div class="muted">Version 1.4.26</div>
+  <p>xapian package</p>
+  <div><a href="nuclei/xapian.nuclei">recipe</a> &middot; <a href="packages/app--xapian.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xdg-desktop-portal">
+  <h3>app/xdg-desktop-portal</h3>
+  <div class="muted">Version 1.18.4</div>
+  <p>xdg-desktop-portal package</p>
+  <div><a href="nuclei/xdg-desktop-portal.nuclei">recipe</a> &middot; <a href="packages/app--xdg-desktop-portal.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xdg-utils">
+  <h3>app/xdg-utils</h3>
+  <div class="muted">Version 1.2.1</div>
+  <p>xdg-utils package</p>
+  <div><a href="nuclei/xdg-utils.nuclei">recipe</a> &middot; <a href="packages/app--xdg-utils.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-appfinder">
+  <h3>app/xfce4-appfinder</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-appfinder package</p>
+  <div><a href="nuclei/xfce4-appfinder.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-appfinder.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-battery-plugin">
+  <h3>app/xfce4-battery-plugin</h3>
+  <div class="muted">Version 1.1.5</div>
+  <p>xfce4-battery-plugin package</p>
+  <div><a href="nuclei/xfce4-battery-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-battery-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-clipman-plugin">
+  <h3>app/xfce4-clipman-plugin</h3>
+  <div class="muted">Version 1.6.6</div>
+  <p>xfce4-clipman-plugin package</p>
+  <div><a href="nuclei/xfce4-clipman-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-clipman-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-datetime-plugin">
+  <h3>app/xfce4-datetime-plugin</h3>
+  <div class="muted">Version 0.8.3</div>
+  <p>xfce4-datetime-plugin package</p>
+  <div><a href="nuclei/xfce4-datetime-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-datetime-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-desktop">
+  <h3>app/xfce4-desktop</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-desktop package</p>
+  <div><a href="nuclei/xfce4-desktop.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-desktop.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-netload-plugin">
+  <h3>app/xfce4-netload-plugin</h3>
+  <div class="muted">Version 1.4.1</div>
+  <p>xfce4-netload-plugin package</p>
+  <div><a href="nuclei/xfce4-netload-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-netload-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-notifyd">
+  <h3>app/xfce4-notifyd</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-notifyd package</p>
+  <div><a href="nuclei/xfce4-notifyd.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-notifyd.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-panel">
+  <h3>app/xfce4-panel</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-panel package</p>
+  <div><a href="nuclei/xfce4-panel.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-panel.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-power-manager">
+  <h3>app/xfce4-power-manager</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-power-manager package</p>
+  <div><a href="nuclei/xfce4-power-manager.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-power-manager.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-pulseaudio-plugin">
+  <h3>app/xfce4-pulseaudio-plugin</h3>
+  <div class="muted">Version 0.4.8</div>
+  <p>xfce4-pulseaudio-plugin package</p>
+  <div><a href="nuclei/xfce4-pulseaudio-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-pulseaudio-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-screensaver">
+  <h3>app/xfce4-screensaver</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-screensaver package</p>
+  <div><a href="nuclei/xfce4-screensaver.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-screensaver.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-session">
+  <h3>app/xfce4-session</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-session package</p>
+  <div><a href="nuclei/xfce4-session.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-session.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-settings">
+  <h3>app/xfce4-settings</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-settings package</p>
+  <div><a href="nuclei/xfce4-settings.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-settings.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-systemload-plugin">
+  <h3>app/xfce4-systemload-plugin</h3>
+  <div class="muted">Version 1.3.2</div>
+  <p>xfce4-systemload-plugin package</p>
+  <div><a href="nuclei/xfce4-systemload-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-systemload-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-taskmanager">
+  <h3>app/xfce4-taskmanager</h3>
+  <div class="muted">Version 1.5.7</div>
+  <p>xfce4-taskmanager package</p>
+  <div><a href="nuclei/xfce4-taskmanager.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-taskmanager.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-terminal">
+  <h3>app/xfce4-terminal</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfce4-terminal package</p>
+  <div><a href="nuclei/xfce4-terminal.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-terminal.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-weather-plugin">
+  <h3>app/xfce4-weather-plugin</h3>
+  <div class="muted">Version 0.11.2</div>
+  <p>xfce4-weather-plugin package</p>
+  <div><a href="nuclei/xfce4-weather-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-weather-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfce4-whiskermenu-plugin">
+  <h3>app/xfce4-whiskermenu-plugin</h3>
+  <div class="muted">Version 2.8.3</div>
+  <p>xfce4-whiskermenu-plugin package</p>
+  <div><a href="nuclei/xfce4-whiskermenu-plugin.nuclei">recipe</a> &middot; <a href="packages/app--xfce4-whiskermenu-plugin.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfconf">
+  <h3>app/xfconf</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfconf package</p>
+  <div><a href="nuclei/xfconf.nuclei">recipe</a> &middot; <a href="packages/app--xfconf.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xfwm4">
+  <h3>app/xfwm4</h3>
+  <div class="muted">Version 4.18.1</div>
+  <p>xfwm4 package</p>
+  <div><a href="nuclei/xfwm4.nuclei">recipe</a> &middot; <a href="packages/app--xfwm4.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/xkbcommon-x11">
+  <h3>app/xkbcommon-x11</h3>
+  <div class="muted">Version 1.7.0</div>
+  <p>xkbcommon-x11 package</p>
+  <div><a href="nuclei/xkbcommon-x11.nuclei">recipe</a> &middot; <a href="packages/app--xkbcommon-x11.json">metadata</a></div>
+</div>
+<div class="card" data-name="app/yelp-xsl">
+  <h3>app/yelp-xsl</h3>
+  <div class="muted">Version 41.2</div>
+  <p>yelp-xsl package</p>
+  <div><a href="nuclei/yelp-xsl.nuclei">recipe</a> &middot; <a href="packages/app--yelp-xsl.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-db/sqlite">
+  <h3>dev-db/sqlite</h3>
+  <div class="muted">Version 3.44.2</div>
+  <p>C library that implements an SQL database engine</p>
+  <div><a href="nuclei/sqlite.nuclei">recipe</a> &middot; <a href="packages/dev-db--sqlite.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-lang/duktape">
+  <h3>dev-lang/duktape</h3>
+  <div class="muted">Version 2.7.0</div>
+  <p>Embeddable JavaScript engine</p>
+  <div><a href="nuclei/duktape.nuclei">recipe</a> &middot; <a href="packages/dev-lang--duktape.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-lang/go">
+  <h3>dev-lang/go</h3>
+  <div class="muted">Version 1.22.0</div>
+  <p>The Go programming language</p>
+  <div><a href="nuclei/go.nuclei">recipe</a> &middot; <a href="packages/dev-lang--go.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-lang/perl">
+  <h3>dev-lang/perl</h3>
+  <div class="muted">Version 5.38.2</div>
+  <p>Practical Extraction and Report Language</p>
+  <div><a href="nuclei/perl.nuclei">recipe</a> &middot; <a href="packages/dev-lang--perl.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-lang/python3">
+  <h3>dev-lang/python3</h3>
+  <div class="muted">Version 3.12.1</div>
+  <p>Interactive high-level object-oriented language</p>
+  <div><a href="nuclei/python3.nuclei">recipe</a> &middot; <a href="packages/dev-lang--python3.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-lang/ruby">
+  <h3>dev-lang/ruby</h3>
+  <div class="muted">Version 3.2.2</div>
+  <p>An interpreted object-oriented programming language</p>
+  <div><a href="nuclei/ruby.nuclei">recipe</a> &middot; <a href="packages/dev-lang--ruby.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-lang/rust">
+  <h3>dev-lang/rust</h3>
+  <div class="muted">Version 1.75.0</div>
+  <p>Systems programming language focused on safety and performance</p>
+  <div><a href="nuclei/rust.nuclei">recipe</a> &middot; <a href="packages/dev-lang--rust.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/appstream">
+  <h3>dev-libs/appstream</h3>
+  <div class="muted">Version 1.0.1</div>
+  <p>Tools and libraries to work with AppStream metadata</p>
+  <div><a href="nuclei/appstream.nuclei">recipe</a> &middot; <a href="packages/dev-libs--appstream.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/expat">
+  <h3>dev-libs/expat</h3>
+  <div class="muted">Version 2.5.0</div>
+  <p>XML parser library</p>
+  <div><a href="nuclei/expat.nuclei">recipe</a> &middot; <a href="packages/dev-libs--expat.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/glib">
+  <h3>dev-libs/glib</h3>
+  <div class="muted">Version 2.78.3</div>
+  <p>Low-level core library for GNOME</p>
+  <div><a href="nuclei/glib.nuclei">recipe</a> &middot; <a href="packages/dev-libs--glib.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/gmp">
+  <h3>dev-libs/gmp</h3>
+  <div class="muted">Version 6.3.0</div>
+  <p>GNU Multiple Precision Arithmetic Library</p>
+  <div><a href="nuclei/gmp.nuclei">recipe</a> &middot; <a href="packages/dev-libs--gmp.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/gobject-introspection">
+  <h3>dev-libs/gobject-introspection</h3>
+  <div class="muted">Version 1.78.1</div>
+  <p>Introspection system for GObject-based libraries</p>
+  <div><a href="nuclei/gobject-introspection.nuclei">recipe</a> &middot; <a href="packages/dev-libs--gobject-introspection.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/json-glib">
+  <h3>dev-libs/json-glib</h3>
+  <div class="muted">Version 1.8.0</div>
+  <p>JSON library built on GLib</p>
+  <div><a href="nuclei/json-glib.nuclei">recipe</a> &middot; <a href="packages/dev-libs--json-glib.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/jsoncpp">
+  <h3>dev-libs/jsoncpp</h3>
+  <div class="muted">Version 1.9.5</div>
+  <p>C++ library for interacting with JSON</p>
+  <div><a href="nuclei/jsoncpp.nuclei">recipe</a> &middot; <a href="packages/dev-libs--jsoncpp.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libassuan">
+  <h3>dev-libs/libassuan</h3>
+  <div class="muted">Version 2.5.6</div>
+  <p>IPC library used by GnuPG and related software</p>
+  <div><a href="nuclei/libassuan.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libassuan.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libevent">
+  <h3>dev-libs/libevent</h3>
+  <div class="muted">Version 2.1.12</div>
+  <p>Event notification library</p>
+  <div><a href="nuclei/libevent.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libevent.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libffi">
+  <h3>dev-libs/libffi</h3>
+  <div class="muted">Version 3.4.4</div>
+  <p>Portable foreign function interface library</p>
+  <div><a href="nuclei/libffi.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libffi.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libgcrypt">
+  <h3>dev-libs/libgcrypt</h3>
+  <div class="muted">Version 1.10.3</div>
+  <p>General purpose cryptographic library</p>
+  <div><a href="nuclei/libgcrypt.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libgcrypt.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libgpg-error">
+  <h3>dev-libs/libgpg-error</h3>
+  <div class="muted">Version 1.47</div>
+  <p>Library that defines common error values for GnuPG</p>
+  <div><a href="nuclei/libgpg-error.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libgpg-error.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libiconv">
+  <h3>dev-libs/libiconv</h3>
+  <div class="muted">Version 1.17</div>
+  <p>Character set conversion library</p>
+  <div><a href="nuclei/libiconv.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libiconv.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libksba">
+  <h3>dev-libs/libksba</h3>
+  <div class="muted">Version 1.6.5</div>
+  <p>Library for working with X.509 certificates and CMS data</p>
+  <div><a href="nuclei/libksba.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libksba.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libtermkey">
+  <h3>dev-libs/libtermkey</h3>
+  <div class="muted">Version 0.22</div>
+  <p>Library for processing keyboard entry from terminal</p>
+  <div><a href="nuclei/libtermkey.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libtermkey.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libunistring">
+  <h3>dev-libs/libunistring</h3>
+  <div class="muted">Version 1.1</div>
+  <p>Library for manipulating Unicode strings</p>
+  <div><a href="nuclei/libunistring.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libunistring.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libuv">
+  <h3>dev-libs/libuv</h3>
+  <div class="muted">Version 1.48.0</div>
+  <p>Multi-platform asynchronous I/O library</p>
+  <div><a href="nuclei/libuv.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libuv.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libxml2">
+  <h3>dev-libs/libxml2</h3>
+  <div class="muted">Version 2.12.3</div>
+  <p>XML parsing library, version 2</p>
+  <div><a href="nuclei/libxml2.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libxml2.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libxmlb">
+  <h3>dev-libs/libxmlb</h3>
+  <div class="muted">Version 0.3.14</div>
+  <p>Library to help create and query binary XML blobs</p>
+  <div><a href="nuclei/libxmlb.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libxmlb.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/libyaml">
+  <h3>dev-libs/libyaml</h3>
+  <div class="muted">Version 0.2.5</div>
+  <p>YAML 1.1 parser and emitter written in C</p>
+  <div><a href="nuclei/libyaml.nuclei">recipe</a> &middot; <a href="packages/dev-libs--libyaml.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/mpfr">
+  <h3>dev-libs/mpfr</h3>
+  <div class="muted">Version 4.2.1</div>
+  <p>Multiple-precision floating-point library</p>
+  <div><a href="nuclei/mpfr.nuclei">recipe</a> &middot; <a href="packages/dev-libs--mpfr.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/npth">
+  <h3>dev-libs/npth</h3>
+  <div class="muted">Version 1.6</div>
+  <p>New portable threads library</p>
+  <div><a href="nuclei/npth.nuclei">recipe</a> &middot; <a href="packages/dev-libs--npth.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/objlog">
+  <h3>dev-libs/objlog</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>ObjLog - Object-oriented logging library by Kokonico</p>
+  <div><a href="nuclei/objlog.nuclei">recipe</a> &middot; <a href="packages/dev-libs--objlog.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/oniguruma">
+  <h3>dev-libs/oniguruma</h3>
+  <div class="muted">Version 6.9.9</div>
+  <p>Regular expressions library</p>
+  <div><a href="nuclei/oniguruma.nuclei">recipe</a> &middot; <a href="packages/dev-libs--oniguruma.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/openssl">
+  <h3>dev-libs/openssl</h3>
+  <div class="muted">Version 3.2.0</div>
+  <p>Toolkit for SSL/TLS and crypto library</p>
+  <div><a href="nuclei/openssl.nuclei">recipe</a> &middot; <a href="packages/dev-libs--openssl.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/pcre">
+  <h3>dev-libs/pcre</h3>
+  <div class="muted">Version 8.45</div>
+  <p>Perl Compatible Regular Expressions</p>
+  <div><a href="nuclei/pcre.nuclei">recipe</a> &middot; <a href="packages/dev-libs--pcre.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/pcre2">
+  <h3>dev-libs/pcre2</h3>
+  <div class="muted">Version 10.42</div>
+  <p>Perl-compatible regular expression library (version 2)</p>
+  <div><a href="nuclei/pcre2.nuclei">recipe</a> &middot; <a href="packages/dev-libs--pcre2.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/popt">
+  <h3>dev-libs/popt</h3>
+  <div class="muted">Version 1.19</div>
+  <p>Command line option parsing library</p>
+  <div><a href="nuclei/popt.nuclei">recipe</a> &middot; <a href="packages/dev-libs--popt.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/readline">
+  <h3>dev-libs/readline</h3>
+  <div class="muted">Version 8.2</div>
+  <p>GNU readline library</p>
+  <div><a href="nuclei/readline.nuclei">recipe</a> &middot; <a href="packages/dev-libs--readline.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/wayland">
+  <h3>dev-libs/wayland</h3>
+  <div class="muted">Version 1.22.0</div>
+  <p>Display server protocol and reference implementation</p>
+  <div><a href="nuclei/wayland.nuclei">recipe</a> &middot; <a href="packages/dev-libs--wayland.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-libs/zlib">
+  <h3>dev-libs/zlib</h3>
+  <div class="muted">Version 1.3.1</div>
+  <p>Standard compression library</p>
+  <div><a href="nuclei/zlib.nuclei">recipe</a> &middot; <a href="packages/dev-libs--zlib.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qt5compat">
+  <h3>dev-qt/qt5compat</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt5 Compatibility module for Qt6</p>
+  <div><a href="nuclei/qt5compat.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qt5compat.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtbase">
+  <h3>dev-qt/qtbase</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt base libraries for Qt6</p>
+  <div><a href="nuclei/qtbase.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtbase.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtdeclarative">
+  <h3>dev-qt/qtdeclarative</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Declarative module for Qt6</p>
+  <div><a href="nuclei/qtdeclarative.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtdeclarative.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtgraphicaleffects">
+  <h3>dev-qt/qtgraphicaleffects</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Graphical Effects module for Qt6</p>
+  <div><a href="nuclei/qtgraphicaleffects.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtgraphicaleffects.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtmultimedia">
+  <h3>dev-qt/qtmultimedia</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Multimedia module for Qt6</p>
+  <div><a href="nuclei/qtmultimedia.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtmultimedia.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtnetworkauth">
+  <h3>dev-qt/qtnetworkauth</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Network Auth module for Qt6</p>
+  <div><a href="nuclei/qtnetworkauth.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtnetworkauth.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtquickcontrols">
+  <h3>dev-qt/qtquickcontrols</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Quick Controls module for Qt6</p>
+  <div><a href="nuclei/qtquickcontrols.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtquickcontrols.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtquickcontrols2">
+  <h3>dev-qt/qtquickcontrols2</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Quick Controls 2 module for Qt6</p>
+  <div><a href="nuclei/qtquickcontrols2.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtquickcontrols2.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qttools">
+  <h3>dev-qt/qttools</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Tools module for Qt6</p>
+  <div><a href="nuclei/qttools.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qttools.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-qt/qtwayland">
+  <h3>dev-qt/qtwayland</h3>
+  <div class="muted">Version 6.7.0</div>
+  <p>Qt Wayland platform plugin for Qt6</p>
+  <div><a href="nuclei/qtwayland.nuclei">recipe</a> &middot; <a href="packages/dev-qt--qtwayland.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-util/cmake">
+  <h3>dev-util/cmake</h3>
+  <div class="muted">Version 3.28.1</div>
+  <p>Cross-platform make system</p>
+  <div><a href="nuclei/cmake.nuclei">recipe</a> &middot; <a href="packages/dev-util--cmake.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-util/meson">
+  <h3>dev-util/meson</h3>
+  <div class="muted">Version 1.3.1</div>
+  <p>High productivity build system</p>
+  <div><a href="nuclei/meson.nuclei">recipe</a> &middot; <a href="packages/dev-util--meson.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-util/ninja">
+  <h3>dev-util/ninja</h3>
+  <div class="muted">Version 1.11.1</div>
+  <p>Small build system with a focus on speed</p>
+  <div><a href="nuclei/ninja.nuclei">recipe</a> &middot; <a href="packages/dev-util--ninja.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-util/pkg-config">
+  <h3>dev-util/pkg-config</h3>
+  <div class="muted">Version 0.29.2</div>
+  <p>Helper tool for compiling applications and libraries</p>
+  <div><a href="nuclei/pkg-config.nuclei">recipe</a> &middot; <a href="packages/dev-util--pkg-config.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-util/scons">
+  <h3>dev-util/scons</h3>
+  <div class="muted">Version 4.6.0</div>
+  <p>Software construction tool</p>
+  <div><a href="nuclei/scons.nuclei">recipe</a> &middot; <a href="packages/dev-util--scons.json">metadata</a></div>
+</div>
+<div class="card" data-name="dev-vcs/git">
+  <h3>dev-vcs/git</h3>
+  <div class="muted">Version 2.53.0</div>
+  <p>Fast, scalable, distributed revision control system</p>
+  <div><a href="nuclei/git.nuclei">recipe</a> &middot; <a href="packages/dev-vcs--git.json">metadata</a></div>
+</div>
+<div class="card" data-name="games-simulation/powder-sandbox">
+  <h3>games-simulation/powder-sandbox</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>Powder Sandbox Classic - Falling sand physics game</p>
+  <div><a href="nuclei/powder-sandbox.nuclei">recipe</a> &middot; <a href="packages/games-simulation--powder-sandbox.json">metadata</a></div>
+</div>
+<div class="card" data-name="lib/ncurses">
+  <h3>lib/ncurses</h3>
+  <div class="muted">Version 6.4</div>
+  <p>System V Release 4.0 curses emulation library</p>
+  <div><a href="nuclei/ncurses.nuclei">recipe</a> &middot; <a href="packages/lib--ncurses.json">metadata</a></div>
+</div>
+<div class="card" data-name="media-libs/mesa">
+  <h3>media-libs/mesa</h3>
+  <div class="muted">Version 24.0.7</div>
+  <p>OpenGL graphics library</p>
+  <div><a href="nuclei/mesa.nuclei">recipe</a> &middot; <a href="packages/media-libs--mesa.json">metadata</a></div>
+</div>
+<div class="card" data-name="media-libs/portaudio">
+  <h3>media-libs/portaudio</h3>
+  <div class="muted">Version 19.7.0</div>
+  <p>Portable cross-platform audio I/O library</p>
+  <div><a href="nuclei/portaudio.nuclei">recipe</a> &middot; <a href="packages/media-libs--portaudio.json">metadata</a></div>
+</div>
+<div class="card" data-name="media-libs/sdl2">
+  <h3>media-libs/sdl2</h3>
+  <div class="muted">Version 2.28.5</div>
+  <p>Simple DirectMedia Layer 2</p>
+  <div><a href="nuclei/sdl2.nuclei">recipe</a> &middot; <a href="packages/media-libs--sdl2.json">metadata</a></div>
+</div>
+<div class="card" data-name="media-sound/cmusic">
+  <h3>media-sound/cmusic</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>cMusic - Terminal music player by Kokonico</p>
+  <div><a href="nuclei/cmusic.nuclei">recipe</a> &middot; <a href="packages/media-sound--cmusic.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-dns/c-ares">
+  <h3>net-dns/c-ares</h3>
+  <div class="muted">Version 1.34.6</div>
+  <p>C library for asynchronous DNS requests</p>
+  <div><a href="nuclei/c-ares.nuclei">recipe</a> &middot; <a href="packages/net-dns--c-ares.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-dns/libidn2">
+  <h3>net-dns/libidn2</h3>
+  <div class="muted">Version 2.3.4</div>
+  <p>Implementation of IDNA2008/TR46 internationalized domain names</p>
+  <div><a href="nuclei/libidn2.nuclei">recipe</a> &middot; <a href="packages/net-dns--libidn2.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-libs/libpsl">
+  <h3>net-libs/libpsl</h3>
+  <div class="muted">Version 0.21.5</div>
+  <p>Public Suffix List library</p>
+  <div><a href="nuclei/libpsl.nuclei">recipe</a> &middot; <a href="packages/net-libs--libpsl.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-libs/libsoup">
+  <h3>net-libs/libsoup</h3>
+  <div class="muted">Version 3.4.4</div>
+  <p>HTTP client/server library for GNOME</p>
+  <div><a href="nuclei/libsoup.nuclei">recipe</a> &middot; <a href="packages/net-libs--libsoup.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-libs/libssh2">
+  <h3>net-libs/libssh2</h3>
+  <div class="muted">Version 1.11.0</div>
+  <p>C library implementing the SSH2 protocol</p>
+  <div><a href="nuclei/libssh2.nuclei">recipe</a> &middot; <a href="packages/net-libs--libssh2.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-libs/nghttp2">
+  <h3>net-libs/nghttp2</h3>
+  <div class="muted">Version 1.58.0</div>
+  <p>HTTP/2 C library</p>
+  <div><a href="nuclei/nghttp2.nuclei">recipe</a> &middot; <a href="packages/net-libs--nghttp2.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-misc/NetworkManager">
+  <h3>net-misc/NetworkManager</h3>
+  <div class="muted">Version 1.46.0</div>
+  <p>Network connection management daemon</p>
+  <div><a href="nuclei/NetworkManager.nuclei">recipe</a> &middot; <a href="packages/net-misc--NetworkManager.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-misc/openssh">
+  <h3>net-misc/openssh</h3>
+  <div class="muted">Version 9.6p1</div>
+  <p>OpenBSD's SSH client and server</p>
+  <div><a href="nuclei/openssh.nuclei">recipe</a> &middot; <a href="packages/net-misc--openssh.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-misc/rsync">
+  <h3>net-misc/rsync</h3>
+  <div class="muted">Version 3.2.7</div>
+  <p>Fast incremental file transfer utility</p>
+  <div><a href="nuclei/rsync.nuclei">recipe</a> &middot; <a href="packages/net-misc--rsync.json">metadata</a></div>
+</div>
+<div class="card" data-name="net-wireless/iwd">
+  <h3>net-wireless/iwd</h3>
+  <div class="muted">Version 2.14</div>
+  <p>Internet Wireless Daemon</p>
+  <div><a href="nuclei/iwd.nuclei">recipe</a> &middot; <a href="packages/net-wireless--iwd.json">metadata</a></div>
+</div>
+<div class="card" data-name="net/curl">
+  <h3>net/curl</h3>
+  <div class="muted">Version 8.4.0</div>
+  <p>Command line tool for transferring data with URLs</p>
+  <div><a href="nuclei/curl.nuclei">recipe</a> &middot; <a href="packages/net--curl.json">metadata</a></div>
+</div>
+<div class="card" data-name="net/wget">
+  <h3>net/wget</h3>
+  <div class="muted">Version 1.21.4</div>
+  <p>Network utility to retrieve files from the Web</p>
+  <div><a href="nuclei/wget.nuclei">recipe</a> &middot; <a href="packages/net--wget.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/bat">
+  <h3>sys-apps/bat</h3>
+  <div class="muted">Version 0.24.0</div>
+  <p>Cat clone with syntax highlighting</p>
+  <div><a href="nuclei/bat.nuclei">recipe</a> &middot; <a href="packages/sys-apps--bat.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/bubblewrap">
+  <h3>sys-apps/bubblewrap</h3>
+  <div class="muted">Version 0.8.0</div>
+  <p>Unprivileged sandboxing tool</p>
+  <div><a href="nuclei/bubblewrap.nuclei">recipe</a> &middot; <a href="packages/sys-apps--bubblewrap.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/coreutils">
+  <h3>sys-apps/coreutils</h3>
+  <div class="muted">Version 9.4</div>
+  <p>GNU core utilities</p>
+  <div><a href="nuclei/coreutils.nuclei">recipe</a> &middot; <a href="packages/sys-apps--coreutils.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/dbus">
+  <h3>sys-apps/dbus</h3>
+  <div class="muted">Version 1.14.10</div>
+  <p>Message bus system for inter-process communication</p>
+  <div><a href="nuclei/dbus.nuclei">recipe</a> &middot; <a href="packages/sys-apps--dbus.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/exa">
+  <h3>sys-apps/exa</h3>
+  <div class="muted">Version 0.10.1</div>
+  <p>Modern replacement for ls</p>
+  <div><a href="nuclei/exa.nuclei">recipe</a> &middot; <a href="packages/sys-apps--exa.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/fd">
+  <h3>sys-apps/fd</h3>
+  <div class="muted">Version 9.0.0</div>
+  <p>Simple, fast alternative to find</p>
+  <div><a href="nuclei/fd.nuclei">recipe</a> &middot; <a href="packages/sys-apps--fd.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/flatpak">
+  <h3>sys-apps/flatpak</h3>
+  <div class="muted">Version 1.16.3</div>
+  <p>Application sandboxing and distribution system for desktop and containerized apps</p>
+  <div><a href="nuclei/flatpak.nuclei">recipe</a> &middot; <a href="packages/sys-apps--flatpak.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/gawk">
+  <h3>sys-apps/gawk</h3>
+  <div class="muted">Version 5.3.0</div>
+  <p>GNU awk pattern-matching language</p>
+  <div><a href="nuclei/gawk.nuclei">recipe</a> &middot; <a href="packages/sys-apps--gawk.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/grep">
+  <h3>sys-apps/grep</h3>
+  <div class="muted">Version 3.11</div>
+  <p>GNU grep, egrep and fgrep</p>
+  <div><a href="nuclei/grep.nuclei">recipe</a> &middot; <a href="packages/sys-apps--grep.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/ostree">
+  <h3>sys-apps/ostree</h3>
+  <div class="muted">Version 2024.1</div>
+  <p>Operating system and container binary deployment and upgrades</p>
+  <div><a href="nuclei/ostree.nuclei">recipe</a> &middot; <a href="packages/sys-apps--ostree.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/ripgrep">
+  <h3>sys-apps/ripgrep</h3>
+  <div class="muted">Version 14.0.3</div>
+  <p>Line-oriented search tool (faster grep)</p>
+  <div><a href="nuclei/ripgrep.nuclei">recipe</a> &middot; <a href="packages/sys-apps--ripgrep.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/sed">
+  <h3>sys-apps/sed</h3>
+  <div class="muted">Version 4.9</div>
+  <p>GNU stream editor</p>
+  <div><a href="nuclei/sed.nuclei">recipe</a> &middot; <a href="packages/sys-apps--sed.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/tree">
+  <h3>sys-apps/tree</h3>
+  <div class="muted">Version 2.1.1</div>
+  <p>Recursive directory listing program</p>
+  <div><a href="nuclei/tree.nuclei">recipe</a> &middot; <a href="packages/sys-apps--tree.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/util-linux">
+  <h3>sys-apps/util-linux</h3>
+  <div class="muted">Version 2.39.4</div>
+  <p>Miscellaneous system utilities</p>
+  <div><a href="nuclei/util-linux.nuclei">recipe</a> &middot; <a href="packages/sys-apps--util-linux.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-apps/xdg-dbus-proxy">
+  <h3>sys-apps/xdg-dbus-proxy</h3>
+  <div class="muted">Version 0.1.5</div>
+  <p>Filtering proxy for D-Bus connections</p>
+  <div><a href="nuclei/xdg-dbus-proxy.nuclei">recipe</a> &middot; <a href="packages/sys-apps--xdg-dbus-proxy.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-auth/polkit">
+  <h3>sys-auth/polkit</h3>
+  <div class="muted">Version 123</div>
+  <p>Application development toolkit for controlling system-wide privileges</p>
+  <div><a href="nuclei/polkit.nuclei">recipe</a> &middot; <a href="packages/sys-auth--polkit.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-boot/grub">
+  <h3>sys-boot/grub</h3>
+  <div class="muted">Version 2.12</div>
+  <p>GNU GRUB boot loader</p>
+  <div><a href="nuclei/grub.nuclei">recipe</a> &middot; <a href="packages/sys-boot--grub.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-devel/autoconf">
+  <h3>sys-devel/autoconf</h3>
+  <div class="muted">Version 2.72</div>
+  <p>Automatic configure script builder</p>
+  <div><a href="nuclei/autoconf.nuclei">recipe</a> &middot; <a href="packages/sys-devel--autoconf.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-devel/automake">
+  <h3>sys-devel/automake</h3>
+  <div class="muted">Version 1.16.5</div>
+  <p>Tool for automatically generating Makefile.in files</p>
+  <div><a href="nuclei/automake.nuclei">recipe</a> &middot; <a href="packages/sys-devel--automake.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-devel/bison">
+  <h3>sys-devel/bison</h3>
+  <div class="muted">Version 3.8.2</div>
+  <p>General-purpose parser generator</p>
+  <div><a href="nuclei/bison.nuclei">recipe</a> &middot; <a href="packages/sys-devel--bison.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-devel/flex">
+  <h3>sys-devel/flex</h3>
+  <div class="muted">Version 2.6.4</div>
+  <p>Fast lexical analyzer generator</p>
+  <div><a href="nuclei/flex.nuclei">recipe</a> &middot; <a href="packages/sys-devel--flex.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-devel/m4">
+  <h3>sys-devel/m4</h3>
+  <div class="muted">Version 1.4.19</div>
+  <p>GNU macro processor</p>
+  <div><a href="nuclei/m4.nuclei">recipe</a> &middot; <a href="packages/sys-devel--m4.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-devel/make">
+  <h3>sys-devel/make</h3>
+  <div class="muted">Version 4.4.1</div>
+  <p>GNU Make - controls the generation of executables</p>
+  <div><a href="nuclei/make.nuclei">recipe</a> &middot; <a href="packages/sys-devel--make.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-devel/patch">
+  <h3>sys-devel/patch</h3>
+  <div class="muted">Version 2.7.6</div>
+  <p>Applies a diff file to an original</p>
+  <div><a href="nuclei/patch.nuclei">recipe</a> &middot; <a href="packages/sys-devel--patch.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-fs/fuse">
+  <h3>sys-fs/fuse</h3>
+  <div class="muted">Version 3.16.2</div>
+  <p>Filesystem in Userspace</p>
+  <div><a href="nuclei/fuse.nuclei">recipe</a> &middot; <a href="packages/sys-fs--fuse.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-libs/gdbm">
+  <h3>sys-libs/gdbm</h3>
+  <div class="muted">Version 1.23</div>
+  <p>GNU database library</p>
+  <div><a href="nuclei/gdbm.nuclei">recipe</a> &middot; <a href="packages/sys-libs--gdbm.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-libs/libarchive">
+  <h3>sys-libs/libarchive</h3>
+  <div class="muted">Version 3.7.4</div>
+  <p>Multi-format archive and compression library</p>
+  <div><a href="nuclei/libarchive.nuclei">recipe</a> &middot; <a href="packages/sys-libs--libarchive.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-libs/libcap">
+  <h3>sys-libs/libcap</h3>
+  <div class="muted">Version 2.69</div>
+  <p>POSIX capabilities library</p>
+  <div><a href="nuclei/libcap.nuclei">recipe</a> &middot; <a href="packages/sys-libs--libcap.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-libs/libseccomp">
+  <h3>sys-libs/libseccomp</h3>
+  <div class="muted">Version 2.5.5</div>
+  <p>High level interface to Linux seccomp filter</p>
+  <div><a href="nuclei/libseccomp.nuclei">recipe</a> &middot; <a href="packages/sys-libs--libseccomp.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-libs/libutempter">
+  <h3>sys-libs/libutempter</h3>
+  <div class="muted">Version 1.2.1</div>
+  <p>Interface for terminal emulators to record user sessions</p>
+  <div><a href="nuclei/libutempter.nuclei">recipe</a> &middot; <a href="packages/sys-libs--libutempter.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-libs/pam">
+  <h3>sys-libs/pam</h3>
+  <div class="muted">Version 1.6.0</div>
+  <p>Linux Pluggable Authentication Modules</p>
+  <div><a href="nuclei/pam.nuclei">recipe</a> &middot; <a href="packages/sys-libs--pam.json">metadata</a></div>
+</div>
+<div class="card" data-name="sys-system/systemd">
+  <h3>sys-system/systemd</h3>
+  <div class="muted">Version 255</div>
+  <p>System and service manager</p>
+  <div><a href="nuclei/systemd.nuclei">recipe</a> &middot; <a href="packages/sys-system--systemd.json">metadata</a></div>
+</div>
+<div class="card" data-name="x11-base/xorg-server">
+  <h3>x11-base/xorg-server</h3>
+  <div class="muted">Version 21.1.11</div>
+  <p>X.Org X server</p>
+  <div><a href="nuclei/xorg-server.nuclei">recipe</a> &middot; <a href="packages/x11-base--xorg-server.json">metadata</a></div>
+</div>
+<div class="card" data-name="x11-wm/dtop">
+  <h3>x11-wm/dtop</h3>
+  <div class="muted">Version 1.0.0</div>
+  <p>DTOP - Linux TUI Process Manager</p>
+  <div><a href="nuclei/dtop.nuclei">recipe</a> &middot; <a href="packages/x11-wm--dtop.json">metadata</a></div>
+</div>
+<div class="card" data-name="x11-wm/sway">
+  <h3>x11-wm/sway</h3>
+  <div class="muted">Version 1.8.1</div>
+  <p>Wayland compositor inspired by i3</p>
+  <div><a href="nuclei/sway.nuclei">recipe</a> &middot; <a href="packages/x11-wm--sway.json">metadata</a></div>
+</div>
+  </div>
+
+  <script>
+    function filterPackages() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        card.style.display = name.includes(query) ? 'block' : 'none';
+      });
+    }
+  </script>
+
+  <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666;">
+    <p>Generated 2026-04-02T08:05:21Z</p>
+  </footer>
+
 </body>
 </html>

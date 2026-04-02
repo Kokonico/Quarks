@@ -1,0 +1,16 @@
+nuclei "e2fsprogs", "1.47.0" do
+  description "Ext2/3/4 filesystem utilities"
+  homepage "https://e2fsprogs.sourceforge.net/"
+  license "GPL-2.0-or-later"
+  category "sys-fs"
+  
+  source "https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.47.0/e2fsprogs-1.47.0.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+  
+  build do
+    configure "--prefix=/usr", "--libdir=/usr/lib64"
+    make
+    install "make DESTDIR=${DESTDIR} install"
+  end
+end

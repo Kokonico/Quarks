@@ -1,0 +1,20 @@
+nuclei "libxft", "2.3.8" do
+  description "libxft package"
+  homepage ""
+  license "Unknown"
+  category "app"
+
+  source "https://www.x.org/pub/individual/lib/libXft-2.3.8.tar.xz",
+         checksum: "placeholder...",
+         algorithm: "sha256"
+
+  depends "autoconf", "automake", "libtool", "libx11", "libxrender", "freetype", "fontconfig"
+
+  build_depends "autoconf", "automake", "libtool", "libx11", "libxrender", "freetype", "fontconfig"
+
+  build do
+    run "./configure --prefix=/usr"
+    run "make -j$(nproc)"
+    run "make install"
+  end
+end
