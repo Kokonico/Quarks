@@ -788,6 +788,7 @@ module PhotonRepoAutofix
             path = queue.pop(true) rescue nil
             next unless path
             process_one(path)
+            puts "Processed #{path} (#{queue.size} remaining)"
           end
         end
       end
