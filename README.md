@@ -1,6 +1,6 @@
 # Quarks Package Manager
 
-> A continuation of Photon by [@RobertFlexx](https://github.com/RobertFlexx), discontinued due to a series of unfortunate events. Quarks will continue what Photon never got the chance to finish.
+> A continuation of [Photon](https://github.com/RobertFlexx/Photon) by [@RobertFlexx](https://github.com/RobertFlexx), which was discontinued due to a series of unfortunate events. Quarks will continue what Photon never got the chance to finish.
 
 A production ready, Portage inspired source based package manager written in Ruby, designed for a Linux distribution(s).
 
