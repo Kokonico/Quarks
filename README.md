@@ -1,6 +1,8 @@
 # Photon Package Manager
 
-A production-ready, Portage-inspired source-based package manager written in Ruby, designed for Linux distributions.
+A production ready, Portage inspired source based package manager written in Ruby, designed for a Linux distribution(s).
+
+> By yours truly, hehe
 
 ## Features
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
-
+# part of dev tools
 require "fileutils"
 require "net/http"
 require "uri"
