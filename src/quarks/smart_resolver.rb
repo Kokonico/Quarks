@@ -3,7 +3,7 @@
 require "set"
 require "fileutils"
 
-module Photon
+module Quarks
   class SmartResolver
     class ResolutionError < StandardError
       attr_reader :conflicts
@@ -484,7 +484,7 @@ module Photon
       /\/etc\/udev\/rules\.d\//
     ].freeze
 
-    CONFIG_BACKUP_DIR = File.join(Photon::Env.state_root, "var", "backup", "photon")
+    CONFIG_BACKUP_DIR = File.join(Quarks::Env.state_root, "var", "backup", "quarks")
 
     def initialize
       @protected = Set.new
@@ -495,7 +495,7 @@ module Photon
       return true if PROTECTED_PATTERNS.any? { |p| path =~ p }
 
       PROTECTED_DIRS.any? do |dir|
-        path.start_with?(dir) && !path.start_with?("#{dir}/photon")
+        path.start_with?(dir) && !path.start_with?("#{dir}/quarks")
       end
     end
 

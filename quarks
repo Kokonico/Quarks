@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+  LINK="$(readlink "$SCRIPT_PATH")"
+  [[ "$LINK" = /* ]] || LINK="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)/$LINK"
+  SCRIPT_PATH="$LINK"
+done
+ROOT_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)"
+
+RUBY_BIN="${QUARKS_RUBY:-ruby}"
+ENTRY="$ROOT_DIR/src/quarks.rb"
+
+die() { echo "!!! $*" >&2; exit 1; }
+
+[[ -f "$ENTRY" ]] || die "Quarks entrypoint missing: $ENTRY"
+command -v "$RUBY_BIN" >/dev/null 2>&1 || die "ruby not found (tried: $RUBY_BIN)"
+
+real_home="${HOME}"
+if [[ -n "${SUDO_USER:-}" ]]; then
+  real_home="$(getent passwd "$SUDO_USER" | cut -d: -f6 || true)"
+  [[ -n "$real_home" ]] || real_home="$HOME"
+fi
+
+export QUARKS_STATE_ROOT="${QUARKS_STATE_ROOT:-$real_home/.local/state/quarks}"
+
+mkdir -p \
+  "$QUARKS_STATE_ROOT/var/db" \
+  "$QUARKS_STATE_ROOT/var/cache/quarks" \
+  "$QUARKS_STATE_ROOT/var/tmp/quarks" \
+  "$QUARKS_STATE_ROOT/var/log/quarks" 2>/dev/null || true
+
+is_writable_or_creatable() {
+  local path="$1"
+  if [[ -e "$path" ]]; then
+    [[ -w "$path" ]]
+  else
+    [[ -w "$(dirname "$path")" ]]
+  fi
+}
+
+if [[ -z "${QUARKS_ROOT:-}" ]]; then
+  if [[ "$(id -u)" -eq 0 ]]; then
+    export QUARKS_ROOT="/opt/quarks"
+  else
+    if is_writable_or_creatable "/opt/quarks"; then
+      export QUARKS_ROOT="/opt/quarks"
+    else
+      export QUARKS_ROOT="$real_home/.local/quarks"
+    fi
+  fi
+fi
+
+cmd=""
+for a in "$@"; do
+  [[ "$a" == "--" ]] && break
+  if [[ "$a" != -* ]]; then
+    cmd="$a"
+    break
+  fi
+done
+
+needs_root=0
+case "$cmd" in
+  install|i|emerge|remove|uninstall|r|rm|unmerge|clean|eclean|setup-path)
+    needs_root=1
+    ;;
+esac
+
+if [[ "$needs_root" -eq 1 && "$(id -u)" -ne 0 ]]; then
+  if [[ "$QUARKS_ROOT" == "/opt/quarks"* && ! -w "$QUARKS_ROOT" && -z "${QUARKS_NO_SUDO:-}" ]]; then
+    echo ">>> Quarks needs admin permissions to write into: $QUARKS_ROOT" >&2
+    echo ">>> Re-running with sudo (state stays in: $QUARKS_STATE_ROOT)" >&2
+
+    exec sudo env \
+      QUARKS_ROOT="$QUARKS_ROOT" \
+      QUARKS_STATE_ROOT="$QUARKS_STATE_ROOT" \
+      QUARKS_JOBS="${QUARKS_JOBS:-}" \
+      QUARKS_VERBOSE="${QUARKS_VERBOSE:-}" \
+      QUARKS_QUIET="${QUARKS_QUIET:-}" \
+      QUARKS_DEBUG="${QUARKS_DEBUG:-}" \
+      QUARKS_WARNINGS="${QUARKS_WARNINGS:-}" \
+      QUARKS_TRACE_SYSTEM="${QUARKS_TRACE_SYSTEM:-}" \
+      QUARKS_NUCLEI_PATHS="${QUARKS_NUCLEI_PATHS:-}" \
+      QUARKS_REPO_URLS="${QUARKS_REPO_URLS:-}" \
+      QUARKS_ALLOW_INSECURE="${QUARKS_ALLOW_INSECURE:-}" \
+      QUARKS_ALLOW_DUPLICATES="${QUARKS_ALLOW_DUPLICATES:-}" \
+      "$RUBY_BIN" "$ENTRY" "$@"
+  fi
+fi
+
+exec "$RUBY_BIN" "$ENTRY" "$@"

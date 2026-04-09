@@ -27,7 +27,7 @@ nuclei.each do |file|
       unless File.exist?(local)
         Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
           req = Net::HTTP::Get.new(uri)
-          req["User-Agent"] = "PhotonChecksumHelper/1.0"
+          req["User-Agent"] = "QuarksChecksumHelper/1.0"
           res = http.request(req)
           raise "HTTP #{res.code} #{res.message}" unless res.is_a?(Net::HTTPSuccess)
           File.binwrite(local, res.body)

@@ -13,7 +13,7 @@ require 'time'
 require 'thread'
 require 'set'
 
-module PhotonRepoAutofix
+module QuarksRepoAutofix
   VERSION = '0.1.0'
 
   class Error < StandardError; end
@@ -78,7 +78,7 @@ module PhotonRepoAutofix
 
   class HttpClient
     DEFAULT_HEADERS = {
-      'User-Agent' => "PhotonRepoAutofix/#{VERSION}",
+      'User-Agent' => "QuarksRepoAutofix/#{VERSION}",
       'Accept' => '*/*'
     }.freeze
 
@@ -729,7 +729,7 @@ module PhotonRepoAutofix
     module_function
 
     def download_path(url)
-      root = File.join(Dir.pwd, '.photon_repo_autofix_tmp')
+      root = File.join(Dir.pwd, '.quarks_repo_autofix_tmp')
       FileUtils.mkdir_p(root)
       slug = Digest::SHA256.hexdigest(url)[0, 16]
       File.join(root, "#{slug}-#{File.basename(URI(url).path)}")
@@ -770,8 +770,8 @@ module PhotonRepoAutofix
       @options = DEFAULTS.dup
       parse_options!(argv)
       @repo_root = File.expand_path(@options[:repo])
-      @cache = Cache.new(File.join(@repo_root, '.photon_repo_autofix', 'cache.json'))
-      @overrides = Overrides.new(@options[:overrides] || File.join(@repo_root, 'photon_repo_autofix.yml'))
+      @cache = Cache.new(File.join(@repo_root, '.quarks_repo_autofix', 'cache.json'))
+      @overrides = Overrides.new(@options[:overrides] || File.join(@repo_root, 'quarks_repo_autofix.yml'))
       @http = HttpClient.new(token: ENV['GITHUB_TOKEN'])
       @planner = Planner.new(http: @http, cache: @cache, overrides: @overrides)
       @results = Queue.new
@@ -805,9 +805,9 @@ module PhotonRepoAutofix
 
     def parse_options!(argv)
       OptionParser.new do |opts|
-        opts.banner = 'Usage: photon_repo_autofix.rb [options]'
+        opts.banner = 'Usage: quarks_repo_autofix.rb [options]'
 
-        opts.on('--repo PATH', 'Path to Photon repo root') { |v| @options[:repo] = v }
+        opts.on('--repo PATH', 'Path to Quarks repo root') { |v| @options[:repo] = v }
         opts.on('--apply', 'Write changes to package recipes') do
           @options[:apply] = true
           @options[:dry_run] = false
@@ -949,5 +949,5 @@ module PhotonRepoAutofix
 end
 
 if $PROGRAM_NAME == __FILE__
-  PhotonRepoAutofix::Runner.new(ARGV).run!
+  QuarksRepoAutofix::Runner.new(ARGV).run!
 end

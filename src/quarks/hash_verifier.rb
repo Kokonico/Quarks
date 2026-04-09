@@ -2,7 +2,7 @@
 
 require "digest"
 
-module Photon
+module Quarks
   class HashVerifier
     SUPPORTED = {
       "sha256" => Digest::SHA256,

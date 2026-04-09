@@ -11,9 +11,9 @@ require "optparse"
 class NucleiSync
   DEFAULT_REPOS = {
     "main" => {
-      url: "https://RobertFlexx.github.io/Photon/docs",
+      url: "https://RobertFlexx.github.io/Quarks/docs",
       mirrors: [
-        "https://mirror.ghproxy.com/https://RobertFlexx.github.io/Photon/docs"
+        "https://mirror.ghproxy.com/https://RobertFlexx.github.io/Quarks/docs"
       ]
     }
   }.freeze
@@ -28,7 +28,7 @@ class NucleiSync
       only_package: nil
     }
     @nuclei_dir = File.join(File.dirname(__FILE__), "..", "nuclei")
-    @state_dir = File.join(File.dirname(__FILE__), "..", "var", "cache", "photon", "repo_sync")
+    @state_dir = File.join(File.dirname(__FILE__), "..", "var", "cache", "quarks", "repo_sync")
   end
 
   def run
@@ -232,7 +232,7 @@ class NucleiSync
       http.read_timeout = timeout
 
       request = Net::HTTP::Get.new(uri)
-      request["User-Agent"] = "Photon-NucleiSync/1.0"
+      request["User-Agent"] = "Quarks-NucleiSync/1.0"
       request["Accept-Encoding"] = "gzip, deflate"
 
       begin

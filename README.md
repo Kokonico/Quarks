@@ -1,4 +1,6 @@
-# Photon Package Manager
+# Quarks Package Manager
+
+> A continuation of Photon by [@RobertFlexx](https://github.com/RobertFlexx), discontinued due to a series of unfortunate events. Quarks will continue what Photon never got the chance to finish.
 
 A production ready, Portage inspired source based package manager written in Ruby, designed for a Linux distribution(s).
 
@@ -22,7 +24,7 @@ A production ready, Portage inspired source based package manager written in Rub
 - **Preserved rebuild**: Rebuild packages affected by library updates
 - **Check-world**: Verify world file integrity
 
-### Photon-Exclusive Features
+### Quarks-Exclusive Features
 
 #### Quantum States
 Packages can be in different quantum states beyond just installed/uninstalled:
@@ -49,7 +51,7 @@ Quick analysis tools for introspection:
 - `beam verify` - Verify package files
 
 #### Sparks
-Lightweight Ruby automation scripts stored in `~/.config/photon/sparks/`.
+Lightweight Ruby automation scripts stored in `~/.config/quarks/sparks/`.
 
 #### Profiles
 Preset configurations for different use cases (desktop, server, minimal).
@@ -111,20 +113,20 @@ Configure repository sync behavior:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/photon.git
-cd photon
+git clone https://github.com/yourusername/quarks.git
+cd quarks
 
 # Install a package
-./photon install hello
+./quarks install hello
 
 # Search for packages
-./photon search nginx
+./quarks search nginx
 
 # Update repositories
-./photon sync
+./quarks sync
 
 # Upgrade installed packages
-./photon upgrade
+./quarks upgrade
 ```
 
 ## Configuration
@@ -133,19 +135,19 @@ cd photon
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PHOTON_ROOT` | `~/.local/photon` | Installation root |
-| `PHOTON_STATE_ROOT` | `~/.local/state/photon` | State/cache/log root |
-| `PHOTON_TMPDIR` | `$STATE_ROOT/var/tmp/photon` | Build temp directory |
-| `PHOTON_JOBS` | CPU count | Parallel build jobs |
-| `PHOTON_NUCLEI_PATHS` | - | Additional local repo paths |
-| `PHOTON_REPO_URLS` | - | Remote repo manifest URLs |
-| `PHOTON_VERIFY_REPOS` | 0 | Verify repository signatures |
-| `PHOTON_ALLOW_INSECURE` | 0 | Allow checksum: skip |
-| `PHOTON_DEBUG` | 0 | Enable debug output |
+| `QUARKS_ROOT` | `~/.local/quarks` | Installation root |
+| `QUARKS_STATE_ROOT` | `~/.local/state/quarks` | State/cache/log root |
+| `QUARKS_TMPDIR` | `$STATE_ROOT/var/tmp/quarks` | Build temp directory |
+| `QUARKS_JOBS` | CPU count | Parallel build jobs |
+| `QUARKS_NUCLEI_PATHS` | - | Additional local repo paths |
+| `QUARKS_REPO_URLS` | - | Remote repo manifest URLs |
+| `QUARKS_VERIFY_REPOS` | 0 | Verify repository signatures |
+| `QUARKS_ALLOW_INSECURE` | 0 | Allow checksum: skip |
+| `QUARKS_DEBUG` | 0 | Enable debug output |
 
 ### Configuration File
 
-Create `~/.config/photon/photon.conf` or `/etc/photon/photon.conf`:
+Create `~/.config/quarks/quarks.conf` or `/etc/quarks/quarks.conf`:
 
 ```conf
 # Repository priorities (lower = higher priority)
@@ -162,164 +164,164 @@ jobs 4
 
 ```bash
 # Install a package
-photon install hello
+quarks install hello
 
 # Install with dependencies only (no package)
-photon install --nodeps package
+quarks install --nodeps package
 
 # Fetch sources only
-photon install --fetchonly package
+quarks install --fetchonly package
 
 # Pretend mode (dry run)
-photon install --pretend package
+quarks install --pretend package
 
 # Skip dependency resolution
-photon install --nodeps package
+quarks install --nodeps package
 ```
 
 ### Package Removal
 
 ```bash
 # Remove a package
-photon remove hello
+quarks remove hello
 
 # Remove without dependencies
-photon remove --nodeps hello
+quarks remove --nodeps hello
 ```
 
 ### System Upgrade
 
 ```bash
 # Upgrade all packages in world file
-photon upgrade
+quarks upgrade
 
 # Dry run upgrade
-photon upgrade --pretend
+quarks upgrade --pretend
 ```
 
 ### Repository Management
 
 ```bash
 # Add a web repository
-photon add-repo myrepo https://example.com/repo/index.json
+quarks add-repo myrepo https://example.com/repo/index.json
 
 # Add with GPG verification
-photon add-repo myrepo https://example.com/repo/index.json --gpg-key-id ABC123
+quarks add-repo myrepo https://example.com/repo/index.json --gpg-key-id ABC123
 
 # List repositories
-photon list-repos
+quarks list-repos
 
 # Remove a repository
-photon remove-repo myrepo
+quarks remove-repo myrepo
 
 # Sync repositories
-photon sync
+quarks sync
 ```
 
 ### Query Commands
 
 ```bash
 # Search for packages
-photon search nginx
+quarks search nginx
 
 # List installed packages
-photon list
+quarks list
 
 # Show package info
-photon info nginx
+quarks info nginx
 
 # Show package files
-photon files nginx
+quarks files nginx
 
 # Find package providing command
-photon which nginx
+quarks which nginx
 
 # Find package owning file
-photon owner /usr/bin/nginx
+quarks owner /usr/bin/nginx
 ```
 
 ### USE Flag Management
 
 ```bash
 # Show current USE flags
-photon use
+quarks use
 
 # Set global USE flags
-photon use set X11 video
+quarks use set X11 video
 
 # Remove global USE flags
-photon use del X11
+quarks use del X11
 
 # Set package-specific USE flags
-photon use package app-vim/syntax on gui
+quarks use package app-vim/syntax on gui
 ```
 
 ### World Set Management
 
 ```bash
 # Show world file contents
-photon world
+quarks world
 
 # Check world file integrity
-photon check-world
+quarks check-world
 
 # Remove orphaned packages
-photon depclean
+quarks depclean
 
 # Rebuild packages for preserved libraries
-photon preserved-rebuild
+quarks preserved-rebuild
 ```
 
-### Photon-Exclusive Commands
+### Quarks-Exclusive Commands
 
 ```bash
 # System status overview
-photon status
+quarks status
 
 # Set power level
-photon flux minimal
-photon flux performance
-photon flux maximum
+quarks flux minimal
+quarks flux performance
+quarks flux maximum
 
 # Freeze a package (prevent updates)
-photon freeze nginx
+quarks freeze nginx
 
 # Unfreeze a package
-photon thaw nginx
+quarks thaw nginx
 
 # Beam analysis commands
-photon beam deps nginx
-photon beam revdeps openssl
-photon beam tree gcc
-photon beam size vim
-photon beam audit
+quarks beam deps nginx
+quarks beam revdeps openssl
+quarks beam tree gcc
+quarks beam size vim
+quarks beam audit
 
 # Wavelength sync modes
-photon wavelength full
-photon wavelength shallow
+quarks wavelength full
+quarks wavelength shallow
 
 # Profile management
-photon profile
-photon profile create desktop
-photon profile activate desktop
+quarks profile
+quarks profile create desktop
+quarks profile activate desktop
 
 # Spark scripts
-photon spark list
-photon spark create mybuild
-photon spark run mybuild
+quarks spark list
+quarks spark create mybuild
+quarks spark run mybuild
 ```
 
 ### System Maintenance
 
 ```bash
 # Clean cache
-photon clean
+quarks clean
 
 # Compact database
-photon compact-db
+quarks compact-db
 
 # System health check
-photon doctor
+quarks doctor
 ```
 
 ## Package Recipes (Nuclei Format)
@@ -401,7 +403,7 @@ Web repositories use JSON manifests:
 
 ```json
 {
-  "repo_name": "photon-main",
+  "repo_name": "quarks-main",
   "generated_at": "2024-01-01T00:00:00Z",
   "package_count": 100,
   "packages": [
@@ -466,22 +468,22 @@ end
 gem install minitest
 
 # Run tests
-ruby -Ilib -Ispec spec/photon_test.rb
+ruby -Ilib -Ispec spec/quarks_test.rb
 ```
 
 ### Adding a New Package
 
 1. Create a nuclei file in `nuclei/<category>/<name>.nuclei`
 2. Define the package using the Nuclei DSL
-3. Test locally with `photon install --fetchonly <name>`
+3. Test locally with `quarks install --fetchonly <name>`
 4. Submit for inclusion in the distribution
 
 ## Architecture
 
 ```
-photon/
+quarks/
 ├── src/
-│   └── photon/
+│   └── quarks/
 │       ├── builder.rb          # Build system execution
 │       ├── database.rb         # SQLite package database
 │       ├── installer.rb        # File installation

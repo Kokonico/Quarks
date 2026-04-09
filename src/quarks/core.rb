@@ -4,7 +4,7 @@ require "fileutils"
 require "json"
 require "time"
 
-module Photon
+module Quarks
   class PackagePolicy
     attr_reader :package, :policy, :since, :reason, :metadata
 
@@ -68,7 +68,7 @@ module Photon
   end
 
   class PolicyManager
-    POLICY_FILE = File.join(Photon::Env.state_root, "var", "db", "photon", "policies.json")
+    POLICY_FILE = File.join(Quarks::Env.state_root, "var", "db", "quarks", "policies.json")
 
     def initialize
       @policies = {}
@@ -185,21 +185,21 @@ module Photon
         cache: true
       },
       default: {
-        jobs: -> { Photon::Env.jobs },
+        jobs: -> { Quarks::Env.jobs },
         verify: true,
         tests: false,
         optimize: true,
         cache: true
       },
       fast: {
-        jobs: -> { Photon::Env.jobs * 2 },
+        jobs: -> { Quarks::Env.jobs * 2 },
         verify: true,
         tests: true,
         optimize: true,
         cache: true
       },
       extreme: {
-        jobs: -> { Photon::Env.jobs * 4 },
+        jobs: -> { Quarks::Env.jobs * 4 },
         verify: true,
         tests: true,
         optimize: true,
@@ -249,7 +249,7 @@ module Photon
   end
 
   class HookManager
-    HOOK_DIR = File.join(Photon::Env.xdg_config_home, "photon", "hooks")
+    HOOK_DIR = File.join(Quarks::Env.xdg_config_home, "quarks", "hooks")
     HOOK_EXTENSION = ".hook"
 
     def self.hook_dir
@@ -295,10 +295,10 @@ module Photon
       script = StringIO.new
 
       script.puts("#!/usr/bin/env ruby")
-      script.puts("# photon-hook execution")
+      script.puts("# quarks-hook execution")
       script.puts("# Generated at: #{Time.now}")
       script.puts
-      script.puts("PHOTON_HOOK_ARGS = #{args.inspect}")
+      script.puts("QUARKS_HOOK_ARGS = #{args.inspect}")
       script.puts
       script.puts(content)
 
@@ -323,7 +323,7 @@ module Photon
         begin
           run_hook(hook[:name], args: [event, context])
         rescue => e
-          warn "[photon] Hook #{hook[:name]} failed: #{e.message}"
+          warn "[quarks] Hook #{hook[:name]} failed: #{e.message}"
         end
       end
     end
@@ -395,7 +395,7 @@ module Photon
   end
 
   class ProfileManager
-    PROFILE_DIR = File.join(Photon::Env.state_root, "var", "db", "photon", "profiles")
+    PROFILE_DIR = File.join(Quarks::Env.state_root, "var", "db", "quarks", "profiles")
     ACTIVE_PROFILE_FILE = File.join(PROFILE_DIR, "active")
 
     def initialize

@@ -133,7 +133,7 @@ class ChecksumVerifier
       http.read_timeout = 300
 
       req = Net::HTTP::Get.new(uri)
-      req["User-Agent"] = "Photon/1.0"
+      req["User-Agent"] = "Quarks/1.0"
 
       res = http.request(req) do |response|
         case response

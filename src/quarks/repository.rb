@@ -5,11 +5,11 @@ require "digest"
 require "fileutils"
 require "net/http"
 require "uri"
-require "photon/env"
-require "photon/package"
-require "photon/web_repo"
+require "quarks/env"
+require "quarks/package"
+require "quarks/web_repo"
 
-module Photon
+module Quarks
   class Repository
     class DuplicatePackageError < StandardError; end
 
@@ -18,7 +18,7 @@ module Photon
     class << self
       def project_root
         src_dir = File.expand_path("../..", __FILE__)
-        if src_dir.end_with?("/src/photon")
+        if src_dir.end_with?("/src/quarks")
           File.expand_path("../..", src_dir)
         elsif src_dir.end_with?("/src")
           File.expand_path("..", src_dir)
@@ -57,19 +57,19 @@ module Photon
     end
 
     def default_sources
-      local_env = ENV["PHOTON_NUCLEI_PATHS"].to_s.strip
-      remote_env = ENV["PHOTON_REPO_URLS"].to_s.strip
+      local_env = ENV["QUARKS_NUCLEI_PATHS"].to_s.strip
+      remote_env = ENV["QUARKS_REPO_URLS"].to_s.strip
 
       local_paths = []
       local_paths.concat(local_env.split(":").map(&:strip)) unless local_env.empty?
       local_paths.concat([
         File.join(PROJECT_ROOT, "nuclei"),
-        File.join(PROJECT_ROOT, "src", "photon", "nuclei"),
+        File.join(PROJECT_ROOT, "src", "quarks", "nuclei"),
         File.join(Dir.pwd, "nuclei"),
         File.join(Env.root, "nuclei"),
-        File.expand_path("~/.photon/nuclei"),
-        "/usr/share/photon/nuclei",
-        "/usr/local/share/photon/nuclei"
+        File.expand_path("~/.quarks/nuclei"),
+        "/usr/share/quarks/nuclei",
+        "/usr/local/share/quarks/nuclei"
       ])
 
       web_repos = WebRepoManager.load_repos
@@ -218,7 +218,7 @@ module Photon
           inferred_category = infer_category(repo_path, file)
 
           begin
-            pkg = Photon::Package.load_from_nuclei(file)
+            pkg = Quarks::Package.load_from_nuclei(file)
             pkg.category = inferred_category if pkg.category.to_s.strip.empty? && inferred_category
             register_package(pkg, source_path: file)
           rescue DuplicatePackageError => e
@@ -254,7 +254,7 @@ module Photon
       name = h["name"].to_s.strip
       raise "Remote package entry missing name" if name.empty?
 
-      pkg = Photon::Package.new(name)
+      pkg = Quarks::Package.new(name)
       pkg.version = h.fetch("version", "0.0.0").to_s
       pkg.description = h.fetch("description", "").to_s
       pkg.homepage = h.fetch("homepage", "").to_s
@@ -331,7 +331,7 @@ module Photon
     end
 
     def remote_cache_dir
-      dir = File.join(Env.state_root, "var", "cache", "photon", "repositories")
+      dir = File.join(Env.state_root, "var", "cache", "quarks", "repositories")
       FileUtils.mkdir_p(dir)
       dir
     end
@@ -397,7 +397,7 @@ module Photon
 
       Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
         request = Net::HTTP::Get.new(uri)
-        request["User-Agent"] = "Photon/#{Photon::VERSION rescue 'dev'}"
+        request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
         response = http.request(request)
         raise "HTTP #{response.code} #{response.message}" unless response.is_a?(Net::HTTPSuccess)
         response.body.to_s

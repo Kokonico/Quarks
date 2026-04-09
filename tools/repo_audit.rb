@@ -169,7 +169,7 @@ class RepoAudit
       ssl_timeout: 8
     ) do |http|
       request = Net::HTTP::Head.new(uri)
-      request["User-Agent"] = "PhotonRepoAudit/1.0"
+      request["User-Agent"] = "QuarksRepoAudit/1.0"
 
       response = http.request(request)
 
@@ -255,7 +255,7 @@ class RepoAudit
       info: grouped.fetch(:info, []).size
     }
 
-    puts "Photon Repo Audit"
+    puts "Quarks Repo Audit"
     puts "-" * 72
     puts "root: #{@root_dir}"
     puts "nuclei: #{@nuclei_dir}"

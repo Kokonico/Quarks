@@ -9,7 +9,7 @@ nuclei "vim", "9.0" do
          algorithm: "sha256"
   
   build do
-    run "cd src && sh ./configure --prefix=/opt/photon --with-features=normal --disable-gui --disable-gpm && cd .."
+    run "cd src && sh ./configure --prefix=/opt/quarks --with-features=normal --disable-gui --disable-gpm && cd .."
     make
     install "cd src && make DESTDIR=${DESTDIR} install"
   end

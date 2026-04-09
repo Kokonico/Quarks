@@ -4,7 +4,7 @@ require "fileutils"
 require "json"
 require "singleton"
 
-module Photon
+module Quarks
   class SignalHandler
     include Singleton
 
@@ -62,8 +62,8 @@ module Photon
         @shutdown_requested = true
       end
 
-      if ENV["PHOTON_DEBUG"]
-        warn "[photon] Received signal: #{sig} (#{@received_signals.length} total)"
+      if ENV["QUARKS_DEBUG"]
+        warn "[quarks] Received signal: #{sig} (#{@received_signals.length} total)"
       end
 
       save_state!
@@ -79,7 +79,7 @@ module Photon
         begin
           saver.call
         rescue => e
-          warn "[photon] State saver failed: #{e.message}" if ENV["PHOTON_DEBUG"]
+          warn "[quarks] State saver failed: #{e.message}" if ENV["QUARKS_DEBUG"]
         end
       end
     end
@@ -112,7 +112,7 @@ module Photon
 
   class BuildStateManager
     STATE_FILE = -> {
-      File.join(Photon::Env.state_root, "var", "lib", "photon", "build_state.json")
+      File.join(Quarks::Env.state_root, "var", "lib", "quarks", "build_state.json")
     }.call
 
     def initialize
@@ -149,7 +149,7 @@ module Photon
       return true unless data["saved_at"]
 
       saved_time = Time.parse(data["saved_at"])
-      max_age = ENV["PHOTON_STATE_MAX_AGE"].to_i
+      max_age = ENV["QUARKS_STATE_MAX_AGE"].to_i
       max_age = 86400 if max_age.zero?
 
       (Time.now - saved_time) > max_age
@@ -278,7 +278,7 @@ module Photon
     end
 
     def state_file_path
-      File.join(Photon::Env.state_root, "var", "lib", "photon", "emerge_queue.json")
+      File.join(Quarks::Env.state_root, "var", "lib", "quarks", "emerge_queue.json")
     end
 
     def save

@@ -7,16 +7,16 @@ require "json"
 
 $LOAD_PATH.unshift File.expand_path("../src", __dir__)
 
-require "photon/env"
-require "photon/package"
-require "photon/database"
-require "photon/repository"
-require "photon/resolver"
-require "photon/hash_verifier"
-require "photon/web_repo"
-require "photon/system_integration"
+require "quarks/env"
+require "quarks/package"
+require "quarks/database"
+require "quarks/repository"
+require "quarks/resolver"
+require "quarks/hash_verifier"
+require "quarks/web_repo"
+require "quarks/system_integration"
 
-module Photon
+module Quarks
   module TestHelpers
     def with_temp_dir
       Dir.mktmpdir do |dir|
@@ -38,11 +38,11 @@ module Photon
         Dir.chdir(tmpdir) do
           with_env(
             "HOME" => tmpdir,
-            "PHOTON_ROOT" => File.join(tmpdir, ".local", "photon"),
-            "PHOTON_STATE_ROOT" => File.join(tmpdir, ".local", "state", "photon")
+            "QUARKS_ROOT" => File.join(tmpdir, ".local", "quarks"),
+            "QUARKS_STATE_ROOT" => File.join(tmpdir, ".local", "state", "quarks")
           ) do
-            FileUtils.mkdir_p(File.join(tmpdir, ".local", "photon"))
-            FileUtils.mkdir_p(File.join(tmpdir, ".local", "state", "photon"))
+            FileUtils.mkdir_p(File.join(tmpdir, ".local", "quarks"))
+            FileUtils.mkdir_p(File.join(tmpdir, ".local", "state", "quarks"))
             yield tmpdir
           end
         end
@@ -181,9 +181,9 @@ module Photon
 
     def setup
       @tmpdir = Dir.mktmpdir
-      ENV["PHOTON_ROOT"] = File.join(@tmpdir, "photon")
-      ENV["PHOTON_STATE_ROOT"] = File.join(@tmpdir, "state", "photon")
-      FileUtils.mkdir_p(File.join(@tmpdir, "state", "photon", "var", "db"))
+      ENV["QUARKS_ROOT"] = File.join(@tmpdir, "quarks")
+      ENV["QUARKS_STATE_ROOT"] = File.join(@tmpdir, "state", "quarks")
+      FileUtils.mkdir_p(File.join(@tmpdir, "state", "quarks", "var", "db"))
     end
 
     def teardown
@@ -292,13 +292,13 @@ module Photon
     def setup
       @tmpdir = Dir.mktmpdir
       @repo_dir = File.join(@tmpdir, "nuclei")
-      @state_dir = File.join(@tmpdir, "state", "photon")
+      @state_dir = File.join(@tmpdir, "state", "quarks")
       FileUtils.mkdir_p(@repo_dir)
       FileUtils.mkdir_p(@state_dir)
 
-      ENV["PHOTON_ROOT"] = File.join(@tmpdir, "photon")
-      ENV["PHOTON_STATE_ROOT"] = @state_dir
-      ENV["PHOTON_NUCLEI_PATHS"] = @repo_dir
+      ENV["QUARKS_ROOT"] = File.join(@tmpdir, "quarks")
+      ENV["QUARKS_STATE_ROOT"] = @state_dir
+      ENV["QUARKS_NUCLEI_PATHS"] = @repo_dir
     end
 
     def teardown
@@ -495,9 +495,9 @@ module Photon
 
     def setup
       @tmpdir = Dir.mktmpdir
-      ENV["PHOTON_ROOT"] = File.join(@tmpdir, "photon")
-      ENV["PHOTON_STATE_ROOT"] = File.join(@tmpdir, "state", "photon")
-      FileUtils.mkdir_p(File.join(@tmpdir, "state", "photon", "var", "db"))
+      ENV["QUARKS_ROOT"] = File.join(@tmpdir, "quarks")
+      ENV["QUARKS_STATE_ROOT"] = File.join(@tmpdir, "state", "quarks")
+      FileUtils.mkdir_p(File.join(@tmpdir, "state", "quarks", "var", "db"))
     end
 
     def teardown

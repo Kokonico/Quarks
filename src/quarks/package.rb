@@ -2,7 +2,7 @@
 
 require "json"
 
-module Photon
+module Quarks
   class NucleiError < StandardError; end
 
   class NucleiParseError < NucleiError
@@ -223,12 +223,12 @@ module Photon
       end
 
       if !name.nil? && version.nil?
-        @package = ::Photon::Package.new(name.to_s)
+        @package = ::Quarks::Package.new(name.to_s)
         instance_eval(&block) if block
         return @package
       end
 
-      @package = ::Photon::Package.new(name.to_s)
+      @package = ::Quarks::Package.new(name.to_s)
       @package.version = version.to_s
       instance_eval(&block) if block
       @package
@@ -421,39 +421,39 @@ module Photon
 
     def build(&block)
       ensure_pkg!
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path, "build do ... end requires a block") unless block
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path, "build do ... end requires a block") unless block
 
-      ctx = ::Photon::BuildContext.new(@package, path: @path)
+      ctx = ::Quarks::BuildContext.new(@package, path: @path)
       ctx.instance_eval(&block)
       true
     end
 
     def run(*)
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path, "Use `run` only inside build do ... end")
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path, "Use `run` only inside build do ... end")
     end
 
     def install(*)
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path, "Use `install` only inside build do ... end")
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path, "Use `install` only inside build do ... end")
     end
 
     def system(*args)
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path,
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path,
         "nuclei cannot execute commands at load-time: system(#{args.inspect}). Put it inside build do ... end")
     end
 
     def `(cmd)
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path,
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path,
         "nuclei cannot execute commands at load-time: `#{cmd}`. Put it inside build do ... end")
     end
 
     def exec(*args)
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path,
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path,
         "nuclei cannot exec at load-time: exec(#{args.inspect}). Put it inside build do ... end")
     end
 
     def method_missing(meth, *args, &block)
       return true if block && args.empty?
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path, "Unknown nuclei directive '#{meth}'. args=#{args.inspect}")
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path, "Unknown nuclei directive '#{meth}'. args=#{args.inspect}")
     end
 
     def respond_to_missing?(*)
@@ -465,7 +465,7 @@ module Photon
     def ensure_pkg!
       return if @package
       inferred = ::File.basename(@path, ".nuclei")
-      @package = ::Photon::Package.new(inferred)
+      @package = ::Quarks::Package.new(inferred)
     end
 
     def norm_list(args)
@@ -553,7 +553,7 @@ module Photon
 
     def method_missing(meth, *args, &block)
       return true if block && args.empty?
-      ::Kernel.raise ::Photon::NucleiParseError.new(@path, "Unknown build directive '#{meth}'. args=#{args.inspect}")
+      ::Kernel.raise ::Quarks::NucleiParseError.new(@path, "Unknown build directive '#{meth}'. args=#{args.inspect}")
     end
 
     def respond_to_missing?(*)

@@ -3,9 +3,9 @@
 require "etc"
 require "fileutils"
 
-module Photon
+module Quarks
   class Config
-    DEFAULT_NAME = "photon.conf"
+    DEFAULT_NAME = "quarks.conf"
 
     def self.default_paths
       home = Etc.getpwnam(original_user).dir rescue Dir.home
@@ -13,11 +13,11 @@ module Photon
       base = xdg.empty? ? File.join(home, ".config") : File.expand_path(xdg)
 
       paths = []
-      paths << ENV["PHOTON_CONFIG"].to_s.strip
-      paths << File.join(base, "photon", DEFAULT_NAME)
-      paths << File.join(home, ".config", "photon", DEFAULT_NAME)
-      paths << File.join(home, ".photon.conf")
-      paths << File.join("/etc/photon", DEFAULT_NAME)
+      paths << ENV["QUARKS_CONFIG"].to_s.strip
+      paths << File.join(base, "quarks", DEFAULT_NAME)
+      paths << File.join(home, ".config", "quarks", DEFAULT_NAME)
+      paths << File.join(home, ".quarks.conf")
+      paths << File.join("/etc/quarks", DEFAULT_NAME)
       paths.reject(&:empty?)
     end
 

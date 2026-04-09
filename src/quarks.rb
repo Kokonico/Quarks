@@ -4,45 +4,45 @@
 require "find"
 require "fileutils"
 
-if ENV["PHOTON_TRACE_SYSTEM"] == "1"
+if ENV["QUARKS_TRACE_SYSTEM"] == "1"
   module Kernel
-    alias __photon_system system
+    alias __quarks_system system
 
     def system(*args)
-      warn "PHOTON_TRACE system(#{args.map(&:inspect).join(', ')})\n  from: #{caller(1, 5).join("\n        ")}"
-      __photon_system(*args)
+      warn "QUARKS_TRACE system(#{args.map(&:inspect).join(', ')})\n  from: #{caller(1, 5).join("\n        ")}"
+      __quarks_system(*args)
     end
   end
 end
 
-PHOTON_LIB_DIR = File.expand_path("../src", __dir__)
-$LOAD_PATH.unshift(PHOTON_LIB_DIR) unless $LOAD_PATH.include?(PHOTON_LIB_DIR)
+QUARKS_LIB_DIR = File.expand_path("../src", __dir__)
+$LOAD_PATH.unshift(QUARKS_LIB_DIR) unless $LOAD_PATH.include?(QUARKS_LIB_DIR)
 
-require "photon/ui"
-require "photon/config"
-require "photon/env"
-require "photon/env"
-require "photon/package"
-require "photon/database"
-require "photon/repository"
-require "photon/web_repo"
-require "photon/resolver"
-require "photon/builder"
-require "photon/installer"
-require "photon/path_integration"
-require "photon/system_integration"
-require "photon/parallel_build"
-require "photon/systemd_manager"
-require "photon/signal_handler"
-require "photon/use_slots"
-require "photon/smart_resolver"
-require "photon/sandbox_build"
-require "photon/core"
-require "photon/query"
+require "quarks/ui"
+require "quarks/config"
+require "quarks/env"
+require "quarks/env"
+require "quarks/package"
+require "quarks/database"
+require "quarks/repository"
+require "quarks/web_repo"
+require "quarks/resolver"
+require "quarks/builder"
+require "quarks/installer"
+require "quarks/path_integration"
+require "quarks/system_integration"
+require "quarks/parallel_build"
+require "quarks/systemd_manager"
+require "quarks/signal_handler"
+require "quarks/use_slots"
+require "quarks/smart_resolver"
+require "quarks/sandbox_build"
+require "quarks/core"
+require "quarks/query"
 
-module Photon
+module Quarks
   VERSION = "1.4.0"
-  AUTHOR  = "Photon Developers"
+  AUTHOR  = "Quarks Developers"
 
   class CLI
     ROOT_COMMANDS = %w[
@@ -81,7 +81,7 @@ module Photon
         fetchonly: false,
         resume: false,
         keep_going: false,
-        jobs: Photon::Env.jobs,
+        jobs: Quarks::Env.jobs,
         force: false,
         debug: false,
         warnings: false,
@@ -93,10 +93,10 @@ module Photon
     end
 
     def setup_signal_handling!
-      Photon::SignalHandler.instance.setup!
+      Quarks::SignalHandler.instance.setup!
 
-      Photon::SignalHandler.instance.on_signal("INT") do
-        if Photon::SignalHandler.instance.interrupted?
+      Quarks::SignalHandler.instance.on_signal("INT") do
+        if Quarks::SignalHandler.instance.interrupted?
           puts "\n#{UI::COLORS[:yellow]}>>> Interrupt received, saving state...#{UI::COLORS[:reset]}"
           save_emerge_state!
           puts "#{UI::COLORS[:yellow]}>>> State saved. Run with --resume to continue.#{UI::COLORS[:reset]}"
@@ -104,7 +104,7 @@ module Photon
         end
       end
 
-      Photon::SignalHandler.instance.register_state_saver do
+      Quarks::SignalHandler.instance.register_state_saver do
         save_emerge_state!
       end
     end
@@ -192,7 +192,7 @@ module Photon
       when "sync" then set_sync(args)
       else
         UI.error "Unknown command: #{command}"
-        puts "Run #{UI::COLORS[:cyan]}photon help#{UI::COLORS[:reset]} for usage information."
+        puts "Run #{UI::COLORS[:cyan]}quarks help#{UI::COLORS[:reset]} for usage information."
         exit 1
       end
     rescue Interrupt
@@ -202,7 +202,7 @@ module Photon
     rescue => e
       portage_msg(e.message, :error)
 
-      if @options[:debug] || Photon::Env.debug?
+      if @options[:debug] || Quarks::Env.debug?
         puts
         puts "#{UI::COLORS[:red]}Stack trace:#{UI::COLORS[:reset]}"
         puts Array(e.backtrace).map { |line| "  #{line}" }.join("\n")
@@ -219,10 +219,10 @@ module Photon
       return if command.empty?
       return unless ROOT_COMMANDS.include?(command)
       return if Process.uid.zero?
-      return if ENV["PHOTON_SUDO_REEXEC"] == "1"
-      return if ENV["PHOTON_NO_SUDO"] == "1"
+      return if ENV["QUARKS_SUDO_REEXEC"] == "1"
+      return if ENV["QUARKS_NO_SUDO"] == "1"
 
-      install_root = Database::PHOTON_ROOT
+      install_root = Database::QUARKS_ROOT
       writable = File.writable?(install_root) || (!File.exist?(install_root) && File.writable?(File.dirname(install_root)))
       return if writable
 
@@ -236,19 +236,19 @@ module Photon
 
           Fix options:
             1) Run with sudo:
-                 sudo photon #{ARGV.join(' ')}
+                 sudo quarks #{ARGV.join(' ')}
 
-            2) Or switch to a user install root with PHOTON_ROOT.
+            2) Or switch to a user install root with QUARKS_ROOT.
         MSG
       end
 
       puts "#{UI::COLORS[:yellow]}>>>#{UI::COLORS[:reset]} Elevated permissions required for '#{command}'. Re-running with sudo..."
-      ENV["PHOTON_SUDO_REEXEC"] = "1"
+      ENV["QUARKS_SUDO_REEXEC"] = "1"
 
       preserve = %w[
-        PHOTON_ROOT PHOTON_STATE_ROOT PHOTON_DISABLE_SHIMS PHOTON_NO_SUDO
-        PHOTON_FORCE_OVERWRITE PHOTON_DEBUG PHOTON_WARNINGS PHOTON_REPO_URLS
-        PHOTON_NUCLEI_PATHS PHOTON_ALLOW_INSECURE PHOTON_ALLOW_DUPLICATES
+        QUARKS_ROOT QUARKS_STATE_ROOT QUARKS_DISABLE_SHIMS QUARKS_NO_SUDO
+        QUARKS_FORCE_OVERWRITE QUARKS_DEBUG QUARKS_WARNINGS QUARKS_REPO_URLS
+        QUARKS_NUCLEI_PATHS QUARKS_ALLOW_INSECURE QUARKS_ALLOW_DUPLICATES
       ].join(",")
 
       exec("sudo", "--preserve-env=#{preserve}", File.expand_path($PROGRAM_NAME), *ARGV)
@@ -272,11 +272,11 @@ module Photon
         when "--quiet", "-q", "--silent"
           @options[:verbose] = false
           @options[:quiet] = true
-          Photon::Env.set_output_mode!(:quiet)
+          Quarks::Env.set_output_mode!(:quiet)
         when "--verbose", "-v"
           @options[:verbose] = true
           @options[:quiet] = false
-          Photon::Env.set_output_mode!(:verbose)
+          Quarks::Env.set_output_mode!(:verbose)
         when "--pretend", "-p"
           @options[:pretend] = true
         when "--ask", "-a"
@@ -295,19 +295,19 @@ module Photon
           @options[:keep_going] = true
         when "--debug"
           @options[:debug] = true
-          Photon::Env.enable_debug!
+          Quarks::Env.enable_debug!
         when "--warnings"
           @options[:warnings] = true
-          Photon::Env.enable_warnings!
+          Quarks::Env.enable_warnings!
         when "--force"
           @options[:force] = true
-          ENV["PHOTON_FORCE_OVERWRITE"] = "1"
+          ENV["QUARKS_FORCE_OVERWRITE"] = "1"
         when "--jobs", "-j"
           value = copy[index + 1].to_s
           raise "Expected a numeric value after #{arg}" unless value.match?(/^\d+$/)
 
           @options[:jobs] = value.to_i
-          ENV["PHOTON_JOBS"] = value
+          ENV["QUARKS_JOBS"] = value
           index += 1
         else
           args << arg
@@ -319,11 +319,11 @@ module Photon
 
     def show_help
       puts
-      puts "#{UI::COLORS[:bold]}#{UI::COLORS[:bright_cyan]}Photon Package Manager#{UI::COLORS[:reset]} #{UI::COLORS[:dim]}v#{VERSION}#{UI::COLORS[:reset]}"
+      puts "#{UI::COLORS[:bold]}#{UI::COLORS[:bright_cyan]}Quarks Package Manager#{UI::COLORS[:reset]} #{UI::COLORS[:dim]}v#{VERSION}#{UI::COLORS[:reset]}"
       puts "#{UI::COLORS[:dim]}Portage-inspired source package manager with local + remote repo support#{UI::COLORS[:reset]}"
       puts
       puts "#{UI::COLORS[:bold]}#{UI::COLORS[:bright_cyan]}USAGE#{UI::COLORS[:reset]}"
-      puts "  #{UI::COLORS[:cyan]}photon#{UI::COLORS[:reset]} [options] <command> [arguments]"
+      puts "  #{UI::COLORS[:cyan]}quarks#{UI::COLORS[:reset]} [options] <command> [arguments]"
       puts
       puts "#{UI::COLORS[:bold]}#{UI::COLORS[:bright_cyan]}GLOBAL OPTIONS#{UI::COLORS[:reset]}"
       puts "  #{UI::COLORS[:green]}-q, --quiet#{UI::COLORS[:reset]}            Minimal output"
@@ -354,7 +354,7 @@ module Photon
       puts "  #{UI::COLORS[:cyan]}upgrade, world#{UI::COLORS[:reset]}        Upgrade installed packages"
       puts "  #{UI::COLORS[:cyan]}clean, eclean#{UI::COLORS[:reset]}        Clean cache"
       puts "  #{UI::COLORS[:cyan]}doctor#{UI::COLORS[:reset]}                System health check"
-      puts "  #{UI::COLORS[:cyan]}paths#{UI::COLORS[:reset]}                 Show Photon paths"
+      puts "  #{UI::COLORS[:cyan]}paths#{UI::COLORS[:reset]}                 Show Quarks paths"
       puts "  #{UI::COLORS[:cyan]}env#{UI::COLORS[:reset]}                   Print exports for shell"
       puts "  #{UI::COLORS[:cyan]}setup-path#{UI::COLORS[:reset]}            Install PATH integration"
       puts "  #{UI::COLORS[:cyan]}compact-db#{UI::COLORS[:reset]}            Vacuum SQLite DB"
@@ -378,13 +378,13 @@ module Photon
       puts "  #{UI::COLORS[:brand]}hook#{UI::COLORS[:reset]}                 Hook script management"
       puts "  #{UI::COLORS[:brand]}sync#{UI::COLORS[:reset]}                 Set sync mode"
       puts "  #{UI::COLORS[:brand]}status#{UI::COLORS[:reset]}               System status overview"
-      puts Photon::Env.help_section
+      puts Quarks::Env.help_section
     end
 
     def install_packages(package_names)
       if package_names.empty?
         portage_msg("No packages specified", :error)
-        puts "Usage: #{UI::COLORS[:cyan]}photon install <package>...#{UI::COLORS[:reset]}"
+        puts "Usage: #{UI::COLORS[:cyan]}quarks install <package>...#{UI::COLORS[:reset]}"
         exit 1
       end
 
@@ -541,7 +541,7 @@ module Photon
 
           puts "#{UI::COLORS[:green]}>>>#{UI::COLORS[:reset]} Successfully merged #{package.atom}-#{package.version} #{UI::COLORS[:dim]}(#{format_time(Time.now - pkg_started_at)})#{UI::COLORS[:reset]}"
 
-        rescue Photon::SignalHandler::InterruptedError
+        rescue Quarks::SignalHandler::InterruptedError
           puts "\n#{UI::COLORS[:yellow]}>>> Interrupted! State saved.#{UI::COLORS[:reset]}"
           save_emerge_state!
           exit 130
@@ -589,7 +589,7 @@ module Photon
     def remove_packages(package_names)
       if package_names.empty?
         portage_msg("No packages specified", :error)
-        puts "Usage: #{UI::COLORS[:cyan]}photon remove <package>...#{UI::COLORS[:reset]}"
+        puts "Usage: #{UI::COLORS[:cyan]}quarks remove <package>...#{UI::COLORS[:reset]}"
         exit 1
       end
 
@@ -706,7 +706,7 @@ module Photon
       packages = @database.list_packages
       if packages.empty?
         portage_msg("No packages installed", :warn)
-        puts "Install packages with: #{UI::COLORS[:cyan]}photon install <package>#{UI::COLORS[:reset]}"
+        puts "Install packages with: #{UI::COLORS[:cyan]}quarks install <package>#{UI::COLORS[:reset]}"
         return
       end
 
@@ -723,7 +723,7 @@ module Photon
     def show_package_info(name)
       unless name
         portage_msg("No package specified", :error)
-        puts "Usage: #{UI::COLORS[:cyan]}photon info <package>#{UI::COLORS[:reset]}"
+        puts "Usage: #{UI::COLORS[:cyan]}quarks info <package>#{UI::COLORS[:reset]}"
         exit 1
       end
 
@@ -789,7 +789,7 @@ module Photon
     def show_package_files(name)
       unless name
         portage_msg("No package specified", :error)
-        puts "Usage: photon files <package>"
+        puts "Usage: quarks files <package>"
         exit 1
       end
 
@@ -809,7 +809,7 @@ module Photon
     def which_command(cmd)
       unless cmd && !cmd.strip.empty?
         portage_msg("No command specified", :error)
-        puts "Usage: photon which <cmd>"
+        puts "Usage: quarks which <cmd>"
         exit 1
       end
 
@@ -824,7 +824,7 @@ module Photon
     def owner_of_path(path)
       unless path && !path.strip.empty?
         portage_msg("No path specified", :error)
-        puts "Usage: photon owner <path>"
+        puts "Usage: quarks owner <path>"
         exit 1
       end
 
@@ -1043,7 +1043,7 @@ module Photon
     end
 
     def run_doctor
-      script = File.expand_path("../tools/photon_doctor.rb", __dir__)
+      script = File.expand_path("../tools/quarks_doctor.rb", __dir__)
       exec(RbConfig.ruby, script)
     end
 
@@ -1052,7 +1052,7 @@ module Photon
       puts
       puts "#{UI::COLORS[:bold]}Directories:#{UI::COLORS[:reset]}"
       puts "  Current:      #{Dir.pwd}"
-      puts "  Install root: #{Database::PHOTON_ROOT}"
+      puts "  Install root: #{Database::QUARKS_ROOT}"
       puts "  State root:   #{Database::STATE_ROOT}"
       puts "  Database:     #{Database::DB_PATH}"
       puts "  Shims:        #{PathIntegration.shim_dir}"
@@ -1066,16 +1066,16 @@ module Photon
       puts "  Available packages: #{@repository.list_atoms.length}"
       puts "  Installed packages: #{@database.list_packages.length}"
       puts "  Ruby version:       #{RUBY_VERSION}"
-      puts "  Photon version:     #{VERSION}"
+      puts "  Quarks version:     #{VERSION}"
       puts
       puts "#{UI::COLORS[:bold]}Environment:#{UI::COLORS[:reset]}"
-      Photon::Env.dump_lines.each { |line| puts "  #{line}" }
+      Quarks::Env.dump_lines.each { |line| puts "  #{line}" }
       puts
     end
 
     def show_version
       puts
-      puts "#{UI::COLORS[:bold]}#{UI::COLORS[:bright_cyan]}Photon Package Manager#{UI::COLORS[:reset]}"
+      puts "#{UI::COLORS[:bold]}#{UI::COLORS[:bright_cyan]}Quarks Package Manager#{UI::COLORS[:reset]}"
       puts "#{UI::COLORS[:dim]}Version #{VERSION}#{UI::COLORS[:reset]}"
       puts "#{UI::COLORS[:dim]}Ruby #{RUBY_VERSION}#{UI::COLORS[:reset]}"
       puts
@@ -1083,9 +1083,9 @@ module Photon
 
     def show_paths
       puts
-      puts "#{UI::COLORS[:bold]}Photon Paths#{UI::COLORS[:reset]}"
+      puts "#{UI::COLORS[:bold]}Quarks Paths#{UI::COLORS[:reset]}"
       puts
-      puts "  Install root: #{UI::COLORS[:cyan]}#{Database::PHOTON_ROOT}#{UI::COLORS[:reset]}"
+      puts "  Install root: #{UI::COLORS[:cyan]}#{Database::QUARKS_ROOT}#{UI::COLORS[:reset]}"
       puts "  State root:   #{UI::COLORS[:cyan]}#{Database::STATE_ROOT}#{UI::COLORS[:reset]}"
       puts "  Database:     #{UI::COLORS[:cyan]}#{Database::DB_PATH}#{UI::COLORS[:reset]}"
       puts "  Shims:        #{UI::COLORS[:cyan]}#{PathIntegration.shim_dir}#{UI::COLORS[:reset]}"
@@ -1093,8 +1093,8 @@ module Photon
     end
 
     def print_env
-      puts "export PHOTON_ROOT=#{shell_escape(Database::PHOTON_ROOT)}"
-      puts "export PHOTON_STATE_ROOT=#{shell_escape(Database::STATE_ROOT)}"
+      puts "export QUARKS_ROOT=#{shell_escape(Database::QUARKS_ROOT)}"
+      puts "export QUARKS_STATE_ROOT=#{shell_escape(Database::STATE_ROOT)}"
     end
 
     def setup_path
@@ -1112,7 +1112,7 @@ module Photon
 
     def add_repository(args)
       if args.length < 2
-        puts "Usage: #{UI::COLORS[:cyan]}photon add-repo <name> <url> [--priority N] [--gpg-key-id ID]#{UI::COLORS[:reset]}"
+        puts "Usage: #{UI::COLORS[:cyan]}quarks add-repo <name> <url> [--priority N] [--gpg-key-id ID]#{UI::COLORS[:reset]}"
         puts
         puts "Options:"
         puts "  --priority N      Repository priority (lower = higher priority, default: 100)"
@@ -1143,7 +1143,7 @@ module Photon
         exit 1
       end
 
-      repo = Photon::WebRepoManager.add_repo(
+      repo = Quarks::WebRepoManager.add_repo(
         name: name,
         url: url,
         priority: priority,
@@ -1160,7 +1160,7 @@ module Photon
       if @options[:ask]
         puts
         if confirm?("Sync repository now?")
-          sync_result = Photon::WebRepoManager.sync_repo(name, force: true)
+          sync_result = Quarks::WebRepoManager.sync_repo(name, force: true)
           if sync_result
             portage_msg("Repository synced successfully")
           else
@@ -1172,12 +1172,12 @@ module Photon
 
     def remove_repository(args)
       if args.empty?
-        puts "Usage: #{UI::COLORS[:cyan]}photon remove-repo <name>...#{UI::COLORS[:reset]}"
+        puts "Usage: #{UI::COLORS[:cyan]}quarks remove-repo <name>...#{UI::COLORS[:reset]}"
         exit 1
       end
 
       args.each do |name|
-        removed = Photon::WebRepoManager.remove_repo(name)
+        removed = Quarks::WebRepoManager.remove_repo(name)
         if removed
           puts "Removed repository: #{name}"
         else
@@ -1187,14 +1187,14 @@ module Photon
     end
 
     def list_repositories
-      repos = Photon::WebRepoManager.load_repos
+      repos = Quarks::WebRepoManager.load_repos
 
       if repos.empty?
         puts
         portage_msg("No web repositories configured")
         puts
         puts "Add repositories with:"
-        puts "  #{UI::COLORS[:cyan]}photon add-repo <name> <url>#{UI::COLORS[:reset]}"
+        puts "  #{UI::COLORS[:cyan]}quarks add-repo <name> <url>#{UI::COLORS[:reset]}"
         return
       end
 
@@ -1225,11 +1225,11 @@ module Photon
 
     def enable_service(name)
       unless name
-        puts "Usage: #{UI::COLORS[:cyan]}photon enable-service <service-name>#{UI::COLORS[:reset]}"
+        puts "Usage: #{UI::COLORS[:cyan]}quarks enable-service <service-name>#{UI::COLORS[:reset]}"
         exit 1
       end
 
-      if Photon::SystemdManager.enable_service(name, dry_run: @options[:pretend])
+      if Quarks::SystemdManager.enable_service(name, dry_run: @options[:pretend])
         portage_msg("Service '#{name}' enabled")
       else
         UI.error "Failed to enable service '#{name}'"
@@ -1239,11 +1239,11 @@ module Photon
 
     def disable_service(name)
       unless name
-        puts "Usage: #{UI::COLORS[:cyan]}photon disable-service <service-name>#{UI::COLORS[:reset]}"
+        puts "Usage: #{UI::COLORS[:cyan]}quarks disable-service <service-name>#{UI::COLORS[:reset]}"
         exit 1
       end
 
-      if Photon::SystemdManager.disable_service(name, dry_run: @options[:pretend])
+      if Quarks::SystemdManager.disable_service(name, dry_run: @options[:pretend])
         portage_msg("Service '#{name}' disabled")
       else
         UI.error "Failed to disable service '#{name}'"
@@ -1262,10 +1262,10 @@ module Photon
         set_package_use(args[1..-1])
       else
         puts "Usage:"
-        puts "  #{UI::COLORS[:cyan]}photon use#{UI::COLORS[:reset]}                 Show current USE flags"
-        puts "  #{UI::COLORS[:cyan]}photon use set <flags>...#{UI::COLORS[:reset]}  Set global USE flags"
-        puts "  #{UI::COLORS[:cyan]}photon use del <flags>...#{UI::COLORS[:reset]}  Remove global USE flags"
-        puts "  #{UI::COLORS[:cyan]}photon use package <pkg> <flags>#{UI::COLORS[:reset]} Set package-specific flags"
+        puts "  #{UI::COLORS[:cyan]}quarks use#{UI::COLORS[:reset]}                 Show current USE flags"
+        puts "  #{UI::COLORS[:cyan]}quarks use set <flags>...#{UI::COLORS[:reset]}  Set global USE flags"
+        puts "  #{UI::COLORS[:cyan]}quarks use del <flags>...#{UI::COLORS[:reset]}  Remove global USE flags"
+        puts "  #{UI::COLORS[:cyan]}quarks use package <pkg> <flags>#{UI::COLORS[:reset]} Set package-specific flags"
       end
     end
 
@@ -1328,7 +1328,7 @@ module Photon
 
     def set_package_use(args)
       if args.length < 2
-        UI.error "Usage: photon use package <package> <flags...>"
+        UI.error "Usage: quarks use package <package> <flags...>"
         exit 1
       end
 
@@ -1498,7 +1498,7 @@ module Photon
         packages_to_rebuild = preserved.values.flatten.uniq
         packages_to_rebuild.each do |pkg_name|
           puts "Emerging #{pkg_name}..."
-          system("photon install #{pkg_name}")
+          system("quarks install #{pkg_name}")
         end
       end
     end
@@ -1507,8 +1507,8 @@ module Photon
       preserved = {}
 
       lib_patterns = [
-        File.join(Database::PHOTON_ROOT, "lib", "*.so.*"),
-        File.join(Database::PHOTON_ROOT, "usr", "lib", "*.so.*")
+        File.join(Database::QUARKS_ROOT, "lib", "*.so.*"),
+        File.join(Database::QUARKS_ROOT, "usr", "lib", "*.so.*")
       ]
 
       actual_libs = Set.new
@@ -1737,7 +1737,7 @@ module Photon
       puts "#{UI::COLORS[:brand]}Package Query Commands#{UI::COLORS[:reset]}"
       puts "#{UI::COLORS[:dim]}Query package information and dependencies#{UI::COLORS[:reset]}"
       puts
-      puts "Usage: #{UI::COLORS[:cyan]}photon query <command> [args]#{UI::COLORS[:reset]}"
+      puts "Usage: #{UI::COLORS[:cyan]}quarks query <command> [args]#{UI::COLORS[:reset]}"
       puts
       puts "Available queries:"
       puts "  #{UI::COLORS[:brand]}deps#{UI::COLORS[:reset]}              Show package dependencies"
@@ -1783,7 +1783,7 @@ module Photon
 
     def release_package(args)
       if args.empty?
-        UI.error "Usage: photon release <package>"
+        UI.error "Usage: quarks release <package>"
         exit 1
       end
 
@@ -1881,10 +1881,10 @@ module Photon
 
       else
         puts "Usage:"
-        puts "  #{UI::COLORS[:cyan]}photon profile#{UI::COLORS[:reset]}                   List profiles"
-        puts "  #{UI::COLORS[:cyan]}photon profile create <name>#{UI::COLORS[:reset]}      Create profile"
-        puts "  #{UI::COLORS[:cyan]}photon profile activate <name>#{UI::COLORS[:reset]}   Activate profile"
-        puts "  #{UI::COLORS[:cyan]}photon profile delete <name>#{UI::COLORS[:reset]}      Delete profile"
+        puts "  #{UI::COLORS[:cyan]}quarks profile#{UI::COLORS[:reset]}                   List profiles"
+        puts "  #{UI::COLORS[:cyan]}quarks profile create <name>#{UI::COLORS[:reset]}      Create profile"
+        puts "  #{UI::COLORS[:cyan]}quarks profile activate <name>#{UI::COLORS[:reset]}   Activate profile"
+        puts "  #{UI::COLORS[:cyan]}quarks profile delete <name>#{UI::COLORS[:reset]}      Delete profile"
       end
     end
 
@@ -1911,7 +1911,7 @@ module Photon
       when "create"
         name = args[1]
         unless name
-          UI.error "Usage: photon hook create <name>"
+          UI.error "Usage: quarks hook create <name>"
           exit 1
         end
 
@@ -1923,7 +1923,7 @@ module Photon
       when "run"
         name = args[1]
         unless name
-          UI.error "Usage: photon hook run <name>"
+          UI.error "Usage: quarks hook run <name>"
           exit 1
         end
 
@@ -1956,7 +1956,7 @@ module Photon
 
       puts
       puts "#{UI::COLORS[:brand]}╔#{'═' * 50}╗#{UI::COLORS[:reset]}"
-      puts "#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}#{UI::COLORS[:bold]}       Photon Status#{UI::COLORS[:reset]}#{' ' * 28}#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}"
+      puts "#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}#{UI::COLORS[:bold]}       Quarks Status#{UI::COLORS[:reset]}#{' ' * 28}#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}"
       puts "#{UI::COLORS[:brand]}╠#{'═' * 50}╣#{UI::COLORS[:reset]}"
       puts "#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}  Packages: #{@database.list_packages.length.to_s.ljust(43)}#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}"
       puts "#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}  Available: #{@repository.list_atoms.length.to_s.ljust(41)}#{UI::COLORS[:brand]}║#{UI::COLORS[:reset]}"
@@ -1991,5 +1991,5 @@ module Photon
 end
 
 if __FILE__ == $PROGRAM_NAME
-  Photon::CLI.new.run(ARGV)
+  Quarks::CLI.new.run(ARGV)
 end

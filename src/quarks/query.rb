@@ -4,7 +4,7 @@ require "fileutils"
 require "json"
 require "find"
 
-module Photon
+module Quarks
   class QueryCommands
     COMMANDS = {
       "deps" => :query_deps,
@@ -181,7 +181,7 @@ module Photon
       total_size = 0
 
       files.each do |rel_path|
-        abs = File.join(Database::PHOTON_ROOT, rel_path)
+        abs = File.join(Database::QUARKS_ROOT, rel_path)
         if File.exist?(abs)
           total_size += File.size(abs)
         elsif File.symlink?(abs)
@@ -204,7 +204,7 @@ module Photon
       output += "\n  By type:\n"
       by_type.sort_by { |_, v| -v.length }.first(5).each do |type, type_files|
         type_size = type_files.sum do |f|
-          abs = File.join(Database::PHOTON_ROOT, f)
+          abs = File.join(Database::QUARKS_ROOT, f)
           File.size(abs) rescue 0
         end
         output += "    #{type}: #{type_files.length} (#{format_size(type_size)})\n"
@@ -233,7 +233,7 @@ module Photon
         end
 
         pkg[:files].each do |rel_path|
-          abs = File.join(Database::PHOTON_ROOT, rel_path)
+          abs = File.join(Database::QUARKS_ROOT, rel_path)
           unless File.exist?(abs) || File.symlink?(abs)
             issues << { type: "missing", package: name, file: rel_path }
           end
@@ -272,11 +272,11 @@ module Photon
 
         if pkg[:files].empty?
           files = []
-          search_path = File.join(Database::PHOTON_ROOT, name)
+          search_path = File.join(Database::QUARKS_ROOT, name)
           if Dir.exist?(search_path)
             Find.find(search_path) do |f|
               next unless File.file?(f)
-              rel = f.sub("#{Database::PHOTON_ROOT}/", "")
+              rel = f.sub("#{Database::QUARKS_ROOT}/", "")
               files << rel
             end
           end
@@ -442,7 +442,7 @@ module Photon
       issues = []
 
       pkg[:files].each do |rel_path|
-        abs = File.join(Database::PHOTON_ROOT, rel_path)
+        abs = File.join(Database::QUARKS_ROOT, rel_path)
         issues << "Missing: #{rel_path}" unless File.exist?(abs)
       end
 

@@ -5,16 +5,16 @@ require "json"
 require "fileutils"
 require "digest"
 require "time"
-require "photon/env"
+require "quarks/env"
 
-module Photon
+module Quarks
   class Database
-    PHOTON_ROOT = Env.root.freeze
+    QUARKS_ROOT = Env.root.freeze
     STATE_ROOT  = Env.state_root.freeze
 
-    DB_PATH    = File.join(STATE_ROOT, "var", "db", "photon.sqlite3").freeze
-    CACHE_ROOT = File.join(STATE_ROOT, "var", "cache", "photon").freeze
-    LOG_ROOT   = File.join(STATE_ROOT, "var", "log", "photon").freeze
+    DB_PATH    = File.join(STATE_ROOT, "var", "db", "quarks.sqlite3").freeze
+    CACHE_ROOT = File.join(STATE_ROOT, "var", "cache", "quarks").freeze
+    LOG_ROOT   = File.join(STATE_ROOT, "var", "log", "quarks").freeze
 
     SCHEMA_VERSION = 4
 
@@ -225,7 +225,7 @@ module Photon
       SQL
       return nil unless row
 
-      { name: row["name"], atom: row["atom"], version: row["version"], path: File.join(PHOTON_ROOT, row["path"]) }
+      { name: row["name"], atom: row["atom"], version: row["version"], path: File.join(QUARKS_ROOT, row["path"]) }
     rescue
       nil
     end
@@ -239,7 +239,7 @@ module Photon
         next unless binary_rel_path?(rel)
 
         name = File.basename(rel)
-        abs = File.join(PHOTON_ROOT, rel)
+        abs = File.join(QUARKS_ROOT, rel)
         next unless File.exist?(abs) || File.symlink?(abs)
         next unless (File.executable?(abs) rescue true)
 
@@ -269,7 +269,7 @@ module Photon
     end
 
     def cache_dirs
-      [CACHE_ROOT, File.join(STATE_ROOT, "var", "tmp", "photon")].uniq
+      [CACHE_ROOT, File.join(STATE_ROOT, "var", "tmp", "quarks")].uniq
     end
 
     def compact!
@@ -459,7 +459,7 @@ module Photon
       configure_db!
       migrate!
       @ready = true
-      warn "[photon] Database recovered from error: #{message}" if Env.debug?
+      warn "[quarks] Database recovered from error: #{message}" if Env.debug?
     rescue => e
       raise "Database failed to recover: #{message} (recovery error: #{e.class}: #{e.message})"
     end
@@ -485,7 +485,7 @@ module Photon
       return "" if value.empty?
 
       expanded = File.expand_path(value)
-      root = File.expand_path(PHOTON_ROOT)
+      root = File.expand_path(QUARKS_ROOT)
 
       if expanded.start_with?(root + "/")
         normalize_rel_path(expanded.delete_prefix(root + "/"))

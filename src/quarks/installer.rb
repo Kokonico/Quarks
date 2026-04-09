@@ -4,9 +4,9 @@ require "fileutils"
 require "find"
 require "shellwords"
 
-require "photon/system_integration"
+require "quarks/system_integration"
 
-module Photon
+module Quarks
   class Installer
     class InstallError < StandardError; end
     class RollbackError < StandardError; end
@@ -24,7 +24,7 @@ module Photon
     def install(dest_dir)
       raise InstallError, "Staging directory does not exist: #{dest_dir}" unless Dir.exist?(dest_dir)
 
-      install_root = Database::PHOTON_ROOT
+      install_root = Database::QUARKS_ROOT
       FileUtils.mkdir_p(install_root) unless Dir.exist?(install_root)
 
       validate_staging_directory(dest_dir)
@@ -71,7 +71,7 @@ module Photon
       pkg_info = @database.get_package(@package.name)
       raise InstallError, "Package not in database: #{@package.name}" unless pkg_info
 
-      install_root = Database::PHOTON_ROOT
+      install_root = Database::QUARKS_ROOT
       sudo_needed = !writable_dir?(install_root)
       files = Array(pkg_info[:files])
       removed = 0
@@ -103,7 +103,7 @@ module Photon
       prune_empty_dirs(files, install_root, sudo: sudo_needed)
 
       if failed_removals.any?
-        warn "[photon] Warning: Failed to remove #{failed_removals.length} file(s)"
+        warn "[quarks] Warning: Failed to remove #{failed_removals.length} file(s)"
       end
 
       @database.remove_package(@package.name)
@@ -131,7 +131,7 @@ module Photon
         abs_link = File.expand_path(link)
         abs_target = File.expand_path(target, File.dirname(link))
 
-        unless abs_target.start_with?(dest_dir) || abs_target.start_with?(Database::PHOTON_ROOT)
+        unless abs_target.start_with?(dest_dir) || abs_target.start_with?(Database::QUARKS_ROOT)
           raise InstallError, "Dangerous absolute symlink detected: #{link} -> #{target}"
         end
       end
@@ -143,7 +143,7 @@ module Photon
     end
 
     def perform_rollback(install_root, sudo: false, error: nil)
-      puts "[photon] Initiating rollback due to: #{error&.message || 'unknown error'}"
+      puts "[quarks] Initiating rollback due to: #{error&.message || 'unknown error'}"
       rolled_back = 0
       failed = []
 
@@ -163,9 +163,9 @@ module Photon
 
       prune_empty_dirs(@installed_files, install_root, sudo: sudo)
 
-      puts "[photon] Rollback complete: #{rolled_back} file(s) removed"
+      puts "[quarks] Rollback complete: #{rolled_back} file(s) removed"
       if failed.any?
-        puts "[photon] Warning: #{failed.length} file(s) could not be removed"
+        puts "[quarks] Warning: #{failed.length} file(s) could not be removed"
       end
     end
 
@@ -176,7 +176,7 @@ module Photon
       if needs_ldconfig
         LdconfigManager.cache_libraries(install_root)
         unless LdconfigManager.update_ldconfig(dry_run: @options[:pretend])
-          warn "[photon] Warning: ldconfig update failed"
+          warn "[quarks] Warning: ldconfig update failed"
         end
       end
 
@@ -236,7 +236,7 @@ module Photon
 
           #{install_root}
 
-        Fix permissions or use a writable PHOTON_ROOT.
+        Fix permissions or use a writable QUARKS_ROOT.
       MSG
     end
 
@@ -283,7 +283,7 @@ module Photon
 
     def writable_dir?(path)
       FileUtils.mkdir_p(path) unless Dir.exist?(path)
-      test = File.join(path, ".photon_write_test_#{Process.pid}")
+      test = File.join(path, ".quarks_write_test_#{Process.pid}")
       File.write(test, "ok")
       File.delete(test)
       true
@@ -297,7 +297,7 @@ module Photon
       info_files = find_info_files(install_root)
       info_files.each do |file|
         if dry_run
-          puts "[photon] Would run: install-info #{file}"
+          puts "[quarks] Would run: install-info #{file}"
         else
           system("install-info #{Shellwords.escape(file)} /usr/share/info/dir 2>/dev/null")
         end
@@ -305,7 +305,7 @@ module Photon
 
       true
     rescue => e
-      warn "[photon] Warning: info database update failed: #{e.message}"
+      warn "[quarks] Warning: info database update failed: #{e.message}"
       false
     end
 

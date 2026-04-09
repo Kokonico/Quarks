@@ -35,19 +35,19 @@ class Doctor
   end
 
   def banner
-    puts "Photon Doctor — wsg gng :D"
+    puts "Quarks Doctor — wsg gng :D"
     puts "cwd: #{@cwd}"
     puts "repo_root: #{@repo_root || '(not found)'}"
-    puts "PHOTON_ROOT=#{ENV['PHOTON_ROOT'] || '(unset)'}"
-    puts "PHOTON_STATE_ROOT=#{ENV['PHOTON_STATE_ROOT'] || '(unset)'}"
-    puts "PHOTON_REPO_URLS=#{ENV['PHOTON_REPO_URLS'] || '(unset)'}"
+    puts "QUARKS_ROOT=#{ENV['QUARKS_ROOT'] || '(unset)'}"
+    puts "QUARKS_STATE_ROOT=#{ENV['QUARKS_STATE_ROOT'] || '(unset)'}"
+    puts "QUARKS_REPO_URLS=#{ENV['QUARKS_REPO_URLS'] || '(unset)'}"
     puts "-" * 72
   end
 
   def find_repo_root(start)
     cur = start
     15.times do
-      return cur if (cur / "src" / "photon").directory?
+      return cur if (cur / "src" / "quarks").directory?
       parent = cur.parent
       break if parent == cur
       cur = parent
@@ -59,7 +59,7 @@ class Doctor
     if @repo_root
       add(severity: :ok, title: "Repo root detected", details: @repo_root.to_s)
     else
-      add(severity: :fail, title: "Not inside a Photon repo", hint: "Run this from the Photon repo root so src/photon is visible.")
+      add(severity: :fail, title: "Not inside a Quarks repo", hint: "Run this from the Quarks repo root so src/quarks is visible.")
     end
   end
 
@@ -88,16 +88,16 @@ class Doctor
   def check_entrypoint
     return unless @repo_root
 
-    entry = @repo_root / "photon"
+    entry = @repo_root / "quarks"
     unless entry.file?
-      add(severity: :fail, title: "Missing ./photon entrypoint")
+      add(severity: :fail, title: "Missing ./quarks entrypoint")
       return
     end
 
     if entry.executable?
-      add(severity: :ok, title: "./photon executable")
+      add(severity: :ok, title: "./quarks executable")
     else
-      add(severity: :warn, title: "./photon is not executable", hint: "chmod +x photon")
+      add(severity: :warn, title: "./quarks is not executable", hint: "chmod +x quarks")
     end
   end
 
@@ -106,11 +106,11 @@ class Doctor
 
     begin
       $LOAD_PATH.unshift((@repo_root / "src").to_s)
-      require "photon/env"
-      require "photon/package"
-      require "photon/repository"
+      require "quarks/env"
+      require "quarks/package"
+      require "quarks/repository"
 
-      repo = Photon::Repository.new(@repo_root / "nuclei")
+      repo = Quarks::Repository.new(@repo_root / "nuclei")
       atoms = repo.list_atoms
 
       if atoms.empty?
@@ -118,7 +118,7 @@ class Doctor
           severity: :warn,
           title: "Repository indexes 0 packages",
           details: (repo.errors + repo.warnings).join("\n"),
-          hint: "Check nuclei syntax, repo layout, and PHOTON_NUCLEI_PATHS / PHOTON_REPO_URLS."
+          hint: "Check nuclei syntax, repo layout, and QUARKS_NUCLEI_PATHS / QUARKS_REPO_URLS."
         )
       else
         add(severity: :ok, title: "Repository indexes #{atoms.length} package(s)")
@@ -127,7 +127,7 @@ class Doctor
       repo.warnings.each { |warn_msg| add(severity: :warn, title: "Repository warning", details: warn_msg) }
       repo.errors.each { |err_msg| add(severity: :fail, title: "Repository error", details: err_msg) }
     rescue LoadError => e
-      add(severity: :fail, title: "Could not load Photon repository code", details: e.message)
+      add(severity: :fail, title: "Could not load Quarks repository code", details: e.message)
     rescue => e
       add(severity: :fail, title: "Repository check crashed", details: "#{e.class}: #{e.message}")
     end
@@ -138,16 +138,16 @@ class Doctor
 
     begin
       $LOAD_PATH.unshift((@repo_root / "src").to_s)
-      require "photon/database"
-      db_path = Photon::Database::DB_PATH
+      require "quarks/database"
+      db_path = Quarks::Database::DB_PATH
 
       if File.exist?(db_path)
         add(severity: :ok, title: "Database file exists", details: db_path)
       else
-        add(severity: :warn, title: "Database file missing", details: db_path, hint: "Run Photon once to initialize the DB.")
+        add(severity: :warn, title: "Database file missing", details: db_path, hint: "Run Quarks once to initialize the DB.")
       end
     rescue LoadError => e
-      add(severity: :warn, title: "Could not load Photon database code", details: e.message)
+      add(severity: :warn, title: "Could not load Quarks database code", details: e.message)
     rescue => e
       add(severity: :warn, title: "Database check crashed", details: "#{e.class}: #{e.message}")
     end

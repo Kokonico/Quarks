@@ -2,11 +2,11 @@
 
 require "fileutils"
 
-module Photon
+module Quarks
   module PathIntegration
     extend self
 
-    SHIM_MARKER = "PHOTON-SHIM".freeze
+    SHIM_MARKER = "QUARKS-SHIM".freeze
 
     def shim_dir
       File.join(Database::STATE_ROOT, "var", "shims")
@@ -27,24 +27,24 @@ module Photon
       snippet = path_snippet
       if rc_file && File.writable?(rc_file)
         content = File.read(rc_file) rescue ""
-        unless content.include?("photon setup-path")
+        unless content.include?("quarks setup-path")
           File.open(rc_file, "a") do |f|
             f.puts
             f.puts snippet
           end
-          puts "#{UI::COLORS[:green]}>>>#{UI::COLORS[:reset]} Added Photon PATH snippet to #{rc_file}"
+          puts "#{UI::COLORS[:green]}>>>#{UI::COLORS[:reset]} Added Quarks PATH snippet to #{rc_file}"
         end
       end
 
       unless ENV["PATH"].to_s.split(":").include?(shim_dir)
-        puts "#{UI::COLORS[:yellow]}>>>#{UI::COLORS[:reset]} Note: Photon shims live at:"
+        puts "#{UI::COLORS[:yellow]}>>>#{UI::COLORS[:reset]} Note: Quarks shims live at:"
         puts "  #{shim_dir}"
-        puts "Make sure your shell loads Photon PATH integration (run photon setup-path once)."
+        puts "Make sure your shell loads Quarks PATH integration (run quarks setup-path once)."
       end
     end
 
     def sync!(database)
-      return if ENV["PHOTON_DISABLE_SHIMS"] == "1"
+      return if ENV["QUARKS_DISABLE_SHIMS"] == "1"
 
       FileUtils.mkdir_p(shim_dir)
 
@@ -54,7 +54,7 @@ module Photon
       bins.each do |name, target|
         shim_name = choose_shim_name(name, target)
         desired[shim_name] = target
-        desired["photon-#{name}"] ||= target
+        desired["quarks-#{name}"] ||= target
       end
 
       remove_stale_shims(desired.keys)
@@ -65,29 +65,29 @@ module Photon
 
     def path_snippet
       <<~SH
-        # >>> photon setup-path >>>
-        export PHOTON_ROOT="${PHOTON_ROOT:-$HOME/.local/photon}"
-        export PHOTON_STATE_ROOT="${PHOTON_STATE_ROOT:-$HOME/.local/state/photon}"
-        export PATH="$PATH:$PHOTON_ROOT/usr/bin:$PHOTON_ROOT/usr/sbin:$PHOTON_ROOT/usr/local/bin:$PHOTON_ROOT/usr/local/sbin:$PHOTON_STATE_ROOT/var/shims"
-        # <<< photon setup-path <<<
+        # >>> quarks setup-path >>>
+        export QUARKS_ROOT="${QUARKS_ROOT:-$HOME/.local/quarks}"
+        export QUARKS_STATE_ROOT="${QUARKS_STATE_ROOT:-$HOME/.local/state/quarks}"
+        export PATH="$PATH:$QUARKS_ROOT/usr/bin:$QUARKS_ROOT/usr/sbin:$QUARKS_ROOT/usr/local/bin:$QUARKS_ROOT/usr/local/sbin:$QUARKS_STATE_ROOT/var/shims"
+        # <<< quarks setup-path <<<
       SH
     end
 
     def choose_shim_name(bin_name, target_path)
-      if command_exists_outside_photon?(bin_name, target_path)
-        "photon-#{bin_name}"
+      if command_exists_outside_quarks?(bin_name, target_path)
+        "quarks-#{bin_name}"
       else
         bin_name
       end
     end
 
-    def command_exists_outside_photon?(bin_name, target_path)
+    def command_exists_outside_quarks?(bin_name, target_path)
       env_path = ENV["PATH"].to_s.split(":")
-      photon_root = Database::PHOTON_ROOT.to_s
+      quarks_root = Database::QUARKS_ROOT.to_s
 
       env_path.each do |dir|
         next if dir.nil? || dir.empty?
-        next if dir.start_with?(photon_root)
+        next if dir.start_with?(quarks_root)
         next if dir == shim_dir
 
         cand = File.join(dir, bin_name)

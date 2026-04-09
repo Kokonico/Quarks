@@ -3,7 +3,7 @@
 require "fileutils"
 require "find"
 
-module Photon
+module Quarks
   class SystemIntegration
     LIBRARY_PATTERNS = [
       /\blib.*\.so(\.\d+)*$/,
@@ -219,14 +219,14 @@ module Photon
   class LdconfigManager
     def self.update_ldconfig(dry_run: false)
       if dry_run
-        puts "[photon] Would run: ldconfig"
+        puts "[quarks] Would run: ldconfig"
         return true
       end
 
       system("ldconfig 2>/dev/null")
       $?.success?
     rescue => e
-      warn "[photon] ldconfig update failed: #{e.message}"
+      warn "[quarks] ldconfig update failed: #{e.message}"
       false
     end
 
@@ -289,7 +289,7 @@ module Photon
       return if desktop_files.empty?
 
       if dry_run
-        puts "[photon] Would update desktop database with #{desktop_files.length} file(s)"
+        puts "[quarks] Would update desktop database with #{desktop_files.length} file(s)"
         return true
       end
 
@@ -299,7 +299,7 @@ module Photon
 
       true
     rescue => e
-      warn "[photon] Desktop database update failed: #{e.message}"
+      warn "[quarks] Desktop database update failed: #{e.message}"
       false
     end
 
@@ -338,14 +338,14 @@ module Photon
       return false unless command_exists?("gio")
 
       if dry_run
-        puts "[photon] Would register desktop file: #{file}"
+        puts "[quarks] Would register desktop file: #{file}"
         return true
       end
 
       system("gio set #{Shellwords.escape(file)} metadata::trusted true 2>/dev/null")
       $?.success?
     rescue => e
-      warn "[photon] GIO desktop registration failed: #{e.message}"
+      warn "[quarks] GIO desktop registration failed: #{e.message}"
       false
     end
 
@@ -355,7 +355,7 @@ module Photon
   end
 
   class UpdateAlternativesManager
-    ALT_DB_PATH = File.join(Photon::Env.state_root, "var", "lib", "photon", "alternatives.json")
+    ALT_DB_PATH = File.join(Quarks::Env.state_root, "var", "lib", "quarks", "alternatives.json")
 
     def self.initialize!
       FileUtils.mkdir_p(File.dirname(ALT_DB_PATH))
@@ -372,7 +372,7 @@ module Photon
       db[name][:links][path] = { priority: priority }
 
       if dry_run
-        puts "[photon] Would register alternative: #{name} -> #{path} (priority: #{priority})"
+        puts "[quarks] Would register alternative: #{name} -> #{path} (priority: #{priority})"
         return true
       end
 
@@ -391,7 +391,7 @@ module Photon
       end
 
       if dry_run
-        puts "[photon] Would unregister alternative: #{name} -> #{path}"
+        puts "[quarks] Would unregister alternative: #{name} -> #{path}"
       end
 
       save_db(db)
@@ -413,7 +413,7 @@ module Photon
       db[name][:active] = path
 
       if dry_run
-        puts "[photon] Would set active alternative: #{name} -> #{path}"
+        puts "[quarks] Would set active alternative: #{name} -> #{path}"
         return true
       end
 
@@ -446,7 +446,7 @@ module Photon
         FileUtils.ln_s(target_path, link_path)
         true
       rescue => e
-        warn "[photon] Failed to create alternative symlink: #{e.message}"
+        warn "[quarks] Failed to create alternative symlink: #{e.message}"
         false
       end
     end
@@ -466,7 +466,7 @@ module Photon
         next unless Dir.exist?(dir)
 
         if dry_run
-          puts "[photon] Would update MIME database in: #{dir}"
+          puts "[quarks] Would update MIME database in: #{dir}"
         else
           system("update-mime-database #{Shellwords.escape(dir)} 2>/dev/null")
           updated ||= $?.success?
@@ -490,7 +490,7 @@ module Photon
 
       icon_dirs.each do |dir|
         if dry_run
-          puts "[photon] Would update icon cache in: #{dir}"
+          puts "[quarks] Would update icon cache in: #{dir}"
         else
           system("gtk-update-icon-cache -f -t #{Shellwords.escape(dir)} 2>/dev/null")
           updated ||= $?.success?

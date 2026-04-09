@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Photon
+module Quarks
   class UI
     def self.color_enabled?
       return false if ENV["NO_COLOR"]
@@ -14,7 +14,7 @@ module Photon
       color_enabled? ? code : ""
     end
 
-    PHOTON_THEME = ENV["PHOTON_THEME"].to_s.downcase.to_sym rescue :default
+    QUARKS_THEME = ENV["QUARKS_THEME"].to_s.downcase.to_sym rescue :default
 
     THEMES = {
       default: {
@@ -48,7 +48,7 @@ module Photon
     }.freeze
 
     def self.current_theme
-      THEMES[PHOTON_THEME] || THEMES[:default]
+      THEMES[QUARKS_THEME] || THEMES[:default]
     end
 
     COLORS = {
@@ -131,7 +131,7 @@ module Photon
         end
 
         if s =~ /warning:/i
-          if ENV["PHOTON_WARNINGS"] == "1"
+          if ENV["QUARKS_WARNINGS"] == "1"
             puts "#{COLORS[:yellow]}! #{s}#{COLORS[:reset]}"
           end
           return
@@ -199,10 +199,10 @@ module Photon
       end
 
       def banner
-        theme_name = PHOTON_THEME.to_s.capitalize
+        theme_name = QUARKS_THEME.to_s.capitalize
         puts
-        puts "#{COLORS[:brand]}    Photon Package Manager#{COLORS[:reset]}"
-        puts "#{COLORS[:dim]}    Theme: #{theme_name}#{COLORS[:reset]}" unless PHOTON_THEME == :default
+        puts "#{COLORS[:brand]}    Quarks Package Manager#{COLORS[:reset]}"
+        puts "#{COLORS[:dim]}    Theme: #{theme_name}#{COLORS[:reset]}" unless QUARKS_THEME == :default
         puts
       end
 
@@ -217,7 +217,7 @@ module Photon
       def list_themes
         puts "\nAvailable themes:"
         THEMES.each_key do |theme|
-          selected = theme == PHOTON_THEME ? " #{COLORS[:green]}[*]#{COLORS[:reset]}" : ""
+          selected = theme == QUARKS_THEME ? " #{COLORS[:green]}[*]#{COLORS[:reset]}" : ""
           puts "  #{theme.to_s.capitalize.ljust(12)}#{selected}"
         end
         puts

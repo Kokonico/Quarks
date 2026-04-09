@@ -2,7 +2,7 @@
 
 require "set"
 
-module Photon
+module Quarks
   class DependencyResolver
     MAX_DEPTH = 500
 
@@ -36,7 +36,7 @@ module Photon
       name = pkg.name.to_s.downcase
 
       if @database.installed?(name)
-        UI.info "#{"  " * depth}#{pkg.atom} (already installed)" if ENV["PHOTON_DEBUG"]
+        UI.info "#{"  " * depth}#{pkg.atom} (already installed)" if ENV["QUARKS_DEBUG"]
         return
       end
 
@@ -48,7 +48,7 @@ module Photon
       return if @visited.include?(pkg.atom)
       @visited.add(pkg.atom)
 
-      UI.info "#{"  " * depth}Resolving #{pkg.atom}..." if ENV["PHOTON_DEBUG"]
+      UI.info "#{"  " * depth}Resolving #{pkg.atom}..." if ENV["QUARKS_DEBUG"]
       @stack << pkg.atom
 
       deps = (Array(pkg.dependencies) + Array(pkg.build_dependencies))

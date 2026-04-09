@@ -2,7 +2,7 @@
 
 require "fileutils"
 
-module Photon
+module Quarks
   class SystemdManager
     SERVICE_TEMPLATE = <<~TEMPLATE
       [Unit]
@@ -117,7 +117,7 @@ module Photon
 
     def self.install_service(name, dest_dir, options = {})
       service_name = options[:service_name] || name
-      install_root = dest_dir || Database::PHOTON_ROOT
+      install_root = dest_dir || Database::QUARKS_ROOT
 
       service_dir = File.join(install_root, "usr", "lib", "systemd", "system")
       FileUtils.mkdir_p(service_dir)
@@ -137,7 +137,7 @@ module Photon
     end
 
     def self.uninstall_service(name, dest_dir)
-      install_root = dest_dir || Database::PHOTON_ROOT
+      install_root = dest_dir || Database::QUARKS_ROOT
 
       service_dir = File.join(install_root, "usr", "lib", "systemd", "system")
       service_file = File.join(service_dir, "#{name}.service")
@@ -159,7 +159,7 @@ module Photon
 
     def self.enable_service(name, dry_run: false)
       if dry_run
-        puts "[photon] Would enable service: #{name}"
+        puts "[quarks] Would enable service: #{name}"
         return true
       end
 
@@ -169,7 +169,7 @@ module Photon
 
     def self.disable_service(name, dry_run: false)
       if dry_run
-        puts "[photon] Would disable service: #{name}"
+        puts "[quarks] Would disable service: #{name}"
         return true
       end
 
@@ -179,7 +179,7 @@ module Photon
 
     def self.start_service(name, dry_run: false)
       if dry_run
-        puts "[photon] Would start service: #{name}"
+        puts "[quarks] Would start service: #{name}"
         return true
       end
 
@@ -189,7 +189,7 @@ module Photon
 
     def self.stop_service(name, dry_run: false)
       if dry_run
-        puts "[photon] Would stop service: #{name}"
+        puts "[quarks] Would stop service: #{name}"
         return true
       end
 
@@ -199,7 +199,7 @@ module Photon
 
     def self.restart_service(name, dry_run: false)
       if dry_run
-        puts "[photon] Would restart service: #{name}"
+        puts "[quarks] Would restart service: #{name}"
         return true
       end
 

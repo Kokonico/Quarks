@@ -8,7 +8,7 @@ require "openssl"
 require "digest"
 require "time"
 
-module Photon
+module Quarks
   class WebRepoManager
     MAX_RETRIES = 5
     RETRY_DELAY_BASE = 2
@@ -120,19 +120,19 @@ module Photon
 
     class << self
       def repo_config_dir
-        dir = File.join(Photon::Env.state_root, "var", "cache", "photon", "repos")
+        dir = File.join(Quarks::Env.state_root, "var", "cache", "quarks", "repos")
         FileUtils.mkdir_p(dir)
         dir
       end
 
       def keyring_dir
-        dir = File.join(Photon::Env.state_root, "var", "cache", "photon", "keys")
+        dir = File.join(Quarks::Env.state_root, "var", "cache", "quarks", "keys")
         FileUtils.mkdir_p(dir)
         dir
       end
 
       def distfiles_dir
-        dir = File.join(Photon::Env.state_root, "var", "cache", "photon", "distfiles")
+        dir = File.join(Quarks::Env.state_root, "var", "cache", "quarks", "distfiles")
         FileUtils.mkdir_p(dir)
         dir
       end
@@ -149,7 +149,7 @@ module Photon
           end
           repos
         rescue JSON::ParserError => e
-          warn "[photon] Invalid repository config: #{e.message}"
+          warn "[quarks] Invalid repository config: #{e.message}"
           {}
         end
       end
@@ -225,7 +225,7 @@ module Photon
           rescue => e
             results[repo.name] = { success: false, error: e.message }
             errors << "#{repo.name}: #{e.message}"
-            warn "[photon] Failed to sync repo '#{repo.name}': #{e.message}" unless offline_ok
+            warn "[quarks] Failed to sync repo '#{repo.name}': #{e.message}" unless offline_ok
           end
         end
 
@@ -243,7 +243,7 @@ module Photon
             last_error = e
             if attempt < retries - 1
               delay = RETRY_DELAY_BASE ** attempt
-              warn "[photon] Retry #{attempt + 1}/#{retries} for #{repo.name} after #{delay}s: #{e.message}"
+              warn "[quarks] Retry #{attempt + 1}/#{retries} for #{repo.name} after #{delay}s: #{e.message}"
               sleep(delay)
             end
           end
@@ -252,7 +252,7 @@ module Photon
         if use_cache
           cached = load_cached_manifest(repo.name)
           if cached
-            warn "[photon] Using stale cache for '#{repo.name}' due to network errors"
+            warn "[quarks] Using stale cache for '#{repo.name}' due to network errors"
             return cached
           end
         end
@@ -286,7 +286,7 @@ module Photon
           repo.manifest_etag = response["ETag"]
           repo.manifest_mtime = response["Last-Modified"]
 
-          if verify && (repo.gpg_key_id || ENV["PHOTON_VERIFY_REPOS"] == "1")
+          if verify && (repo.gpg_key_id || ENV["QUARKS_VERIFY_REPOS"] == "1")
             signature = fetch_signature(repo)
             verify_manifest!(body, signature, repo)
           end
@@ -300,7 +300,7 @@ module Photon
       end
 
       def force_refresh?(repo)
-        ENV["PHOTON_FORCE_SYNC"] == "1"
+        ENV["QUARKS_FORCE_SYNC"] == "1"
       end
 
       def fetch_signature(repo)
@@ -317,7 +317,7 @@ module Photon
           raise NetworkError, "Failed to fetch signature: HTTP #{response.code}"
         end
       rescue => e
-        warn "[photon] Could not fetch signature for '#{repo.name}': #{e.message}"
+        warn "[quarks] Could not fetch signature for '#{repo.name}': #{e.message}"
         nil
       end
 
@@ -364,7 +364,7 @@ module Photon
         File.write(dest, response.body)
         true
       rescue => e
-        warn "[photon] Failed to fetch GPG key from #{url}: #{e.message}"
+        warn "[quarks] Failed to fetch GPG key from #{url}: #{e.message}"
         false
       end
 
@@ -379,7 +379,7 @@ module Photon
 
         File.exist?(dest)
       rescue => e
-        warn "[photon] Failed to fetch GPG key from server: #{e.message}"
+        warn "[quarks] Failed to fetch GPG key from server: #{e.message}"
         false
       end
 
@@ -546,7 +546,7 @@ module Photon
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = uri.scheme == "https"
 
-        if ENV["PHOTON_SSL_NO_VERIFY"] == "1" || uri.host == "localhost"
+        if ENV["QUARKS_SSL_NO_VERIFY"] == "1" || uri.host == "localhost"
           http.verify_mode = OpenSSL::SSL::VERIFY_NONE
         end
 
@@ -558,7 +558,7 @@ module Photon
 
         request_class = Net::HTTP.const_get(method.capitalize)
         request = request_class.new(uri, headers)
-        request["User-Agent"] = "Photon/#{Photon::VERSION rescue 'dev'}"
+        request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
         request["Accept"] = "application/json"
         request["Accept-Encoding"] = "gzip, deflate"
 
@@ -593,7 +593,7 @@ module Photon
             content = response.body
             checksum = Digest::SHA256.hexdigest(content)
 
-            if verify && ENV["PHOTON_VERIFY_RECIPES"] == "1"
+            if verify && ENV["QUARKS_VERIFY_RECIPES"] == "1"
               checksum_url = "#{recipe_url}.sha256"
               checksum_response = http_request(URI.parse(checksum_url))
               if checksum_response.is_a?(Net::HTTPSuccess)
@@ -674,8 +674,8 @@ module Photon
       end
 
       def debug_log(msg)
-        return unless ENV["PHOTON_DEBUG"] == "1"
-        warn "[photon/debug] #{msg}"
+        return unless ENV["QUARKS_DEBUG"] == "1"
+        warn "[quarks/debug] #{msg}"
       end
     end
   end

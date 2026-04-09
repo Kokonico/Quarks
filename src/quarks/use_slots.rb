@@ -3,17 +3,17 @@
 require "fileutils"
 require "json"
 
-module Photon
+module Quarks
   class USEConfig
-    DEFAULT_USE_FILE = File.join(Photon::Env.xdg_config_home, "photon", "use.conf")
-    SYSTEM_USE_FILE = "/etc/photon/use.conf"
-    MAKE_CONF_USE = ENV["PHOTON_USE"].to_s.split
+    DEFAULT_USE_FILE = File.join(Quarks::Env.xdg_config_home, "quarks", "use.conf")
+    SYSTEM_USE_FILE = "/etc/quarks/use.conf"
+    MAKE_CONF_USE = ENV["QUARKS_USE"].to_s.split
 
     SYSTEM_USE = %w[
       static-libs
     ].freeze
 
-    PROFILE_USE_FILE = File.join(Photon::Env.state_root, "var", "db", "photon", "profile", "use")
+    PROFILE_USE_FILE = File.join(Quarks::Env.state_root, "var", "db", "quarks", "profile", "use")
 
     def initialize
       @use_flags = []
@@ -105,7 +105,7 @@ module Photon
       FileUtils.mkdir_p(File.dirname(DEFAULT_USE_FILE))
 
       lines = []
-      lines << "# Photon USE flags configuration"
+      lines << "# Quarks USE flags configuration"
       lines << "# One flag per line, use -flag to disable"
       lines << ""
 
@@ -165,7 +165,7 @@ module Photon
     end
 
     def load_package_use!
-      package_use_file = File.join(Photon::Env.xdg_config_home, "photon", "package.use")
+      package_use_file = File.join(Quarks::Env.xdg_config_home, "quarks", "package.use")
       return unless File.exist?(package_use_file)
 
       File.readlines(package_use_file).each do |line|
@@ -211,7 +211,7 @@ module Photon
   end
 
   class SLOTManager
-    SLOT_FILE = File.join(Photon::Env.state_root, "var", "db", "photon", "slot_mapping.json")
+    SLOT_FILE = File.join(Quarks::Env.state_root, "var", "db", "quarks", "slot_mapping.json")
 
     def initialize
       @slots = {}

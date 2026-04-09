@@ -3,12 +3,12 @@
 require "fileutils"
 require "shellwords"
 
-module Photon
+module Quarks
   class SandboxManager
-    SANDBOX_SCRIPT = File.join(Photon::Env.state_root, "var", "tmp", "photon", "sandbox.sh")
+    SANDBOX_SCRIPT = File.join(Quarks::Env.state_root, "var", "tmp", "quarks", "sandbox.sh")
 
     def self.enabled?
-      return false if ENV["PHOTON_NO_SANDBOX"] == "1"
+      return false if ENV["QUARKS_NO_SANDBOX"] == "1"
       return true if File.exist?("/usr/bin/sandbox")
       return true if File.exist?("/usr/sbin/sandbox")
 
@@ -43,12 +43,12 @@ module Photon
         "export TERM=${TERM:-dumb}",
         "",
         "# Build directories",
-        "export PHOTON_BUILD=#{Photon::Env.tmpdir}/photon-build",
-        "export PHOTON_DEST=#{Photon::Env.tmpdir}/photon-dest",
+        "export QUARKS_BUILD=#{Quarks::Env.tmpdir}/quarks-build",
+        "export QUARKS_DEST=#{Quarks::Env.tmpdir}/quarks-dest",
         "",
         "# User environment",
         "export PATH=/usr/bin:/bin:/usr/local/bin",
-        "export MAKEFLAGS=-j#{Photon::Env.jobs}",
+        "export MAKEFLAGS=-j#{Quarks::Env.jobs}",
         "",
         "# Sandbox environment variables"
       ]
@@ -62,7 +62,7 @@ module Photon
       end
 
       lines << ""
-      lines << "cd #{cwd || Photon::Env.tmpdir}" if cwd
+      lines << "cd #{cwd || Quarks::Env.tmpdir}" if cwd
       lines << ""
       lines << cmd
       lines << ""
@@ -135,17 +135,17 @@ module Photon
     end
 
     def prepare_directories!
-      tmp_root = Photon::Env.tmpdir
-      build_root = File.join(tmp_root, "photon-build")
-      dest_root = File.join(tmp_root, "photon-dest")
+      tmp_root = Quarks::Env.tmpdir
+      build_root = File.join(tmp_root, "quarks-build")
+      dest_root = File.join(tmp_root, "quarks-dest")
 
       slug = safe_slug(@package.full_name)
 
       @build_dir = File.join(build_root, slug)
       @dest_dir = File.join(dest_root, slug)
 
-      state_root = Photon::Env.state_root
-      log_dir = File.join(state_root, "var", "log", "photon")
+      state_root = Quarks::Env.state_root
+      log_dir = File.join(state_root, "var", "log", "quarks")
       FileUtils.mkdir_p(log_dir)
       @log_file = File.join(log_dir, "#{slug}.log")
 
@@ -185,7 +185,7 @@ module Photon
   end
 
   class EmergeLogger
-    LOG_DIR = File.join(Photon::Env.state_root, "var", "log", "photon", "emerge")
+    LOG_DIR = File.join(Quarks::Env.state_root, "var", "log", "quarks", "emerge")
 
     def initialize
       FileUtils.mkdir_p(LOG_DIR)
@@ -246,7 +246,7 @@ module Photon
   end
 
   class WorldManager
-    WORLD_FILE = File.join(Photon::Env.state_root, "var", "db", "photon", "world")
+    WORLD_FILE = File.join(Quarks::Env.state_root, "var", "db", "quarks", "world")
 
     def initialize
       FileUtils.mkdir_p(File.dirname(WORLD_FILE))

@@ -3,7 +3,7 @@
 require "thread"
 require "fileutils"
 
-module Photon
+module Quarks
   class ParallelBuilder
     class BuildError < StandardError
       attr_reader :package, :log_file
@@ -15,7 +15,7 @@ module Photon
       end
     end
 
-    def initialize(jobs: Photon::Env.jobs, options: {})
+    def initialize(jobs: Quarks::Env.jobs, options: {})
       @max_jobs = [jobs.to_i, 1].max
       @options = options || {}
       @queue = Queue.new

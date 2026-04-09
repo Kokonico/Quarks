@@ -10,10 +10,10 @@ require "find"
 require "shellwords"
 require "time"
 
-require "photon/env"
-require "photon/hash_verifier"
+require "quarks/env"
+require "quarks/hash_verifier"
 
-module Photon
+module Quarks
   class Builder
     BuildPlan = Struct.new(
       :system, :cwd, :build_dir, :configure_cmds, :build_cmds, :install_cmds,
@@ -28,23 +28,23 @@ module Photon
       @total   = total
       @options = options || {}
 
-      @quiet   = ENV["PHOTON_QUIET"].to_s == "1" || @options[:quiet]
+      @quiet   = ENV["QUARKS_QUIET"].to_s == "1" || @options[:quiet]
       @verbose = !@quiet
-      @debug   = ENV["PHOTON_DEBUG"].to_s == "1" || @options[:debug]
-      @jobs    = (@options[:jobs].to_i.positive? ? @options[:jobs].to_i : Photon::Env.jobs)
+      @debug   = ENV["QUARKS_DEBUG"].to_s == "1" || @options[:debug]
+      @jobs    = (@options[:jobs].to_i.positive? ? @options[:jobs].to_i : Quarks::Env.jobs)
 
-      tmp_root   = Photon::Env.tmpdir rescue (ENV["PHOTON_TMPDIR"] || "/var/tmp/photon")
-      build_root = File.join(tmp_root, "photon-build")
-      dest_root  = File.join(tmp_root, "photon-dest")
+      tmp_root   = Quarks::Env.tmpdir rescue (ENV["QUARKS_TMPDIR"] || "/var/tmp/quarks")
+      build_root = File.join(tmp_root, "quarks-build")
+      dest_root  = File.join(tmp_root, "quarks-dest")
 
       slug = safe_slug(@package.full_name)
 
       @build_dir = File.join(build_root, slug)
       @dest_dir  = File.join(dest_root, slug)
 
-      state_root = Photon::Env.state_root rescue (ENV["PHOTON_STATE_ROOT"] || File.expand_path("~/.local/state/photon"))
-      @cache_dir = File.join(state_root, "var", "cache", "photon", "distfiles")
-      @log_dir   = File.join(state_root, "var", "log", "photon")
+      state_root = Quarks::Env.state_root rescue (ENV["QUARKS_STATE_ROOT"] || File.expand_path("~/.local/state/quarks"))
+      @cache_dir = File.join(state_root, "var", "cache", "quarks", "distfiles")
+      @log_dir   = File.join(state_root, "var", "log", "quarks")
       FileUtils.mkdir_p(@log_dir)
       @log_file  = File.join(@log_dir, "#{slug}.log")
 
@@ -186,7 +186,7 @@ module Photon
       algorithm = "sha256" if algorithm.empty?
 
       if expected_hash == "skip"
-        if Photon::Env.allow_insecure?
+        if Quarks::Env.allow_insecure?
           say_detail("Skipping checksum verification for #{File.basename(path)}")
           return true
         end
@@ -195,7 +195,7 @@ module Photon
 
       raise "Checksum is empty for #{source_key}" if expected_hash.empty?
 
-      ok = Photon::HashVerifier.verify_file(
+      ok = Quarks::HashVerifier.verify_file(
         path,
         algorithm: algorithm,
         expected_hex: expected_hash
@@ -204,7 +204,7 @@ module Photon
       raise "Checksum verification failed for #{File.basename(path)}" unless ok
       say_detail("Verified #{File.basename(path)} (#{algorithm})")
       true
-    rescue Photon::HashVerifier::VerificationError => e
+    rescue Quarks::HashVerifier::VerificationError => e
       raise "Checksum verification failed for #{File.basename(path)}: #{e.message}"
     end
 
@@ -237,7 +237,7 @@ module Photon
           ssl_timeout: 15
         ) do |http|
           request = Net::HTTP::Get.new(current_uri)
-          request["User-Agent"] = "Photon/#{Photon::VERSION rescue 'dev'}"
+          request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
           response = http.request(request)
         end
 
@@ -596,11 +596,11 @@ module Photon
       env["PREFIX"] = @package.install_prefix.to_s
       env["JOBS"] = @jobs.to_s
       env["MAKEFLAGS"] ||= "-j#{@jobs}"
-      env["PHOTON_SRCDIR"] = @source_dir || @build_dir
-      env["PHOTON_BUILDDIR"] = plan.build_dir || @source_dir || @build_dir
-      env["PHOTON_DESTDIR"] = @dest_dir
-      env["PHOTON_PKG_NAME"] = @package.name.to_s
-      env["PHOTON_PKG_VERSION"] = @package.version.to_s
+      env["QUARKS_SRCDIR"] = @source_dir || @build_dir
+      env["QUARKS_BUILDDIR"] = plan.build_dir || @source_dir || @build_dir
+      env["QUARKS_DESTDIR"] = @dest_dir
+      env["QUARKS_PKG_NAME"] = @package.name.to_s
+      env["QUARKS_PKG_VERSION"] = @package.version.to_s
       env
     end
 
@@ -640,8 +640,8 @@ module Photon
 
     def stream_line(line, quiet: false)
       return if quiet
-      if defined?(Photon::UI) && Photon::UI.respond_to?(:pretty_build_line)
-        Photon::UI.pretty_build_line(line, debug: @debug)
+      if defined?(Quarks::UI) && Quarks::UI.respond_to?(:pretty_build_line)
+        Quarks::UI.pretty_build_line(line, debug: @debug)
       else
         puts line unless @quiet
       end
@@ -688,9 +688,9 @@ module Photon
 
       prefix =
         case type
-        when :warn then "#{Photon::UI::COLORS[:yellow]}>>>#{Photon::UI::COLORS[:reset]}"
-        when :error then "#{Photon::UI::COLORS[:red]}!!!#{Photon::UI::COLORS[:reset]}"
-        else "#{Photon::UI::COLORS[:green]}>>>#{Photon::UI::COLORS[:reset]}"
+        when :warn then "#{Quarks::UI::COLORS[:yellow]}>>>#{Quarks::UI::COLORS[:reset]}"
+        when :error then "#{Quarks::UI::COLORS[:red]}!!!#{Quarks::UI::COLORS[:reset]}"
+        else "#{Quarks::UI::COLORS[:green]}>>>#{Quarks::UI::COLORS[:reset]}"
         end
 
       puts "#{prefix} #{message}"
@@ -700,8 +700,8 @@ module Photon
 
     def say_detail(message)
       return unless @verbose || @debug
-      if defined?(Photon::UI)
-        puts "#{Photon::UI::COLORS[:dim]}#{message}#{Photon::UI::COLORS[:reset]}"
+      if defined?(Quarks::UI)
+        puts "#{Quarks::UI::COLORS[:dim]}#{message}#{Quarks::UI::COLORS[:reset]}"
       else
         puts message
       end
