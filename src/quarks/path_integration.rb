@@ -16,7 +16,6 @@ module Quarks
       FileUtils.mkdir_p(shim_dir)
 
       home = Database.original_user_home
-      shell = ENV["SHELL"].to_s
 
       rc_candidates = []
       # TODO add commands on all available shells, not just active shell
