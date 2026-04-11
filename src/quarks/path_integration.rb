@@ -19,8 +19,11 @@ module Quarks
       shell = ENV["SHELL"].to_s
 
       rc_candidates = []
-      rc_candidates << File.join(home, ".zshrc") if shell.include?("zsh")
-      rc_candidates << File.join(home, ".bashrc") if shell.include?("bash")
+      # TODO add commands on all available shells, not just active shell
+      # zsh
+      rc_candidates << File.join(home, ".zshrc") if File.exist? File.join(home, ".zshrc")
+      # bash
+      rc_candidates << File.join(home, ".bashrc") if File.exist? File.join(home, ".bashrc")
       rc_candidates << File.join(home, ".profile")
       rc_file = rc_candidates.find { |p| File.file?(p) } || rc_candidates.last
 

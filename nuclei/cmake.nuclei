@@ -1,11 +1,11 @@
-nuclei "cmake", "3.28.1" do
+nuclei "cmake", "4.3.1" do
   description "Cross-platform make system"
   homepage "https://cmake.org/"
   license "BSD"
   category "dev-util"
 
-  source "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1.tar.gz",
-         checksum: "15e94f83e647f7d620a140a7a5da76349fc47a1bfed66d0f5cdee8e7344079ad",
+  source "https://github.com/Kitware/CMake/releases/download/v4.3.1/cmake-4.3.1.tar.gz",
+         checksum: "0798f4be7a1a406a419ac32db90c2956936fecbf50db3057d7af47d69a2d7edb",
          algorithm: "sha256"
 
   install_prefix "/usr"
