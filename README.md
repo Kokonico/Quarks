@@ -26,37 +26,10 @@ A production ready, Portage inspired source based package manager written in Rub
 
 ### Quarks-Exclusive Features
 
-#### Quantum States
-Packages can be in different quantum states beyond just installed/uninstalled:
-- **Frozen**: Package is installed but locked from updates
-- **Volatile**: Package may need rebuilding or attention
-- **Blocked**: Package is blocked by another
-- **Broken**: Package has broken dependencies
-
-#### Flux Control
-Power management system for build behavior:
-- `minimal` - Minimal resources, no verification
-- `standard` - Balanced (default)
-- `performance` - Higher parallelism, run tests
-- `maximum` - Maximum power, full optimization
-
-#### Beam Commands
-Quick analysis tools for introspection:
-- `beam deps` - Show dependencies
-- `beam revdeps` - Show reverse dependencies
-- `beam tree` - Draw dependency tree
-- `beam graph` - Generate graphviz output
-- `beam size` - Show package size
-- `beam audit` - Audit installed packages
-- `beam verify` - Verify package files
-
-#### Sparks
-Lightweight Ruby automation scripts stored in `~/.config/quarks/sparks/`.
-
 #### Profiles
 Preset configurations for different use cases (desktop, server, minimal).
 
-#### Wavelength Sync
+#### Sync
 Configure repository sync behavior:
 - `full` - Complete sync
 - `incremental` - Smart sync using ETags (default)
