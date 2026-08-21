@@ -1,478 +1,167 @@
-# Quarks Package Manager
+# Quarks
 
-> A continuation of [Photon](https://github.com/RobertFlexx/Photon) by [@RobertFlexx](https://github.com/RobertFlexx), which was discontinued due to a series of unfortunate events. Quarks will continue what Photon never got the chance to finish.
+Quarks is a source-based package manager for Linux. You ask for a package, it works out the dependencies, builds everything in a sandbox under your own user, and installs it. If an install fails partway through, your system stays as it was.
 
-A production ready, Portage inspired source based package manager written in Ruby, designed for a Linux distribution(s).
+Some things worth knowing up front:
 
-> By yours truly, hehe
+- Builds run in a Bubblewrap sandbox as a regular user. No network, no access to your home directory.
+- Downloads are checked against exact SHA-256 or SHA-512 checksums over HTTPS.
+- Installs are transactional. A failed merge rolls back cleanly.
+- Package repositories are GPG signed. Unsigned ones are rejected by default.
+- Packages support per-package USE flags if you want that level of control.
 
-## Features
+## Requirements
 
-### Core Package Management
-- **Source-based builds**: Compile packages from source with support for multiple build systems
-- **Dependency resolution**: Recursive dependency resolution with circular dependency detection
-- **Multiple build systems**: Autotools, CMake, Meson, Make, Ninja, and manual builds
-- **World file**: Track user-requested packages for system upgrades
-- **SLOT support**: Multiple versions of the same package can coexist
-- **Blockers**: Package conflict detection and resolution
+- Linux with Ruby 3.2 through 4.0
+- Bubblewrap (`bwrap`) for sandboxed builds
+- `gpg` and `gpgv` for signed repositories
+- GNU `cp`, `tar`, `unzip`, and `patch`, plus whatever toolchain a package needs
 
-### Portage-Inspired Features
-- **USE flags**: Flexible package configuration system
-- **Package USE**: Per-package USE flag configuration
-- **World set**: User-selected packages for system management
-- **Depclean**: Remove orphaned packages
-- **Preserved rebuild**: Rebuild packages affected by library updates
-- **Check-world**: Verify world file integrity
+## Installing
 
-### Quarks-Exclusive Features
-
-#### Profiles
-Preset configurations for different use cases (desktop, server, minimal).
-
-#### Sync
-Configure repository sync behavior:
-- `full` - Complete sync
-- `incremental` - Smart sync using ETags (default)
-- `shallow` - Only changed packages
-- `mirror` - Download everything, no verification
-
-### Repository Support
-- **Local repositories**: Use nuclei recipe files from local directories
-- **Web repositories**: Fetch package metadata from remote JSON manifests
-- **GPG verification**: Signature verification for web repositories
-- **Incremental sync**: ETag/Last-Modified based caching for efficient updates
-- **Offline mode**: Graceful fallback to cached data when offline
-
-### System Integration
-- **ldconfig integration**: Automatic library cache updates
-- **Desktop files**: Desktop database registration for .desktop files
-- **Man pages**: Categorized man page installation
-- **Info pages**: GNU info database support
-- **Alternatives**: File alternative management (like update-alternatives)
-- **MIME types**: Automatic MIME database updates
-- **GTK icons**: Icon cache updates
-
-### Security
-- **Checksum verification**: SHA256, SHA512, SHA1, MD5 support
-- **Path validation**: Symlink and directory traversal protection
-- **File collisions**: Detection and prevention of file ownership conflicts
-- **GPG signatures**: Repository and package signature verification
-- **Secure shell escaping**: Proper command-line argument escaping
-- **Config protection**: Protected system configuration files
-
-### Build Features
-- **Parallel builds**: Multi-threaded build support
-- **Build caching**: Source tarball caching
-- **Build logging**: Detailed build logs with timestamps
-- **Resume support**: Continue interrupted builds (SIGINT safe)
-- **Build state persistence**: Save state on interrupt, resume later
-- **Sandbox support**: Optional build sandboxing
-- **Patches**: Built-in patch application with strip level support
-
-### Signal Handling
-- **Graceful shutdown**: Handle SIGINT, SIGTERM, SIGQUIT
-- **State saving**: Automatically save build state on interrupt
-- **Resume capability**: `--resume` flag to continue interrupted builds
-
-## Installation
-
-### Requirements
-- Ruby >= 3.0
-- SQLite3
-- Standard build tools (gcc, make, tar)
-- OpenSSL (for checksum verification)
-
-### Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/quarks.git
-cd quarks
-
-# Install a package
-./quarks install hello
-
-# Search for packages
-./quarks search nginx
-
-# Update repositories
-./quarks sync
-
-# Upgrade installed packages
-./quarks upgrade
+```sh
+gem install quarks-package-manager
+quarks version
 ```
+
+Or run it straight from a checkout:
+
+```sh
+git clone https://github.com/RobertFlexx/Quarks.git
+cd Quarks
+bundle install
+./quarks version
+```
+
+Everything lives under `~/.local/quarks` by default, with state in `~/.local/state/quarks`. Builds never run as root. If you point Quarks at a system-wide install root, only the final copy step uses `sudo`.
+
+## First steps
+
+```sh
+quarks setup-path        # put quarks-installed apps on your PATH
+quarks search hello      # find packages
+quarks info hello        # see details
+quarks install hello     # build and install
+```
+
+Builds ask before doing anything. Add `--yes` to skip the prompt. Other commands you will probably want at some point:
+
+```sh
+quarks upgrade               # update everything in your world file
+quarks remove hello
+quarks world                 # what you have explicitly installed
+quarks owner usr/bin/hello   # which package owns a file
+quarks doctor                # check that your setup is healthy
+```
+
+Run `quarks help` for the full list.
 
 ## Configuration
 
-### Environment Variables
+Quarks reads `/etc/quarks/quarks.conf`, then `~/.config/quarks/quarks.conf`, then the `QUARKS_CONFIG` environment variable. Later files win. Unknown keys are errors, not warnings.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `QUARKS_ROOT` | `~/.local/quarks` | Installation root |
-| `QUARKS_STATE_ROOT` | `~/.local/state/quarks` | State/cache/log root |
-| `QUARKS_TMPDIR` | `$STATE_ROOT/var/tmp/quarks` | Build temp directory |
-| `QUARKS_JOBS` | CPU count | Parallel build jobs |
-| `QUARKS_NUCLEI_PATHS` | - | Additional local repo paths |
-| `QUARKS_REPO_URLS` | - | Remote repo manifest URLs |
-| `QUARKS_VERIFY_REPOS` | 0 | Verify repository signatures |
-| `QUARKS_ALLOW_INSECURE` | 0 | Allow checksum: skip |
-| `QUARKS_DEBUG` | 0 | Enable debug output |
-
-### Configuration File
-
-Create `~/.config/quarks/quarks.conf` or `/etc/quarks/quarks.conf`:
+A small example:
 
 ```conf
-# Repository priorities (lower = higher priority)
-repo_priority main 100
-repo_priority testing 200
-
-# Build options
-jobs 4
+jobs = 12
+sandbox = true
+use = "ssl unicode -static-libs"
 ```
 
-## Usage
+Most settings can also come from environment variables:
 
-### Package Installation
+| Variable | Purpose |
+|---|---|
+| `QUARKS_ROOT` | Installation root |
+| `QUARKS_JOBS` | Build parallelism |
+| `QUARKS_USE` | Global USE flags |
+| `QUARKS_TMPDIR` | Where builds happen |
+| `QUARKS_NO_SANDBOX=1` | Disable Bubblewrap (unsafe) |
 
-```bash
-# Install a package
-quarks install hello
+Run `quarks env` to print shell exports for everything Quarks installs. `quarks setup-path` adds them to your shell config for you.
 
-# Install with dependencies only (no package)
-quarks install --nodeps package
+## USE flags
 
-# Fetch sources only
-quarks install --fetchonly package
+Global flags live in `~/.config/quarks/use.conf`, and per-package rules go in `package.use` next to it. Prefix a flag with `-` to turn it off.
 
-# Pretend mode (dry run)
-quarks install --pretend package
-
-# Skip dependency resolution
-quarks install --nodeps package
+```sh
+quarks use set ssl unicode -gtk
+quarks use package app-editors/vim gui -python
+quarks use explain app-editors/vim    # show where each flag came from
 ```
 
-### Package Removal
+## Writing your own recipes
 
-```bash
-# Remove a package
-quarks remove hello
-
-# Remove without dependencies
-quarks remove --nodeps hello
-```
-
-### System Upgrade
-
-```bash
-# Upgrade all packages in world file
-quarks upgrade
-
-# Dry run upgrade
-quarks upgrade --pretend
-```
-
-### Repository Management
-
-```bash
-# Add a web repository
-quarks add-repo myrepo https://example.com/repo/index.json
-
-# Add with GPG verification
-quarks add-repo myrepo https://example.com/repo/index.json --gpg-key-id ABC123
-
-# List repositories
-quarks list-repos
-
-# Remove a repository
-quarks remove-repo myrepo
-
-# Sync repositories
-quarks sync
-```
-
-### Query Commands
-
-```bash
-# Search for packages
-quarks search nginx
-
-# List installed packages
-quarks list
-
-# Show package info
-quarks info nginx
-
-# Show package files
-quarks files nginx
-
-# Find package providing command
-quarks which nginx
-
-# Find package owning file
-quarks owner /usr/bin/nginx
-```
-
-### USE Flag Management
-
-```bash
-# Show current USE flags
-quarks use
-
-# Set global USE flags
-quarks use set X11 video
-
-# Remove global USE flags
-quarks use del X11
-
-# Set package-specific USE flags
-quarks use package app-vim/syntax on gui
-```
-
-### World Set Management
-
-```bash
-# Show world file contents
-quarks world
-
-# Check world file integrity
-quarks check-world
-
-# Remove orphaned packages
-quarks depclean
-
-# Rebuild packages for preserved libraries
-quarks preserved-rebuild
-```
-
-### Quarks-Exclusive Commands
-
-```bash
-# System status overview
-quarks status
-
-# Set power level
-quarks flux minimal
-quarks flux performance
-quarks flux maximum
-
-# Freeze a package (prevent updates)
-quarks freeze nginx
-
-# Unfreeze a package
-quarks thaw nginx
-
-# Beam analysis commands
-quarks beam deps nginx
-quarks beam revdeps openssl
-quarks beam tree gcc
-quarks beam size vim
-quarks beam audit
-
-# Wavelength sync modes
-quarks wavelength full
-quarks wavelength shallow
-
-# Profile management
-quarks profile
-quarks profile create desktop
-quarks profile activate desktop
-
-# Spark scripts
-quarks spark list
-quarks spark create mybuild
-quarks spark run mybuild
-```
-
-### System Maintenance
-
-```bash
-# Clean cache
-quarks clean
-
-# Compact database
-quarks compact-db
-
-# System health check
-quarks doctor
-```
-
-## Package Recipes (Nuclei Format)
-
-Packages are defined using the Nuclei DSL:
+Packages are described by `.nuclei` files. These are data files with Ruby-like syntax, and nothing in them gets executed while loading. Sources must be HTTPS with an exact checksum.
 
 ```ruby
 nuclei "hello", "2.12.1" do
-  description "GNU Hello World"
+  description "GNU Hello"
   homepage "https://www.gnu.org/software/hello/"
-  license "GPL-3.0"
+  license "GPL-3.0-or-later"
   category "app-misc"
 
   depends "sys-libs/ncurses"
-  build_depends "gcc", "make"
+  build_depends "sys-devel/make"
 
   source "https://ftp.gnu.org/gnu/hello/hello-2.12.1.tar.gz",
-         sha256: "abc123..."
+         checksum: "<64 hex characters>",
+         algorithm: "sha256",
+         size: 1_234_567
 
-  configure "--prefix=/usr"
   build_system :autotools
 
-  slot "0"
-  blocks "app-misc/hello-old"
-
-  iuse "X", "gtk"
-  use_dep "gtk", "x11-libs/gtk+:3"
-
-  patch "fix-warning.patch", strip: 1
-
-  env "CFLAGS", "-O2"
-
   build do
-    configure
-    make
-  end
-
-  install do
-    make "install"
+    run "./configure --prefix=%{prefix}"
+    run "make -j%{jobs}"
+    install "make DESTDIR=%{destdir} install"
   end
 end
 ```
 
-### Advanced Package Features
+Point `QUARKS_NUCLEI_PATHS` (or `nuclei_paths` in your config) at a directory and your recipes show up alongside the packaged ones.
 
-#### SLOT Support
-```ruby
-slot "1"           # Primary slot
-subslot "1.2"      # Sub-slot for ABI compatibility
+If you package something new, consider sending it upstream. Recipes are meant to be shared the same way Gentoo handles ebuilds: open a pull request against this repository with your `.nuclei` file, and once it is reviewed and verified it ships to everyone in the next catalog update. Local recipes are fine for quick personal use, but the catalog only grows because people contribute theirs.
+
+## Signed repositories
+
+You can also add remote repositories. They must be GPG signed:
+
+```sh
+quarks add-repo main https://packages.example/index.json \
+  --gpg-key-id 0123456789ABCDEF0123456789ABCDEF01234567 \
+  --gpg-key-url https://packages.example/signing-key.asc
+quarks sync
+quarks list-repos
 ```
 
-#### Package Blockers
-```ruby
-blocks "app-misc/old-package"     # This package blocks another
-blocked_by "app-misc/other"      # This package is blocked by another
+Repository manifests expire after at most 30 days and carry a sequence number that only ever goes up, so a repository cannot hand you stale or rolled-back metadata.
+
+## Safety basics
+
+- Recipe files are parsed as data. Nothing runs while loading them.
+- Build commands stay inside a sandbox with no network and no view of your home directory.
+- Downloads cannot be redirected to private-network addresses, and redirects get checked again.
+- Root builds are refused, and installs will not overwrite files Quarks does not own unless you pass `--force`.
+- If the database looks damaged, Quarks stops and tells you instead of quietly rebuilding it.
+
+## Status
+
+The core workflow works well, but the package catalog is still small. About 115 recipes ship today and more are being verified over time. Expect gaps.
+
+## Contributing
+
+Bug reports and pull requests are welcome. New package recipes are the most useful contribution of all; see "Writing your own recipes" above for the format. To work on Quarks itself:
+
+```sh
+git clone https://github.com/RobertFlexx/Quarks.git
+cd Quarks
+bundle install
+./quarks version
 ```
 
-#### USE Dependencies
-```ruby
-iuse "X", "ssl", "gtk"
-
-use_dep "gtk", "x11-libs/gtk+:3"           # When gtk USE is enabled
-use_dep "ssl", "dev-libs/openssl", condition: :enabled
-```
-
-### Supported Build Systems
-
-- `:autotools` - GNU Autotools (configure/make)
-- `:cmake` - CMake build system
-- `:meson` - Meson build system
-- `:make` - Plain Makefile
-- `:ninja` - Ninja build system
-- `:manual` - Custom commands only
-- `:auto` - Auto-detect based on files
-
-## Web Repository Format
-
-Web repositories use JSON manifests:
-
-```json
-{
-  "repo_name": "quarks-main",
-  "generated_at": "2024-01-01T00:00:00Z",
-  "package_count": 100,
-  "packages": [
-    {
-      "name": "hello",
-      "version": "2.12.1",
-      "description": "GNU Hello World",
-      "category": "app-misc",
-      "license": "GPL-3.0",
-      "dependencies": ["sys-libs/ncurses"],
-      "build_dependencies": ["gcc", "make"],
-      "sources": [
-        {
-          "url": "https://ftp.gnu.org/gnu/hello/hello-2.12.1.tar.gz",
-          "hash": "abc123...",
-          "algorithm": "sha256"
-        }
-      ],
-      "build_system": "autotools"
-    }
-  ]
-}
-```
-
-### Repository Signing
-
-Sign your repository manifest:
-
-```bash
-# Create a GPG key
-gpg --gen-key
-
-# Sign the manifest
-gpg --sign --armor -o index.json.sig index.json
-
-# Distribute both files
-```
-
-## Systemd Service Generation
-
-Packages can include systemd service files:
-
-```ruby
-nuclei "myservice", "1.0.0" do
-  description "My awesome service"
-
-  systemd_service do
-    exec_start "/usr/bin/myservice"
-    restart "on-failure"
-    user "myservice"
-    group "myservice"
-  end
-end
-```
-
-## Development
-
-### Running Tests
-
-```bash
-# Install test dependencies
-gem install minitest
-
-# Run tests
-ruby -Ilib -Ispec spec/quarks_test.rb
-```
-
-### Adding a New Package
-
-1. Create a nuclei file in `nuclei/<category>/<name>.nuclei`
-2. Define the package using the Nuclei DSL
-3. Test locally with `quarks install --fetchonly <name>`
-4. Submit for inclusion in the distribution
-
-## Architecture
-
-```
-quarks/
-├── src/
-│   └── quarks/
-│       ├── builder.rb          # Build system execution
-│       ├── database.rb         # SQLite package database
-│       ├── installer.rb        # File installation
-│       ├── package.rb          # Nuclei DSL parser
-│       ├── repository.rb       # Repository management
-│       ├── resolver.rb         # Dependency resolution
-│       ├── system_integration.rb # System integration
-│       ├── web_repo.rb         # Web repository support
-│       ├── parallel_build.rb   # Parallel build support
-│       ├── conflict_resolver.rb # Conflict detection
-│       └── systemd_manager.rb  # Systemd service generation
-├── nuclei/                     # Package recipes
-├── docs/                       # Web repo documentation
-└── tools/                      # Development tools
-```
+Test and release tooling is kept outside the public tree. If something here does not make sense, open an issue.
 
 ## License
 
-BSD 3-Clause License
+BSD 3-Clause. See [LICENSE](LICENSE).

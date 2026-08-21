@@ -8,7 +8,7 @@ nuclei "appstream", "1.0.1" do
          checksum: "fa4d5994e5c6f22e9b66cb0b52e8b5f5d96e7353ea5528b56436e0150829203b",
          algorithm: "sha256"
   
-  depends "glib", "libxml2", "libyaml", "libcurl", "libxmlb"
+  depends "glib", "libxml2", "libyaml", "curl", "libxmlb"
   build_depends "meson", "ninja", "gobject-introspection"
   
   build do

@@ -34,7 +34,7 @@ nuclei "flatpak", "1.16.3" do
              "-Dsystemd=disabled"
 
   build do
-    run "meson setup build #{meson_args.join(' ')}"
+    run "meson setup build %{meson_args}"
     run "ninja -C build"
     install "DESTDIR=${DESTDIR} meson install -C build --no-rebuild"
   end

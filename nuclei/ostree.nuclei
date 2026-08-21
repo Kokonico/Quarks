@@ -8,7 +8,7 @@ nuclei "ostree", "2024.1" do
          checksum: "152327fe804512d4f896fb9b9e9cdc84ad9b4c0b205b8625472147d5a28164af",
          algorithm: "sha256"
   
-  depends "glib", "libsoup", "gpgme", "libarchive", "fuse", "libcurl", "openssl"
+  depends "glib", "libsoup", "gpgme", "libarchive", "fuse", "curl", "openssl"
   build_depends "gobject-introspection", "bison"
   
   configure "--with-curl",

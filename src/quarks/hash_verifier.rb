@@ -6,16 +6,12 @@ module Quarks
   class HashVerifier
     SUPPORTED = {
       "sha256" => Digest::SHA256,
-      "sha512" => Digest::SHA512,
-      "sha1"   => Digest::SHA1,
-      "md5"    => Digest::MD5
+      "sha512" => Digest::SHA512
     }.freeze
 
     DIGEST_HEX_LEN = {
       "sha256" => 64,
-      "sha512" => 128,
-      "sha1"   => 40,
-      "md5"    => 32
+      "sha512" => 128
     }.freeze
 
     class VerificationError < StandardError; end
@@ -44,8 +40,6 @@ module Quarks
       def verify_file(path, algorithm:, expected_hex:)
         alg = normalize_alg(algorithm)
         exp = normalize_hex(expected_hex)
-
-        return true if exp == "skip"
 
         raise VerificationError, "Unsupported hash algorithm: #{alg}" unless supported?(alg)
         raise VerificationError, "File not found: #{path}" unless File.file?(path)

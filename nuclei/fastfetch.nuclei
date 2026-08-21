@@ -20,7 +20,7 @@ nuclei "fastfetch", "2.60.0" do
     "-DENABLE_OPENCL=OFF"
 
   build do
-    run "cmake -S %{srcdir} -B %{builddir} -DCMAKE_INSTALL_PREFIX=%{prefix} #{cmake_args.join(' ')}"
+    run "cmake -S %{srcdir} -B %{builddir} -DCMAKE_INSTALL_PREFIX=%{prefix} %{cmake_args}"
     run "cmake --build %{builddir} --parallel %{jobs}"
     install "DESTDIR=%{destdir} cmake --install %{builddir}"
   end

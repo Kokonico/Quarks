@@ -3,6 +3,14 @@
 require "fileutils"
 require "json"
 require "time"
+require "digest"
+require "net/http"
+require "openssl"
+require "rbconfig"
+require "tempfile"
+require "timeout"
+require "quarks/env"
+require "quarks/security"
 
 module Quarks
   class PackagePolicy
@@ -18,11 +26,12 @@ module Quarks
 
     def normalize_policy(policy)
       case policy.to_s.downcase.to_sym
+      when :normal, :n then :normal
       when :held, :h then :held
       when :flagged, :f then :flagged
       when :broken, :b then :broken
       when :masked, :m then :masked
-      else :normal
+      else raise ArgumentError, "Unknown package policy: #{policy.inspect}"
       end
     end
 
@@ -57,6 +66,7 @@ module Quarks
     end
 
     def self.from_h(h)
+      raise ArgumentError, "Policy entry must contain an object" unless h.is_a?(Hash)
       new(
         package: h["package"],
         policy: h["policy"],
@@ -154,65 +164,55 @@ module Quarks
     end
 
     def save!
-      FileUtils.mkdir_p(File.dirname(POLICY_FILE))
       data = @policies.transform_values(&:to_h)
-      File.write(POLICY_FILE, JSON.pretty_generate(data))
+      Quarks::Security.atomic_write(POLICY_FILE, JSON.pretty_generate(data))
     end
 
     def load!
       return unless File.exist?(POLICY_FILE)
 
       data = JSON.parse(File.read(POLICY_FILE))
+      raise ArgumentError, "Policy database must contain an object" unless data.is_a?(Hash)
       @policies = data.transform_values { |h| PackagePolicy.from_h(h) }
-    rescue JSON::ParserError
-      @policies = {}
+    rescue JSON::ParserError, ArgumentError => e
+      raise ArgumentError, "Invalid policy database #{POLICY_FILE}: #{e.message}"
     end
 
     private
 
     def normalize_name(name)
-      name.to_s.strip.downcase
+      value = name.to_s.strip.downcase
+      unless value.match?(/\A(?:[a-z0-9][a-z0-9+_.-]*\/)?[a-z0-9][a-z0-9+_.-]*\z/)
+        raise ArgumentError, "Invalid package policy name: #{name.inspect}"
+      end
+      value.split("/", 2).last
     end
   end
 
   class BuildConfig
+    CONFIG_FILE = File.join(Quarks::Env.state_root, "var", "db", "quarks", "build_profile")
     PROFILES = {
-      minimal: {
-        jobs: 1,
-        verify: false,
-        tests: false,
-        optimize: false,
-        cache: true
-      },
-      default: {
-        jobs: -> { Quarks::Env.jobs },
-        verify: true,
-        tests: false,
-        optimize: true,
-        cache: true
-      },
-      fast: {
-        jobs: -> { Quarks::Env.jobs * 2 },
-        verify: true,
-        tests: true,
-        optimize: true,
-        cache: true
-      },
-      extreme: {
-        jobs: -> { Quarks::Env.jobs * 4 },
-        verify: true,
-        tests: true,
-        optimize: true,
-        cache: false
-      }
+      minimal: { jobs: 1 },
+      default: { jobs: -> { Quarks::Env.jobs } },
+      fast: { jobs: -> { Quarks::Env.jobs * 2 } },
+      extreme: { jobs: -> { Quarks::Env.jobs * 4 } }
     }.freeze
 
     def self.current
-      @current_profile ||= :default
+      return @current_profile if @current_profile
+      return @current_profile = :default unless File.file?(CONFIG_FILE)
+      stored = File.read(CONFIG_FILE).strip
+      @current_profile = normalize_profile(stored)
+      raise ArgumentError, "Invalid stored build profile: #{stored.inspect}" unless @current_profile
+      @current_profile
     end
 
     def self.set(profile)
-      @current_profile = normalize_profile(profile)
+      normalized = normalize_profile(profile)
+      raise ArgumentError, "Unknown build profile: #{profile}" unless normalized
+      @current_profile = normalized
+      Quarks::Security.atomic_write(CONFIG_FILE, normalized.to_s)
+      normalized
     end
 
     def self.normalize_profile(profile)
@@ -221,7 +221,7 @@ module Quarks
       when :def, :default then :default
       when :fast, :performance then :fast
       when :max, :extreme, :maximum then :extreme
-      else :default
+      else nil
       end
     end
 
@@ -231,24 +231,10 @@ module Quarks
       jobs.respond_to?(:call) ? jobs.call : jobs
     end
 
-    def self.verify_sources?
-      PROFILES[current][:verify]
-    end
-
-    def self.run_tests?
-      PROFILES[current][:tests]
-    end
-
-    def self.optimize_build?
-      PROFILES[current][:optimize]
-    end
-
-    def self.use_cache?
-      PROFILES[current][:cache]
-    end
   end
 
   class HookManager
+    SAFE_NAME = /\A[a-zA-Z0-9*][a-zA-Z0-9*_.-]*\z/.freeze
     HOOK_DIR = File.join(Quarks::Env.xdg_config_home, "quarks", "hooks")
     HOOK_EXTENSION = ".hook"
 
@@ -269,13 +255,15 @@ module Quarks
     end
 
     def self.create_hook(name, content)
-      FileUtils.mkdir_p(hook_dir)
+      validate_name!(name)
+      raise ArgumentError, "Hook exceeds 1 MiB" if content.to_s.bytesize > 1024 * 1024
       path = File.join(hook_dir, "#{name}#{HOOK_EXTENSION}")
-      File.write(path, content)
+      Quarks::Security.atomic_write(path, content.to_s)
       path
     end
 
     def self.run_hook(name, args: [])
+      validate_name!(name)
       path = File.join(hook_dir, "#{name}#{HOOK_EXTENSION}")
       return nil unless File.exist?(path)
 
@@ -284,6 +272,7 @@ module Quarks
     end
 
     def self.delete_hook(name)
+      validate_name!(name)
       path = File.join(hook_dir, "#{name}#{HOOK_EXTENSION}")
       return false unless File.exist?(path)
 
@@ -292,29 +281,84 @@ module Quarks
     end
 
     def self.execute_hook(content, args)
-      script = StringIO.new
+      script = Tempfile.new(["quarks-hook-", ".rb"])
+      output_file = Tempfile.new(["quarks-hook-stdout-", ".log"])
+      error_file = Tempfile.new(["quarks-hook-stderr-", ".log"])
+      script.write("# frozen_string_literal: true\nrequire 'json'\nQUARKS_HOOK_ARGS = JSON.parse(ENV.fetch('QUARKS_HOOK_ARGS'))\n")
+      script.write(content.to_s)
+      script.flush
 
-      script.puts("#!/usr/bin/env ruby")
-      script.puts("# quarks-hook execution")
-      script.puts("# Generated at: #{Time.now}")
-      script.puts
-      script.puts("QUARKS_HOOK_ARGS = #{args.inspect}")
-      script.puts
-      script.puts(content)
-
-      code = script.string
-      eval(code, TOPLEVEL_BINDING, "(hook)", 0)
+      environment = {
+        "QUARKS_HOOK_ARGS" => JSON.generate(args),
+        "PATH" => ENV.fetch("PATH", "/usr/bin:/bin"),
+        "LANG" => ENV.fetch("LANG", "C.UTF-8"),
+        "LC_ALL" => ENV.fetch("LC_ALL", "C.UTF-8")
+      }
+      pid = Process.spawn(
+        environment,
+        RbConfig.ruby,
+        script.path,
+        in: File::NULL,
+        out: output_file.path,
+        err: error_file.path,
+        unsetenv_others: true,
+        pgroup: true,
+        rlimit_cpu: 60,
+        rlimit_fsize: 1024 * 1024,
+        rlimit_nofile: 64
+      )
+      _, status = Timeout.timeout(60) { Process.wait2(pid) }
+      output = File.binread(output_file.path, 1024 * 1024)
+      error_output = File.binread(error_file.path, 1024 * 1024)
+      raise "Hook failed (exit #{status.exitstatus}): #{error_output.strip}" unless status.success?
+      output
+    rescue Timeout::Error
+      Process.kill("KILL", -pid) rescue nil
+      Process.wait(pid) rescue nil
+      raise "Hook timed out after 60 seconds"
+    ensure
+      script&.close!
+      output_file&.close!
+      error_file&.close!
     end
 
-    def self.import_hook(url)
-      uri = URI.parse(url)
-      response = Net::HTTP.get_response(uri)
+    def self.import_hook(url, sha256: nil)
+      raise ArgumentError, "A SHA-256 digest is required when importing a hook" unless sha256.to_s.match?(/\A[0-9a-fA-F]{64}\z/)
+      uri = Security.validate_remote_uri!(url, purpose: "hook import")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.ipaddr = Security.resolve_public_addresses!(uri.host, purpose: "hook import").first
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      http.open_timeout = 10
+      http.read_timeout = 30
+      http.max_retries = 0
+      response = nil
+      body = +"".b
+      http.request(Net::HTTP::Get.new(uri)) do |incoming|
+        response = incoming
+        next unless incoming.is_a?(Net::HTTPSuccess)
+
+        declared = Integer(incoming["Content-Length"], exception: false)
+        raise "Imported hook exceeds 1 MiB" if declared && declared > 1024 * 1024
+        incoming.read_body do |chunk|
+          raise "Imported hook exceeds 1 MiB" if body.bytesize + chunk.bytesize > 1024 * 1024
+          body << chunk
+        end
+      end
       return nil unless response.is_a?(Net::HTTPSuccess)
+      actual = Digest::SHA256.hexdigest(body)
+      raise "Hook checksum mismatch" unless actual == sha256.downcase
 
       name = File.basename(uri.path, ".hook")
       name = "imported" if name.empty?
 
-      create_hook(name, response.body)
+      create_hook(name, body)
+    end
+
+    def self.validate_name!(name)
+      value = name.to_s
+      raise ArgumentError, "Invalid hook name: #{value.inspect}" unless value.match?(SAFE_NAME)
+      value
     end
 
     def self.run_hooks_for(event, context = {})
@@ -334,16 +378,15 @@ module Quarks
   end
 
   class SyncMode
+    CONFIG_FILE = File.join(Quarks::Env.state_root, "var", "db", "quarks", "sync_mode")
     MODES = {
-      full: { description: "Complete sync, download all metadata", cache: false },
-      incremental: { description: "Smart sync using ETags", cache: true },
-      shallow: { description: "Only changed packages", cache: true },
-      mirror: { description: "Download everything, no verification", cache: false }
+      full: { description: "Force a fresh, verified metadata download", cache: false },
+      incremental: { description: "Use verified caches and conditional requests", cache: true }
     }.freeze
 
     attr_reader :mode, :progress, :start_time
 
-    def initialize(mode: :incremental)
+    def initialize(mode: self.class.current)
       @mode = normalize_mode(mode)
       @progress = 0
       @start_time = nil
@@ -353,10 +396,20 @@ module Quarks
       case mode.to_s.downcase.to_sym
       when :full, :complete then :full
       when :inc, :incremental then :incremental
-      when :shallow, :quick then :shallow
-      when :mirror, :raw then :mirror
-      else :incremental
+      else
+        raise ArgumentError, "Unknown sync mode: #{mode}"
       end
+    end
+
+    def self.current
+      return :incremental unless File.file?(CONFIG_FILE)
+      new(mode: File.read(CONFIG_FILE).strip).mode
+    end
+
+    def self.set(mode)
+      normalized = new(mode: mode).mode
+      Quarks::Security.atomic_write(CONFIG_FILE, normalized.to_s)
+      normalized
     end
 
     def start
@@ -378,11 +431,11 @@ module Quarks
     end
 
     def cache_only?
-      @mode == :incremental || @mode == :shallow
+      @mode == :incremental
     end
 
     def verify?
-      @mode != :mirror
+      true
     end
 
     def full_sync?
@@ -395,6 +448,7 @@ module Quarks
   end
 
   class ProfileManager
+    SAFE_NAME = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]*\z/.freeze
     PROFILE_DIR = File.join(Quarks::Env.state_root, "var", "db", "quarks", "profiles")
     ACTIVE_PROFILE_FILE = File.join(PROFILE_DIR, "active")
 
@@ -406,24 +460,25 @@ module Quarks
       profiles = {}
       Dir.glob(File.join(PROFILE_DIR, "*.json")).each do |file|
         name = File.basename(file, ".json")
-        profiles[name] = load(file)
+        profiles[name] = load(name)
       end
       profiles
     end
 
     def create(name, config = {})
+      current_use = USEConfig.new.flags
       profile = {
         name: name,
         created_at: Time.now.iso8601,
-        build: config[:build] || :default,
-        sync: config[:sync] || :incremental,
-        use_flags: config[:use_flags] || [],
+        build: config.fetch(:build, BuildConfig.current),
+        sync: config.fetch(:sync, SyncMode.current),
+        use_flags: config.fetch(:use_flags, current_use),
         make_conf: config[:make_conf] || {},
         repos: config[:repos] || []
       }
 
       path = profile_path(name)
-      File.write(path, JSON.pretty_generate(profile))
+      Quarks::Security.atomic_write(path, JSON.pretty_generate(profile))
       profile
     end
 
@@ -431,16 +486,18 @@ module Quarks
       path = profile_path(name)
       return nil unless File.exist?(path)
 
-      JSON.parse(File.read(path))
-    rescue JSON::ParserError
-      nil
+      profile = JSON.parse(File.read(path))
+      raise ArgumentError, "Profile must contain an object" unless profile.is_a?(Hash)
+      profile
+    rescue JSON::ParserError => e
+      raise ArgumentError, "Invalid profile #{name}: #{e.message}"
     end
 
     def activate(name)
       path = profile_path(name)
       return false unless File.exist?(path)
 
-      File.write(ACTIVE_PROFILE_FILE, name)
+      Quarks::Security.atomic_write(ACTIVE_PROFILE_FILE, name.to_s)
       apply(name)
       true
     end
@@ -460,9 +517,11 @@ module Quarks
         BuildConfig.set(profile["build"].to_sym)
       end
 
+      SyncMode.set(profile["sync"]) if profile["sync"]
+
       if profile["use_flags"]
         use_config = USEConfig.new
-        profile["use_flags"].each { |f| use_config.add_flag(f) }
+        use_config.replace_global_flags(profile["use_flags"])
         use_config.save!
       end
     end
@@ -478,6 +537,7 @@ module Quarks
     private
 
     def profile_path(name)
+      raise ArgumentError, "Invalid profile name: #{name.inspect}" unless name.to_s.match?(SAFE_NAME)
       File.join(PROFILE_DIR, "#{name}.json")
     end
   end

@@ -4,7 +4,7 @@ nuclei "libtermkey", "0.22" do
   license "MIT"
   category "dev-libs"
   
-  source "http://www.leonerd.org.uk/code/libtermkey/libtermkey-0.22.tar.gz",
+  source "https://www.leonerd.org.uk/code/libtermkey/libtermkey-0.22.tar.gz",
          checksum: "6945bd3c4aaa83da83d80a045c5563da4edd7d0374c62c0d35aec09eb3014600",
          algorithm: "sha256"
   

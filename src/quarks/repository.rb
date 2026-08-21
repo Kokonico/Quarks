@@ -7,6 +7,7 @@ require "net/http"
 require "uri"
 require "quarks/env"
 require "quarks/package"
+require "quarks/security"
 require "quarks/web_repo"
 
 module Quarks
@@ -30,17 +31,19 @@ module Quarks
 
     PROJECT_ROOT = project_root.freeze
 
-    attr_reader :sources
+    attr_reader :sources, :quarantined
 
     def initialize(custom_sources = nil)
-      @sources = normalize_sources(custom_sources || default_sources)
       @cache_by_atom = {}
       @cache_by_name = {}
       @source_by_atom = {}
       @source_by_name = {}
+      @sorted_atoms = nil
       @errors = []
       @warnings = []
+      @quarantined = []
       @scanned = false
+      @sources = normalize_sources(custom_sources || default_sources)
       scan_all
     end
 
@@ -65,7 +68,6 @@ module Quarks
       local_paths.concat([
         File.join(PROJECT_ROOT, "nuclei"),
         File.join(PROJECT_ROOT, "src", "quarks", "nuclei"),
-        File.join(Dir.pwd, "nuclei"),
         File.join(Env.root, "nuclei"),
         File.expand_path("~/.quarks/nuclei"),
         "/usr/share/quarks/nuclei",
@@ -73,17 +75,28 @@ module Quarks
       ])
 
       web_repos = WebRepoManager.load_repos
-      remote_urls = []
+      remote_sources = []
 
       if remote_env.empty? && web_repos.any?
-        remote_urls = web_repos.values.sort_by(&:priority).map(&:manifest_url)
+        remote_sources = web_repos.values.sort_by(&:priority).filter_map do |repo|
+          next unless repo.enabled
+          Source.new(type: :remote, location: repo.manifest_url, name: repo.name)
+        end
       else
-        remote_urls = remote_env.split(":").map(&:strip) unless remote_env.empty?
+        unless remote_env.empty?
+          if ENV["QUARKS_ALLOW_UNSIGNED_REPOS"] == "1"
+            remote_sources = split_remote_urls(remote_env).map do |url|
+              Source.new(type: :remote, location: url, name: url)
+            end
+          else
+            @warnings&.push("QUARKS_REPO_URLS is disabled unless QUARKS_ALLOW_UNSIGNED_REPOS=1; configure a pinned web repository instead")
+          end
+        end
       end
 
       [
         *local_paths.map { |path| Source.new(type: :local, location: File.expand_path(path), name: File.basename(path)) },
-        *remote_urls.reject(&:empty?).map { |url| Source.new(type: :remote, location: url, name: url) }
+        *remote_sources
       ]
     end
 
@@ -91,7 +104,8 @@ module Quarks
       value = name_or_atom.to_s.strip
       return "" if value.empty?
 
-      value = value.split("/", 2).last if value.include?("/")
+      slash = value.index("/")
+      value = value[(slash + 1)..] if slash
       value.downcase
     end
 
@@ -121,7 +135,8 @@ module Quarks
 
     def list_atoms
       scan_all unless @scanned
-      @cache_by_atom.keys.sort
+      @sorted_atoms ||= @cache_by_atom.keys.sort.freeze
+      @sorted_atoms.dup
     end
 
     def source_overview
@@ -134,25 +149,27 @@ module Quarks
       end
     end
 
-    def update
+    def update(force: false)
       @cache_by_atom.clear
       @cache_by_name.clear
       @source_by_atom.clear
       @source_by_name.clear
+      @sorted_atoms = nil
       @errors.clear
       @warnings.clear
+      @quarantined.clear
       @scanned = false
 
-      sync_web_repos
-      scan_all(refresh_remote: true)
+      sync_web_repos(force: force)
+      scan_all(refresh_remote: false)
       list_atoms.length
     end
 
-    def sync_web_repos(force: false, verify: true)
+    def sync_web_repos(force: false)
       web_repos = WebRepoManager.load_repos
       return if web_repos.empty?
 
-      results = WebRepoManager.sync_all(force: force, verify: verify, offline_ok: true)
+      results = WebRepoManager.sync_all(force: force, offline_ok: true)
 
       results[:errors].each do |error|
         @warnings << "Web repo sync: #{error}"
@@ -162,6 +179,10 @@ module Quarks
     end
 
     private
+
+    def split_remote_urls(value)
+      value.to_s.split(/(?:[\s,]+|:(?=https?:\/\/))/).map(&:strip).reject(&:empty?)
+    end
 
     def normalize_sources(input)
       values = case input
@@ -223,6 +244,11 @@ module Quarks
             register_package(pkg, source_path: file)
           rescue DuplicatePackageError => e
             @errors << e.message
+          rescue NucleiParseError, NucleiSchemaError => e
+            msg = "Quarantined invalid recipe #{file}: #{e.message}"
+            @quarantined << { source: file, error: e.message }
+            @warnings << msg
+            warn msg if Env.debug?
           rescue => e
             msg = "Failed to load #{file}: #{e.message}"
             @errors << msg
@@ -243,6 +269,9 @@ module Quarks
           register_package(pkg, source_path: "#{source.location}##{idx + 1}")
         rescue DuplicatePackageError => e
           @errors << e.message
+        rescue NucleiSchemaError => e
+          @quarantined << { source: "#{source.location}##{idx + 1}", error: e.message }
+          @warnings << "Quarantined invalid remote package from #{source.location}: #{e.message}"
         rescue => e
           @errors << "Failed to load remote package from #{source.location}: #{e.message}"
         end
@@ -251,7 +280,7 @@ module Quarks
 
     def package_from_manifest_entry(entry)
       h = stringify_hash(entry)
-      name = h["name"].to_s.strip
+      name = (h["name"] || h["package_name"]).to_s.strip
       raise "Remote package entry missing name" if name.empty?
 
       pkg = Quarks::Package.new(name)
@@ -276,10 +305,28 @@ module Quarks
       pkg.make_args = Array(h["make_args"]).map(&:to_s)
       pkg.cmake_args = Array(h["cmake_args"]).map(&:to_s)
       pkg.meson_args = Array(h["meson_args"]).map(&:to_s)
+      pkg.slot = h["slot"]&.to_s
+      pkg.subslot = h["subslot"]&.to_s
+      pkg.blocks = Array(h["blocks"]).map(&:to_s)
+      pkg.blocked_by = Array(h["blocked_by"]).map(&:to_s)
+      pkg.use_dependencies = Array(h["use_dependencies"]).map { |value| stringify_hash(value).transform_keys(&:to_sym) }
+      pkg.provided_use = Array(h["provided_use"]).map(&:to_s)
+      pkg.required_use = Array(h["required_use"]).map(&:to_s)
+      pkg.iuse = Array(h["iuse"]).map(&:to_s)
+      pkg.provided_by = h["provided_by"]&.to_s
+      pkg.restrict = Array(h["restrict"]).map(&:to_s)
 
       sources = Array(h["sources"])
+      if sources.empty? && h["source_url"]
+        sources = [{
+          "url" => h["source_url"],
+          "hash" => h["source_checksum"],
+          "algorithm" => h["source_algorithm"] || "sha256"
+        }]
+      end
       pkg.sources = []
       pkg.checksums = {}
+      pkg.source_sizes = {}
       sources.each do |src|
         src_hash = stringify_hash(src)
         url = src_hash["url"].to_s.strip
@@ -289,6 +336,7 @@ module Quarks
         hash = src_hash["hash"].to_s.strip
         algorithm = src_hash.fetch("algorithm", "sha256").to_s.strip
         pkg.checksums[url] = { hash: hash, algorithm: algorithm } unless hash.empty?
+        pkg.source_sizes[url] = src_hash["size"] unless src_hash["size"].nil?
       end
 
       pkg.validate!(path: "(remote manifest)")
@@ -314,6 +362,7 @@ module Quarks
       @cache_by_name[name] = pkg
       @source_by_atom[atom] = source_path
       @source_by_name[name] = source_path
+      @sorted_atoms = nil
     end
 
     def handle_duplicate!(message)
@@ -338,10 +387,14 @@ module Quarks
 
     def load_remote_manifest(source, refresh: false)
       web_repos = WebRepoManager.load_repos
-      repo_name = infer_repo_name_from_url(source.location)
 
-      if web_repos.key?(repo_name)
-        return load_from_web_repo(web_repos[repo_name], refresh: refresh)
+      if web_repos.key?(source.name)
+        return load_from_web_repo(web_repos[source.name], refresh: refresh)
+      end
+
+      unless ENV["QUARKS_ALLOW_UNSIGNED_REPOS"] == "1"
+        @errors << "Refusing unsigned remote repository #{source.location}; add it with a pinned signing key"
+        return nil
       end
 
       cache_path = remote_cache_path(source.location)
@@ -349,7 +402,7 @@ module Quarks
       if refresh || !File.exist?(cache_path)
         begin
           body = fetch_url(source.location)
-          File.write(cache_path, body)
+          Security.atomic_write(cache_path, body)
         rescue => e
           @errors << "Failed to fetch #{source.location}: #{e.message}"
           if File.exist?(cache_path)
@@ -369,11 +422,14 @@ module Quarks
     end
 
     def load_from_web_repo(repo, refresh: false)
-      manifest_data = WebRepoManager.fetch_manifest(repo, use_cache: !refresh, verify: true)
-      manifest_data
+      if refresh
+        WebRepoManager.sync_repo(repo.name, force: true, offline_ok: true)
+      else
+        WebRepoManager.load_cached_manifest(repo.name, repo: repo)
+      end
     rescue => e
       @warnings << "Web repo '#{repo.name}' fetch failed: #{e.message}"
-      WebRepoManager.load_cached_manifest(repo.name)
+      WebRepoManager.sync_repo(repo.name, offline_ok: true)
     end
 
     def infer_repo_name_from_url(url)
@@ -392,15 +448,46 @@ module Quarks
     end
 
     def fetch_url(url)
-      uri = URI.parse(url)
-      raise "Unsupported repository URL scheme: #{uri.scheme}" unless %w[http https].include?(uri.scheme)
+      uri = Security.validate_remote_uri!(
+        url,
+        purpose: "unsigned repository manifest",
+        allow_http: ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1",
+        allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+      )
 
-      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+      http = Net::HTTP.new(uri.host, uri.port)
+      addresses = if ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+                    Resolv.getaddresses(uri.host)
+                  else
+                    Security.resolve_public_addresses!(uri.host, purpose: "unsigned repository manifest")
+                  end
+      raise "Repository host did not resolve: #{uri.host}" if addresses.empty?
+      http.ipaddr = addresses.first
+      http.use_ssl = uri.scheme == "https"
+      http.open_timeout = 10
+      http.read_timeout = 30
+      http.write_timeout = 30 if http.respond_to?(:write_timeout=)
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
+      http.max_retries = 0
+
+      http.start do
         request = Net::HTTP::Get.new(uri)
         request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
-        response = http.request(request)
+        body = +"".b
+        response = nil
+        http.request(request) do |incoming|
+          response = incoming
+          next unless incoming.is_a?(Net::HTTPSuccess)
+
+          declared = Integer(incoming["Content-Length"], exception: false)
+          raise "Repository manifest exceeds 16 MiB" if declared && declared > 16 * 1024 * 1024
+          incoming.read_body do |chunk|
+            raise "Repository manifest exceeds 16 MiB" if body.bytesize + chunk.bytesize > 16 * 1024 * 1024
+            body << chunk
+          end
+        end
         raise "HTTP #{response.code} #{response.message}" unless response.is_a?(Net::HTTPSuccess)
-        response.body.to_s
+        body
       end
     end
 

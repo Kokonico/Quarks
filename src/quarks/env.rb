@@ -9,7 +9,7 @@ module Quarks
 
     def original_user
       sudo_user = ENV["SUDO_USER"].to_s.strip
-      return sudo_user unless sudo_user.empty?
+      return sudo_user if Process.euid.zero? && !sudo_user.empty?
 
       login = begin
         Etc.getlogin.to_s.strip
@@ -67,13 +67,14 @@ module Quarks
 
     def tmpdir
       v = ENV["QUARKS_TMPDIR"].to_s.strip
-      return File.expand_path(v) unless v.empty?
-
-      tmp = File.join(state_root, "var", "tmp", "quarks")
-      FileUtils.mkdir_p(tmp)
+      tmp = v.empty? ? File.join(state_root, "var", "tmp", "quarks") : File.expand_path(v)
+      FileUtils.mkdir_p(tmp, mode: 0o700)
+      raise "Unsafe build temp directory symlink: #{tmp}" if File.symlink?(tmp)
+      stat = File.stat(tmp)
+      raise "Build temp path is not a directory: #{tmp}" unless stat.directory?
+      raise "Build temp directory is not owned by uid #{Process.euid}: #{tmp}" unless stat.uid == Process.euid
+      raise "Build temp directory is group/world-writable: #{tmp}" if (stat.mode & 0o022).positive?
       tmp
-    rescue
-      "/var/tmp/quarks"
     end
 
     def jobs_default
@@ -175,9 +176,15 @@ module Quarks
       QUARKS_DEBUG        Show debug information (1/0)
       QUARKS_WARNINGS     Show compiler warnings (1/0)
       QUARKS_TRACE_SYSTEM Trace executed system calls (1/0)
+      QUARKS_CONFIG       Explicit configuration file
       QUARKS_NUCLEI_PATHS Additional local repo paths separated by ':'
-      QUARKS_REPO_URLS    Remote repo manifest URLs separated by ':'
-      QUARKS_ALLOW_INSECURE Allow checksum: skip (1/0)
+      QUARKS_REPO_URLS    Remote repo manifest URLs separated by comma/space
+      QUARKS_NO_SANDBOX   Disable Bubblewrap isolation (unsafe, 1/0)
+      QUARKS_BUILD_NETWORK Allow build network access (unsafe, 1/0)
+      QUARKS_ALLOW_PRIVATE_NETWORKS Allow private remote addresses (unsafe, 1/0)
+      QUARKS_ALLOW_INSECURE_SOURCES Allow HTTP sources (unsafe, 1/0)
+      QUARKS_ALLOW_INSECURE_REPOS Allow HTTP repositories (unsafe, 1/0)
+      QUARKS_ALLOW_UNSIGNED_REPOS Allow unsigned repositories (unsafe, 1/0)
       QUARKS_ALLOW_DUPLICATES Allow duplicate package definitions (1/0)
       TXT
     end
@@ -186,8 +193,10 @@ module Quarks
       %w[
         QUARKS_ROOT QUARKS_STATE_ROOT QUARKS_TMPDIR QUARKS_JOBS
         QUARKS_VERBOSE QUARKS_QUIET QUARKS_DEBUG QUARKS_WARNINGS
-        QUARKS_TRACE_SYSTEM QUARKS_NUCLEI_PATHS QUARKS_REPO_URLS
-        QUARKS_ALLOW_INSECURE QUARKS_ALLOW_DUPLICATES
+        QUARKS_TRACE_SYSTEM QUARKS_CONFIG QUARKS_NUCLEI_PATHS QUARKS_REPO_URLS
+        QUARKS_NO_SANDBOX QUARKS_BUILD_NETWORK QUARKS_ALLOW_PRIVATE_NETWORKS
+        QUARKS_ALLOW_INSECURE_SOURCES QUARKS_ALLOW_INSECURE_REPOS
+        QUARKS_ALLOW_UNSIGNED_REPOS QUARKS_ALLOW_DUPLICATES
       ].map do |key|
         value = ENV[key].to_s.strip
         value = "(not set)" if value.empty?

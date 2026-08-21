@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "pathname"
 
 module Quarks
   class NucleiError < StandardError; end
@@ -25,9 +26,19 @@ module Quarks
   end
 
   class Package
+    MAX_RECIPE_BYTES = 1024 * 1024
+    NAME_PATTERN = /\A[a-zA-Z0-9][a-zA-Z0-9+_.-]*\z/.freeze
+    CATEGORY_PATTERN = /\A[a-zA-Z0-9][a-zA-Z0-9+_.-]*\z/.freeze
+    VERSION_PATTERN = /\A[^\s\x00\/]+\z/.freeze
+    ENV_KEY_PATTERN = /\A[A-Za-z_][A-Za-z0-9_]*\z/.freeze
+    TOOL_PATTERN = /\A[A-Za-z0-9][A-Za-z0-9+_.-]*\z/.freeze
+    DEPENDENCY_PATTERN = /\A(?:[A-Za-z0-9][A-Za-z0-9+_.-]*\/)?[A-Za-z0-9][A-Za-z0-9+_.-]*\z/.freeze
+    USE_FLAG_PATTERN = /\A-?[A-Za-z0-9][A-Za-z0-9+_@.-]*\z/.freeze
+    BUILD_SYSTEMS = %i[auto meson cmake autotools make ninja manual].freeze
+    STRONG_HASHES = { "sha256" => 64, "sha512" => 128 }.freeze
     attr_accessor :name, :version, :description, :homepage, :license, :category
     attr_accessor :dependencies, :build_dependencies, :host_tools
-    attr_accessor :sources, :checksums
+    attr_accessor :sources, :checksums, :source_sizes
     attr_accessor :configure_flags, :build_commands, :install_commands
     attr_accessor :patches, :environment
     attr_accessor :build_system, :build_dir, :install_prefix
@@ -37,7 +48,7 @@ module Quarks
     attr_accessor :use_dependencies, :provided_use
     attr_accessor :required_use, :iuse
     attr_accessor :provided_by
-    attr_accessor :src_uri, :homepage
+    attr_accessor :src_uri
     attr_accessor :restrict
 
     def initialize(name)
@@ -55,6 +66,7 @@ module Quarks
 
       @sources = []
       @checksums = {}
+      @source_sizes = {}
 
       @configure_flags = []
       @build_commands = []
@@ -105,6 +117,7 @@ module Quarks
         host_tools: @host_tools,
         sources: @sources,
         checksums: @checksums,
+        source_sizes: @source_sizes,
         configure_flags: @configure_flags,
         build_commands: @build_commands,
         install_commands: @install_commands,
@@ -123,7 +136,9 @@ module Quarks
         use_dependencies: @use_dependencies,
         provided_use: @provided_use,
         required_use: @required_use,
-        iuse: @iuse
+        iuse: @iuse,
+        provided_by: @provided_by,
+        restrict: @restrict
       }
     end
 
@@ -145,6 +160,7 @@ module Quarks
         use_dependencies: @use_dependencies,
         iuse: @iuse,
         sources: @sources,
+        source_sizes: @source_sizes,
         build_system: @build_system.to_s
       }
     end
@@ -157,48 +173,149 @@ module Quarks
       raise NucleiSchemaError.new(path, "Package name is missing") if @name.to_s.strip.empty?
       raise NucleiSchemaError.new(path, "Package version is missing") if @version.to_s.strip.empty?
       raise NucleiSchemaError.new(path, "Package category is missing") if @category.to_s.strip.empty?
+      raise NucleiSchemaError.new(path, "Invalid package name: #{@name.inspect}") unless @name.to_s.match?(NAME_PATTERN)
+      raise NucleiSchemaError.new(path, "Invalid package category: #{@category.inspect}") unless @category.to_s.match?(CATEGORY_PATTERN)
+      raise NucleiSchemaError.new(path, "Invalid package version: #{@version.inspect}") unless @version.to_s.match?(VERSION_PATTERN)
+
+      validate_relative_path!(@build_dir, path, field: "build_dir", allow_dot: true)
+      validate_install_prefix!(path)
 
       dup_sources = @sources.group_by(&:itself).select { |_, v| v.length > 1 }.keys
       raise NucleiSchemaError.new(path, "Duplicate source entries: #{dup_sources.join(', ')}") if dup_sources.any?
 
+      unknown_sized_sources = @source_sizes.keys.map(&:to_s) - @sources.map(&:to_s)
+      if unknown_sized_sources.any?
+        raise NucleiSchemaError.new(path, "Sizes declared for unknown sources: #{unknown_sized_sources.join(', ')}")
+      end
+
+      @sources.each { |source| validate_source!(source, path) }
+
       unknown_patches = @patches.reject { |p| p.is_a?(Hash) && p[:file].to_s.strip != "" }
       raise NucleiSchemaError.new(path, "Malformed patch declarations: #{unknown_patches.inspect}") if unknown_patches.any?
+      @patches.each do |patch|
+        validate_relative_path!(patch[:file] || patch["file"], path, field: "patch")
+        strip = (patch[:strip] || patch["strip"] || 1).to_i
+        raise NucleiSchemaError.new(path, "Patch strip must be between 0 and 10") unless strip.between?(0, 10)
+      end
+
+      @environment.each_key do |key|
+        raise NucleiSchemaError.new(path, "Invalid environment variable name: #{key.inspect}") unless key.to_s.match?(ENV_KEY_PATTERN)
+      end
+
+      unless BUILD_SYSTEMS.include?(@build_system.to_s.downcase.to_sym)
+        raise NucleiSchemaError.new(path, "Unsupported build system: #{@build_system.inspect}")
+      end
+
+      @host_tools.each do |tool|
+        raise NucleiSchemaError.new(path, "Invalid host tool name: #{tool.inspect}") unless tool.to_s.match?(TOOL_PATTERN)
+      end
+
+      (@dependencies + @build_dependencies + @blocks + @blocked_by).each do |dependency|
+        unless dependency.to_s.match?(DEPENDENCY_PATTERN)
+          raise NucleiSchemaError.new(path, "Invalid dependency atom: #{dependency.inspect}")
+        end
+      end
+
+      (@provided_use + @required_use + @iuse).each do |flag|
+        raise NucleiSchemaError.new(path, "Invalid USE flag: #{flag.inspect}") unless flag.to_s.match?(USE_FLAG_PATTERN)
+      end
+
+      string_lists = [
+        @dependencies, @build_dependencies, @configure_flags, @make_args,
+        @cmake_args, @meson_args, @blocks, @blocked_by, @provided_use,
+        @required_use, @iuse, @restrict
+      ]
+      string_lists.flatten.each do |value|
+        if value.to_s.empty? || value.to_s.include?("\0") || value.to_s.match?(/[\r\n]/)
+          raise NucleiSchemaError.new(path, "Package list values must be non-empty single-line strings")
+        end
+      end
+
+      @use_dependencies.each do |use_dep|
+        data = use_dep.transform_keys(&:to_sym)
+        flag = data[:flag].to_s
+        condition = data.fetch(:condition, :enabled).to_s.to_sym
+        raise NucleiSchemaError.new(path, "Invalid USE dependency flag: #{flag.inspect}") unless flag.match?(TOOL_PATTERN)
+        raise NucleiSchemaError.new(path, "Invalid USE dependency condition: #{condition}") unless %i[enabled disabled].include?(condition)
+        Array(data[:dependencies]).each do |dependency|
+          unless dependency.to_s.match?(DEPENDENCY_PATTERN)
+            raise NucleiSchemaError.new(path, "Invalid USE dependency atom: #{dependency.inspect}")
+          end
+        end
+      end
+
+      (@build_commands + @install_commands).each do |command|
+        if command.to_s.include?("\0") || command.to_s.include?("\n") || command.to_s.include?("\r")
+          raise NucleiSchemaError.new(path, "Build commands must be single-line strings")
+        end
+      end
 
       true
+    end
+
+    private
+
+    def validate_source!(source, path)
+      require "uri"
+      uri = URI.parse(source.to_s)
+      allowed_schemes = ENV["QUARKS_ALLOW_INSECURE_SOURCES"] == "1" ? %w[https http file] : %w[https file]
+      unless allowed_schemes.include?(uri.scheme)
+        raise NucleiSchemaError.new(path, "Source must use HTTPS or file://: #{source}")
+      end
+      raise NucleiSchemaError.new(path, "Source URL is missing a host: #{source}") if uri.is_a?(URI::HTTP) && uri.host.to_s.empty?
+
+      checksum = @checksums[source] || @checksums[source.to_s]
+      raise NucleiSchemaError.new(path, "Source is missing a checksum: #{source}") unless checksum.is_a?(Hash)
+
+      declared_size = @source_sizes[source] || @source_sizes[source.to_s]
+      unless declared_size.nil?
+        size = Integer(declared_size, exception: false)
+        unless size&.positive?
+          raise NucleiSchemaError.new(path, "Source size must be a positive integer: #{source}")
+        end
+      end
+
+      algorithm = (checksum[:algorithm] || checksum["algorithm"] || "sha256").to_s.downcase
+      expected = (checksum[:hash] || checksum["hash"]).to_s.downcase
+      length = STRONG_HASHES[algorithm]
+      raise NucleiSchemaError.new(path, "Source checksum must use SHA-256 or SHA-512: #{source}") unless length
+      unless expected.match?(/\A[0-9a-f]{#{length}}\z/)
+        raise NucleiSchemaError.new(path, "Invalid #{algorithm} checksum for #{source}")
+      end
+    rescue URI::InvalidURIError => e
+      raise NucleiSchemaError.new(path, "Invalid source URL #{source.inspect}: #{e.message}")
+    end
+
+    def validate_relative_path!(value, path, field:, allow_dot: false)
+      raw = value.to_s
+      return if allow_dot && (raw.empty? || raw == ".")
+
+      pathname = Pathname.new(raw)
+      clean = pathname.cleanpath.to_s
+      invalid = raw.empty? || pathname.absolute? || clean == ".." || clean.start_with?("../") || raw.include?("\0")
+      raise NucleiSchemaError.new(path, "Invalid #{field} path: #{raw.inspect}") if invalid
+    end
+
+    def validate_install_prefix!(path)
+      raw = @install_prefix.to_s
+      pathname = Pathname.new(raw)
+      clean = pathname.cleanpath.to_s
+      unless pathname.absolute? && !clean.include?("/../") && !raw.include?("\0")
+        raise NucleiSchemaError.new(path, "Invalid install_prefix: #{raw.inspect}")
+      end
     end
 
     def self.load_from_nuclei(path, strict: true)
       path = path.to_s
       raise NucleiParseError.new(path, "Nuclei file not found: #{path}") unless ::File.exist?(path)
+      if ::File.size(path) > MAX_RECIPE_BYTES
+        raise NucleiParseError.new(path, "Nuclei recipe exceeds #{MAX_RECIPE_BYTES} bytes")
+      end
 
       content = ::File.read(path)
-      dsl = NucleiDSL.new(path: path, strict: strict)
 
-      begin
-        dsl.instance_eval(content, path, 1)
-      rescue ::Exception => e
-        bt = e.backtrace&.find { |x| x.include?(path) }.to_s rescue ""
-        loc = bt.empty? ? "" : " at: #{bt}"
-        raise NucleiParseError.new(path, "Failed to parse #{path}: #{e.class}: #{e.message}#{loc}", original: e)
-      end
-
-      pkg = dsl.package
-      if pkg.nil?
-        inferred = ::File.basename(path, ".nuclei")
-        pkg = Package.new(inferred)
-        dsl.__attach_package__(pkg)
-
-        begin
-          dsl.instance_eval(content, path, 1)
-        rescue ::Exception => e
-          bt = e.backtrace&.find { |x| x.include?(path) }.to_s rescue ""
-          loc = bt.empty? ? "" : " at: #{bt}"
-          raise NucleiParseError.new(path, "Failed to parse #{path} (implicit nuclei): #{e.class}: #{e.message}#{loc}", original: e)
-        end
-      end
-
-      pkg.validate!(path: path) if strict
-      pkg
+      require "quarks/safe_nuclei_parser"
+      SafeNucleiParser.new(path: path, strict: strict).parse(content)
     end
   end
 
@@ -267,10 +384,15 @@ module Quarks
     def bdep(*deps) build_depends(*deps) end
     def build_dependencies(*deps) build_depends(*deps) end
 
-    def source(url, checksum: nil, algorithm: "sha256", sha256: nil, sha512: nil, md5: nil, **kw)
+    def source(url, checksum: nil, algorithm: "sha256", sha256: nil, sha512: nil, md5: nil, size: nil, **kw)
       ensure_pkg!
       u = url.to_s
       @package.sources << u unless @package.sources.include?(u)
+
+      unknown_keywords = kw.keys - %i[hash algo]
+      unless unknown_keywords.empty?
+        ::Kernel.raise ::ArgumentError, "unknown source keywords: #{unknown_keywords.join(', ')}"
+      end
 
       if sha256
         checksum = sha256
@@ -289,6 +411,7 @@ module Quarks
       if checksum
         @package.checksums[u] = { hash: checksum.to_s, algorithm: algorithm.to_s }
       end
+      @package.source_sizes[u] = size unless size.nil?
 
       true
     end

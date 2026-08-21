@@ -7,14 +7,26 @@ require "uri"
 require "openssl"
 require "digest"
 require "find"
+require "pathname"
+require "securerandom"
 require "shellwords"
 require "time"
 
 require "quarks/env"
 require "quarks/hash_verifier"
+require "quarks/operation_lock"
+require "quarks/sandbox_build"
+require "quarks/security"
+require "quarks/source_size"
 
 module Quarks
   class Builder
+    MAX_SOURCE_BYTES = Integer(ENV.fetch("QUARKS_MAX_SOURCE_BYTES", 4 * 1024 * 1024 * 1024)).freeze
+    MAX_EXTRACTED_BYTES = Integer(ENV.fetch("QUARKS_MAX_EXTRACTED_BYTES", 20 * 1024 * 1024 * 1024)).freeze
+    MAX_EXTRACTED_FILES = Integer(ENV.fetch("QUARKS_MAX_EXTRACTED_FILES", 250_000)).freeze
+    MAX_ARCHIVE_LIST_BYTES = 64 * 1024 * 1024
+    MAX_OUTPUT_LINE_BYTES = 64 * 1024
+    MAX_LOG_BYTES = Integer(ENV.fetch("QUARKS_MAX_LOG_BYTES", 64 * 1024 * 1024)).freeze
     BuildPlan = Struct.new(
       :system, :cwd, :build_dir, :configure_cmds, :build_cmds, :install_cmds,
       keyword_init: true
@@ -32,33 +44,76 @@ module Quarks
       @verbose = !@quiet
       @debug   = ENV["QUARKS_DEBUG"].to_s == "1" || @options[:debug]
       @jobs    = (@options[:jobs].to_i.positive? ? @options[:jobs].to_i : Quarks::Env.jobs)
+      @use_flags = if @options.key?(:use_flags)
+                     Array(@options[:use_flags]).map(&:to_s)
+                   else
+                     require "quarks/use_slots"
+                     Quarks::USEConfig.new.flags_for_package(@package)
+                   end
 
       tmp_root   = Quarks::Env.tmpdir rescue (ENV["QUARKS_TMPDIR"] || "/var/tmp/quarks")
       build_root = File.join(tmp_root, "quarks-build")
       dest_root  = File.join(tmp_root, "quarks-dest")
 
       slug = safe_slug(@package.full_name)
+      run_id = @options[:workspace_id].to_s.strip
+      run_id = "#{Process.pid}-#{SecureRandom.hex(6)}" if run_id.empty?
+      workspace_slug = "#{slug}-#{safe_slug(run_id)}"
 
-      @build_dir = File.join(build_root, slug)
-      @dest_dir  = File.join(dest_root, slug)
+      @build_dir = File.join(build_root, workspace_slug)
+      @dest_dir  = File.join(dest_root, workspace_slug)
 
       state_root = Quarks::Env.state_root rescue (ENV["QUARKS_STATE_ROOT"] || File.expand_path("~/.local/state/quarks"))
       @cache_dir = File.join(state_root, "var", "cache", "quarks", "distfiles")
       @log_dir   = File.join(state_root, "var", "log", "quarks")
       FileUtils.mkdir_p(@log_dir)
-      @log_file  = File.join(@log_dir, "#{slug}.log")
+      @log_file  = File.join(@log_dir, "#{workspace_slug}.log")
+      @log_bytes = File.file?(@log_file) ? File.size(@log_file) : 0
+      @log_truncated = @log_bytes >= MAX_LOG_BYTES
 
       @source_dir = nil
       @downloaded_sources = []
     end
 
     def fetch_only
-      prepare_directories
-      @downloaded_sources = download_sources
-      true
+      OperationLock.synchronize("build:#{@package.atom}:#{@package.version}") do
+        fetch_only_unlocked
+      end
     end
 
     def build
+      OperationLock.synchronize("build:#{@package.atom}:#{@package.version}") do
+        build_unlocked
+      end
+    end
+
+    def cleanup!
+      return false if @options[:keep_temp]
+
+      FileUtils.rm_rf(@build_dir)
+      FileUtils.rm_rf(@dest_dir)
+      true
+    end
+
+    private
+
+    def fetch_only_unlocked
+      prepare_directories
+      @downloaded_sources = download_sources
+      true
+    ensure
+      cleanup!
+    end
+
+    def build_unlocked
+      if Process.euid.zero? && ENV["QUARKS_ALLOW_ROOT_BUILD"] != "1"
+        raise "Refusing to execute package builds as root. Run Quarks as an unprivileged user; only the final merge may elevate."
+      end
+
+      if SandboxManager.enabled?
+        SandboxManager.assert_operational!(network: ENV["QUARKS_BUILD_NETWORK"] == "1")
+      end
+
       prepare_directories
       ensure_host_tools!
       @downloaded_sources = download_sources
@@ -87,10 +142,10 @@ module Quarks
       log_line("")
       log_line("BUILD FAILED: #{e.class}: #{e.message}")
       log_line(Array(e.backtrace).join("\n")) if @debug
-      raise build_error_with_log(e)
+      wrapped = build_error_with_log(e)
+      cleanup!
+      raise wrapped
     end
-
-    private
 
     def prepare_directories
       FileUtils.mkdir_p(@cache_dir)
@@ -124,7 +179,13 @@ module Quarks
       if local_path
         say_detail("Using local source #{File.basename(local_path)}")
         verify_source!(local_path, source)
-        return local_path
+        uri = URI.parse(source)
+        cached_path = File.join(@cache_dir, cache_filename_for(uri, index))
+        unless File.exist?(cached_path) && cached_source_valid?(cached_path, source)
+          FileUtils.cp(local_path, cached_path)
+          File.chmod(0o600, cached_path)
+        end
+        return cached_path
       end
 
       uri = URI.parse(source)
@@ -158,15 +219,7 @@ module Quarks
     end
 
     def cache_filename_for(uri, index)
-      base = File.basename(uri.path.to_s)
-      base = "source-#{index + 1}" if base.nil? || base.empty? || base == "/"
-
-      if uri.query && !uri.query.empty?
-        digest = Digest::SHA256.hexdigest(uri.to_s)[0, 12]
-        "#{base}.#{digest}"
-      else
-        base
-      end
+      Quarks::SourceSize.cache_filename(uri, index)
     end
 
     def cached_source_valid?(path, source)
@@ -179,19 +232,16 @@ module Quarks
 
     def verify_source!(path, source_key)
       checksum = lookup_checksum(source_key)
-      return true unless checksum
+      raise "Missing checksum for package source #{source_key}" unless checksum
+
+      declared_size = @package.source_sizes[source_key] || @package.source_sizes[source_key.to_s]
+      if declared_size && File.size(path) != declared_size.to_i
+        raise "Source size mismatch for #{File.basename(path)}: expected #{declared_size} bytes, got #{File.size(path)}"
+      end
 
       expected_hash = checksum[:hash].to_s.strip
       algorithm = checksum[:algorithm].to_s.strip
       algorithm = "sha256" if algorithm.empty?
-
-      if expected_hash == "skip"
-        if Quarks::Env.allow_insecure?
-          say_detail("Skipping checksum verification for #{File.basename(path)}")
-          return true
-        end
-        raise "Insecure package source: checksum is set to 'skip' for #{source_key}"
-      end
 
       raise "Checksum is empty for #{source_key}" if expected_hash.empty?
 
@@ -223,41 +273,67 @@ module Quarks
 
     def download_http(uri, dest)
       max_redirects = 5
-      current_uri = uri
+      allow_http = ENV["QUARKS_ALLOW_INSECURE_SOURCES"] == "1"
+      allow_private = ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+      current_uri = Security.validate_remote_uri!(uri, purpose: "package source", allow_http: allow_http, allow_private: allow_private)
 
       max_redirects.times do
-        response = nil
+        completed = false
+        redirect = nil
+        tmp = "#{dest}.part-#{Process.pid}-#{SecureRandom.hex(6)}"
 
-        Net::HTTP.start(
-          current_uri.host,
-          current_uri.port,
-          use_ssl: current_uri.scheme == "https",
-          open_timeout: 15,
-          read_timeout: 180,
-          ssl_timeout: 15
-        ) do |http|
+        http = Net::HTTP.new(current_uri.host, current_uri.port)
+        addresses = allow_private ? Resolv.getaddresses(current_uri.host) : Security.resolve_public_addresses!(current_uri.host, purpose: "package source")
+        raise "Package source host did not resolve: #{current_uri.host}" if addresses.empty?
+        http.ipaddr = addresses.first
+        http.use_ssl = current_uri.scheme == "https"
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
+        http.open_timeout = 15
+        http.read_timeout = 180
+        http.ssl_timeout = 15
+        http.max_retries = 0
+
+        http.start do
           request = Net::HTTP::Get.new(current_uri)
           request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
-          response = http.request(request)
+          http.request(request) do |response|
+            case response
+            when Net::HTTPSuccess
+              declared_size = response["Content-Length"].to_i
+              if declared_size.positive? && declared_size > MAX_SOURCE_BYTES
+                raise "Source exceeds maximum download size (#{declared_size} > #{MAX_SOURCE_BYTES})"
+              end
+
+              bytes = 0
+              File.open(tmp, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+                response.read_body do |chunk|
+                  bytes += chunk.bytesize
+                  raise "Source exceeds maximum download size (#{MAX_SOURCE_BYTES} bytes)" if bytes > MAX_SOURCE_BYTES
+                  file.write(chunk)
+                end
+                file.flush
+                file.fsync
+              end
+              File.rename(tmp, dest)
+              completed = true
+            when Net::HTTPRedirection
+              location = response["location"].to_s
+              raise "Redirect missing location for #{current_uri}" if location.empty?
+              redirect = URI.join(current_uri.to_s, location)
+            else
+              raise "Download failed: HTTP #{response.code} #{response.message}"
+            end
+          end
         end
 
-        case response
-        when Net::HTTPSuccess
-          tmp = "#{dest}.part-#{Process.pid}"
-          begin
-            File.open(tmp, "wb") { |f| f.write(response.body) }
-            FileUtils.mv(tmp, dest)
-          ensure
-            FileUtils.rm_f(tmp) if File.exist?(tmp)
-          end
-          return dest
-        when Net::HTTPRedirection
-          location = response["location"].to_s
-          raise "Redirect missing location for #{current_uri}" if location.empty?
-          current_uri = URI.join(current_uri.to_s, location)
-        else
-          raise "Download failed: HTTP #{response.code} #{response.message}"
+        return dest if completed
+        raise "Unexpected response while fetching #{current_uri}" unless redirect
+        if current_uri.scheme == "https" && redirect.scheme != "https" && !allow_http
+          raise "Refusing HTTPS downgrade redirect to #{redirect}"
         end
+        current_uri = Security.validate_remote_uri!(redirect, purpose: "package source redirect", allow_http: allow_http, allow_private: allow_private)
+      ensure
+        FileUtils.rm_f(tmp) if defined?(tmp) && tmp && File.exist?(tmp)
       end
 
       raise "Too many redirects while fetching #{uri}"
@@ -283,21 +359,162 @@ module Quarks
 
     def extract_archive(path, dest)
       FileUtils.mkdir_p(dest)
+      validate_archive_entries!(path)
 
       if path =~ /\.zip$/i
         ensure_command!("unzip")
         run_shell!(
           "unzip -q #{shell_escape(path)} -d #{shell_escape(dest)}",
           cwd: dest,
-          env: {}
+          env: {},
+          writable_paths: [@build_dir]
         )
       else
         ensure_command!("tar")
         run_shell!(
           "tar -xf #{shell_escape(path)} -C #{shell_escape(dest)}",
           cwd: dest,
-          env: {}
+          env: {},
+          writable_paths: [@build_dir]
         )
+      end
+      validate_extracted_tree!(dest)
+    end
+
+    def validate_archive_entries!(path)
+      tool = path.match?(/\.zip$/i) ? "unzip" : "tar"
+      ensure_command!(tool)
+      tool_args = tool == "unzip" ? ["unzip", "-Z1", path] : ["tar", "-tf", path]
+      argv, process_env, spawn_options = archive_command(tool_args)
+
+      count = 0
+      listed_bytes = 0
+      diagnostic = +""
+      status = nil
+      Open3.popen2e(process_env, *argv, **spawn_options) do |stdin, io, wait_thr|
+        stdin.close
+        io.each_line("\n", 16 * 1024) do |raw_entry|
+          listed_bytes += raw_entry.bytesize
+          diagnostic << raw_entry if diagnostic.bytesize < 4096
+          raise "Archive listing exceeds #{MAX_ARCHIVE_LIST_BYTES} bytes" if listed_bytes > MAX_ARCHIVE_LIST_BYTES
+          if raw_entry.bytesize == 16 * 1024 && !raw_entry.end_with?("\n")
+            raise "Archive entry name exceeds 16 KiB"
+          end
+          entry = raw_entry.strip
+          next if entry.empty?
+          count += 1
+          raise "Archive has too many entries (#{count} > #{MAX_EXTRACTED_FILES})" if count > MAX_EXTRACTED_FILES
+          normalized = entry.tr("\\", "/")
+          clean = Pathname.new(normalized).cleanpath.to_s
+          if normalized.start_with?("/") || clean == ".." || clean.start_with?("../") || normalized.include?("\0")
+            raise "Unsafe archive entry: #{entry.inspect}"
+          end
+        end
+        status = wait_thr.value
+      end
+      unless status&.success?
+        detail = diagnostic.byteslice(0, 4096).to_s.strip
+        raise "Could not inspect archive #{File.basename(path)}#{": #{detail}" unless detail.empty?}"
+      end
+      validate_archive_metadata!(path, tool, expected_count: count)
+      true
+    end
+
+    def validate_archive_metadata!(path, tool, expected_count:)
+      tool_args = if tool == "unzip"
+                    ["unzip", "-Z", "-l", path]
+                  else
+                    ["tar", "--list", "--verbose", "--numeric-owner", "--file", path]
+                  end
+      argv, process_env, spawn_options = archive_command(tool_args)
+      count = 0
+      total_bytes = 0
+      listed_bytes = 0
+      diagnostic = +""
+      status = nil
+
+      Open3.popen2e(process_env, *argv, **spawn_options) do |stdin, io, wait_thr|
+        stdin.close
+        io.each_line("\n", 16 * 1024) do |line|
+          listed_bytes += line.bytesize
+          diagnostic << line if diagnostic.bytesize < 4096
+          raise "Archive metadata exceeds #{MAX_ARCHIVE_LIST_BYTES} bytes" if listed_bytes > MAX_ARCHIVE_LIST_BYTES
+          if line.bytesize == 16 * 1024 && !line.end_with?("\n")
+            raise "Archive metadata line exceeds 16 KiB"
+          end
+
+          fields = line.strip.split(/\s+/)
+          if tool == "unzip"
+            next unless fields.length >= 4 && fields[1]&.match?(/\A\d+(?:\.\d+)?\z/) && fields[3]&.match?(/\A\d+\z/)
+            kind = fields[0].to_s[0]
+            raise "Archive contains unsupported special-file entry" if %w[b c p s].include?(kind)
+            size_field = fields[3]
+          else
+            next unless fields[0]&.match?(/\A[-dlhbcps][rwxStTs-]{9}[+@.]?\z/)
+            kind = fields[0][0]
+            raise "Archive contains unsupported special-file entry" unless %w[- d l h].include?(kind)
+            size_field = fields[2]
+          end
+          size = Integer(size_field, exception: false)
+          raise "Could not parse archive entry size" unless size && size >= 0
+
+          count += 1
+          total_bytes += size
+          raise "Archive expands beyond #{MAX_EXTRACTED_BYTES} bytes" if total_bytes > MAX_EXTRACTED_BYTES
+        end
+        status = wait_thr.value
+      end
+
+      unless status&.success?
+        detail = diagnostic.byteslice(0, 4096).to_s.strip
+        raise "Could not inspect archive metadata #{File.basename(path)}#{": #{detail}" unless detail.empty?}"
+      end
+      raise "Archive metadata entry count mismatch" unless count == expected_count
+      true
+    end
+
+    def archive_command(tool_args)
+      tool = tool_args.first
+      if SandboxManager.enabled?
+        argv = SandboxManager.command_for(
+          Shellwords.join(tool_args),
+          cwd: @build_dir,
+          writable_paths: [],
+          readable_paths: [@build_dir, *sandbox_readable_paths],
+          environment: safe_build_environment,
+          network: ENV["QUARKS_BUILD_NETWORK"] == "1"
+        )
+        [argv, safe_host_environment, { unsetenv_others: true }]
+      else
+        trusted_tool = %W[/usr/bin/#{tool} /bin/#{tool}].find { |candidate| File.executable?(candidate) }
+        raise "Trusted system tool not found: #{tool}" unless trusted_tool
+        [[trusted_tool, *tool_args.drop(1)], safe_host_environment, { unsetenv_others: true }]
+      end
+    end
+
+    def validate_extracted_tree!(dest)
+      root = File.realpath(dest)
+      count = 0
+      bytes = 0
+      Find.find(dest) do |entry|
+        next if entry == dest
+        count += 1
+        raise "Extracted tree exceeds #{MAX_EXTRACTED_FILES} entries" if count > MAX_EXTRACTED_FILES
+        stat = File.lstat(entry)
+        unless stat.directory? || stat.file? || stat.symlink?
+          raise "Extracted tree contains an unsupported special file: #{entry}"
+        end
+        if stat.symlink?
+          target = File.readlink(entry)
+          raise "Extracted tree contains an absolute symlink: #{entry}" if target.start_with?("/")
+          resolved = File.expand_path(target, File.dirname(entry))
+          unless resolved == root || resolved.start_with?(root + File::SEPARATOR)
+            raise "Extracted symlink escapes the source tree: #{entry} -> #{target}"
+          end
+        end
+        next unless stat.file?
+        bytes += stat.size
+        raise "Extracted tree exceeds #{MAX_EXTRACTED_BYTES} bytes" if bytes > MAX_EXTRACTED_BYTES
       end
     end
 
@@ -370,9 +587,6 @@ module Quarks
 
     def resolve_patch_path(ref)
       candidates = [
-        ref,
-        File.expand_path(ref),
-        File.join(Dir.pwd, ref),
         File.join(@source_dir || @build_dir, ref)
       ].uniq
 
@@ -422,6 +636,7 @@ module Quarks
           build_cmds     = default_make_build
           install_cmds   = default_make_install
         else
+          configure_cmds = configure_cmds.map { |command| autotools_configure_with_prefix(command) }
           install_cmds = custom_install_cmds
         end
       when :make
@@ -511,18 +726,21 @@ module Quarks
     def interpolate_commands(commands, srcdir, builddir)
       commands.map do |cmd|
         s = cmd.to_s.dup
-        s.gsub!("%{srcdir}", srcdir)
-        s.gsub!("%{builddir}", builddir)
-        s.gsub!("%{destdir}", @dest_dir)
-        s.gsub!("%{prefix}", @package.install_prefix.to_s)
+        s.gsub!("%{srcdir}", shell_escape(srcdir))
+        s.gsub!("%{builddir}", shell_escape(builddir))
+        s.gsub!("%{destdir}", shell_escape(@dest_dir))
+        s.gsub!("%{prefix}", shell_escape(@package.install_prefix.to_s))
         s.gsub!("%{jobs}", @jobs.to_s)
+        s.gsub!("%{cmake_args}", Shellwords.join(Array(@package.cmake_args).map(&:to_s)))
+        s.gsub!("%{meson_args}", Shellwords.join(Array(@package.meson_args).map(&:to_s)))
+        s.gsub!("%{make_args}", Shellwords.join(Array(@package.make_args).map(&:to_s)))
         s
       end.reject(&:empty?)
     end
 
     def default_meson_configure(source_dir, build_dir)
       FileUtils.mkdir_p(build_dir)
-      args = Array(@package.meson_args).map(&:to_s).join(" ")
+      args = Shellwords.join(Array(@package.meson_args).map(&:to_s))
       [[
         "meson setup",
         shell_escape(build_dir),
@@ -542,7 +760,7 @@ module Quarks
 
     def default_cmake_configure(source_dir, build_dir)
       FileUtils.mkdir_p(build_dir)
-      args = Array(@package.cmake_args).map(&:to_s).join(" ")
+      args = Shellwords.join(Array(@package.cmake_args).map(&:to_s))
       [[
         "cmake",
         "-S #{shell_escape(source_dir)}",
@@ -561,18 +779,25 @@ module Quarks
     end
 
     def default_autotools_configure(_source_dir)
-      flags = Array(@package.configure_flags).map(&:to_s).join(" ")
+      flags = Shellwords.join(Array(@package.configure_flags).map(&:to_s))
       [["./configure", "--prefix=#{shell_escape(@package.install_prefix)}", flags].reject(&:empty?).join(" ")]
     end
 
+    def autotools_configure_with_prefix(command)
+      value = command.to_s.strip
+      return value if value.match?(/(?:\A|\s)--prefix(?:=|\s)/)
+
+      "#{value} --prefix=#{shell_escape(@package.install_prefix)}"
+    end
+
     def default_make_build
-      args = Array(@package.make_args).map(&:to_s).join(" ")
+      args = Shellwords.join(Array(@package.make_args).map(&:to_s))
       ["make -j#{@jobs} #{args}".strip]
     end
 
     def default_make_install
       prefix = @package.install_prefix.to_s
-      args = Array(@package.make_args).map(&:to_s).join(" ")
+      args = Shellwords.join(Array(@package.make_args).map(&:to_s))
       ["make DESTDIR=#{shell_escape(@dest_dir)} PREFIX=#{shell_escape(prefix)} #{args} install".strip]
     end
 
@@ -601,7 +826,36 @@ module Quarks
       env["QUARKS_DESTDIR"] = @dest_dir
       env["QUARKS_PKG_NAME"] = @package.name.to_s
       env["QUARKS_PKG_VERSION"] = @package.version.to_s
+      env["QUARKS_USE"] = @use_flags.join(" ")
+      env["USE"] = @use_flags.join(" ")
+      env["QUARKS_ENABLED_USE"] = @use_flags.reject { |flag| flag.start_with?("-") }.join(" ")
+      env.merge!(dependency_environment)
       env
+    end
+
+    def dependency_environment
+      root = File.expand_path(Quarks::Env.root)
+      return {} if root == File::SEPARATOR || !Dir.exist?(root)
+
+      bins = %w[usr/bin usr/sbin usr/local/bin usr/local/sbin bin sbin]
+             .map { |path| File.join(root, path) }.select { |path| Dir.exist?(path) }
+      includes = %w[usr/include usr/local/include include]
+                 .map { |path| File.join(root, path) }.select { |path| Dir.exist?(path) }
+      libraries = %w[usr/lib usr/lib64 usr/local/lib usr/local/lib64 lib lib64]
+                  .map { |path| File.join(root, path) }.select { |path| Dir.exist?(path) }
+      pkgconfig = libraries.map { |path| File.join(path, "pkgconfig") }.select { |path| Dir.exist?(path) }
+      share_pkgconfig = File.join(root, "usr", "share", "pkgconfig")
+      pkgconfig << share_pkgconfig if Dir.exist?(share_pkgconfig)
+      cmake = [root, File.join(root, "usr"), File.join(root, "usr", "local")].select { |path| Dir.exist?(path) }
+
+      environment = {}
+      environment["PATH"] = (bins + [safe_build_environment.fetch("PATH")]).join(File::PATH_SEPARATOR) if bins.any?
+      environment["CPATH"] = includes.join(File::PATH_SEPARATOR) if includes.any?
+      environment["LIBRARY_PATH"] = libraries.join(File::PATH_SEPARATOR) if libraries.any?
+      environment["LD_LIBRARY_PATH"] = libraries.join(File::PATH_SEPARATOR) if libraries.any?
+      environment["PKG_CONFIG_PATH"] = pkgconfig.join(File::PATH_SEPARATOR) if pkgconfig.any?
+      environment["CMAKE_PREFIX_PATH"] = cmake.join(File::PATH_SEPARATOR) if cmake.any?
+      environment
     end
 
     def run_commands(commands, cwd:, env:, phase:)
@@ -619,17 +873,36 @@ module Quarks
       end
     end
 
-    def run_shell!(cmd, cwd:, env:, quiet: false)
+    def run_shell!(cmd, cwd:, env:, quiet: false, writable_paths: nil)
       log_line("")
       log_line("$ #{cmd}")
       log_line("cwd=#{cwd}")
       log_line("env=#{env.inspect}") if @debug
 
       status = nil
-      Open3.popen2e(env, "bash", "-lc", cmd, chdir: cwd) do |_stdin, io, wait_thr|
-        io.each_line do |line|
-          log_line(line.chomp)
-          stream_line(line, quiet: quiet)
+      command_env = safe_build_environment.merge(stringify_hash(env))
+      if SandboxManager.enabled?
+        argv = SandboxManager.command_for(
+          cmd,
+          cwd: cwd,
+          writable_paths: writable_paths || [@build_dir, @dest_dir],
+          readable_paths: sandbox_readable_paths,
+          environment: command_env,
+          network: ENV["QUARKS_BUILD_NETWORK"] == "1"
+        )
+        process_env = safe_host_environment
+        spawn_options = { unsetenv_others: true }
+      else
+        argv = ["/bin/bash", "-lc", cmd.to_s]
+        process_env = command_env
+        spawn_options = { chdir: cwd, unsetenv_others: true }
+      end
+
+      Open3.popen2e(process_env, *argv, **spawn_options) do |_stdin, io, wait_thr|
+        io.each_line("\n", MAX_OUTPUT_LINE_BYTES) do |line|
+          display_line = line.encode(Encoding::UTF_8, invalid: :replace, undef: :replace, replace: "�")
+          log_line(display_line.chomp)
+          stream_line(display_line, quiet: quiet)
         end
         status = wait_thr.value
       end
@@ -638,8 +911,28 @@ module Quarks
       raise "Command failed (exit #{status&.exitstatus || 'unknown'}): #{cmd}"
     end
 
+    def safe_build_environment
+      {
+        "PATH" => "/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
+        "LANG" => "C.UTF-8",
+        "LC_ALL" => "C.UTF-8",
+        "TZ" => "UTC"
+      }
+    end
+
+    def safe_host_environment
+      { "PATH" => "/usr/bin:/bin", "LANG" => "C", "LC_ALL" => "C" }
+    end
+
+    def sandbox_readable_paths
+      paths = [@cache_dir]
+      install_root = File.expand_path(Quarks::Env.root)
+      paths << install_root unless install_root == File::SEPARATOR
+      paths
+    end
+
     def stream_line(line, quiet: false)
-      return if quiet
+      return if quiet || @quiet
       if defined?(Quarks::UI) && Quarks::UI.respond_to?(:pretty_build_line)
         Quarks::UI.pretty_build_line(line, debug: @debug)
       else
@@ -662,7 +955,9 @@ module Quarks
     end
 
     def command_exists?(name)
-      system("command -v #{Shellwords.escape(name)} >/dev/null 2>&1")
+      ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? do |directory|
+        File.executable?(File.join(directory, name.to_s))
+      end
     end
 
     def stringify_hash(hash)
@@ -708,18 +1003,25 @@ module Quarks
     end
 
     def log_header(title)
-      File.open(@log_file, "a") do |f|
-        f.puts("")
-        f.puts("=" * 80)
-        f.puts("[#{Time.now.iso8601}] #{title}")
-        f.puts("=" * 80)
-      end
-    rescue
-      nil
+      log_line("")
+      log_line("=" * 80)
+      log_line("[#{Time.now.iso8601}] #{title}")
+      log_line("=" * 80)
     end
 
     def log_line(line)
-      File.open(@log_file, "a") { |f| f.puts(line) }
+      return if @log_truncated
+
+      data = "#{line}\n"
+      remaining = MAX_LOG_BYTES - @log_bytes
+      if data.bytesize > remaining
+        marker = "\n[quarks] Build log truncated at #{MAX_LOG_BYTES} bytes\n"
+        fragment_size = [remaining - marker.bytesize, 0].max
+        data = data.byteslice(0, fragment_size).to_s + marker.byteslice(0, remaining).to_s
+        @log_truncated = true
+      end
+      File.open(@log_file, "ab") { |file| file.write(data) }
+      @log_bytes += data.bytesize
     rescue
       nil
     end

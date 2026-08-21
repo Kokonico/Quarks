@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift(File.expand_path("src", __dir__))
+project_lib = File.expand_path("../src", __dir__)
+$LOAD_PATH.unshift(project_lib) if Dir.exist?(project_lib) && !$LOAD_PATH.include?(project_lib)
 
 ARGV.each_with_index do |argument, index|
   if argument == "--config"

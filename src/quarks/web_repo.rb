@@ -7,28 +7,24 @@ require "uri"
 require "openssl"
 require "digest"
 require "time"
+require "open3"
+require "shellwords"
+require "tempfile"
+require "quarks/env"
+require "quarks/security"
 
 module Quarks
   class WebRepoManager
-    MAX_RETRIES = 5
+    MAX_RETRIES = 3
     RETRY_DELAY_BASE = 2
     OFFLINE_GRACE_PERIOD = 86400
     CONNECT_TIMEOUT = 10
     READ_TIMEOUT = 60
     WRITE_TIMEOUT = 60
-
-    FALLBACK_MIRRORS = {
-      "ftp.gnu.org" => [
-        "https://mirrors.kernel.org/gnu/",
-        "https://ftpmirror1.internal.org/gnu/"
-      ],
-      "github.com" => [
-        "https://mirror.ghproxy.com/https://github.com/"
-      ],
-      "raw.githubusercontent.com" => [
-        "https://mirror.ghproxy.com/https://raw.githubusercontent.com/"
-      ]
-    }.freeze
+    MAX_MANIFEST_BYTES = 16 * 1024 * 1024
+    MAX_SIGNATURE_BYTES = 1024 * 1024
+    MAX_CONFIG_BYTES = 1024 * 1024
+    MAX_MANIFEST_PACKAGES = 100_000
 
     class RepoError < StandardError; end
     class SignatureError < RepoError; end
@@ -42,11 +38,14 @@ module Quarks
       attr_accessor :manifest_url, :signature_url, :timestamp_url
       attr_accessor :last_sync, :manifest_etag, :manifest_mtime
       attr_accessor :manifest_data, :manifest_hash
+      attr_accessor :manifest_sequence
       attr_accessor :mirrors, :verify_checksums, :allow_insecure
 
       def initialize(name:, repo_url:, **opts)
         @name = name
-        @repo_url = repo_url
+        supplied_url = repo_url.to_s.sub(%r{/+\z}, "")
+        explicit_manifest = supplied_url.match?(/\.json\z/i)
+        @repo_url = explicit_manifest ? supplied_url.sub(%r{/[^/]+\z}, "") : supplied_url
         @priority = opts[:priority] || 100
         @enabled = opts.fetch(:enabled, true)
         @gpg_key_id = opts[:gpg_key_id]
@@ -55,14 +54,15 @@ module Quarks
         @mirrors = opts[:mirrors] || []
         @verify_checksums = opts.fetch(:verify_checksums, true)
         @allow_insecure = opts.fetch(:allow_insecure, false)
-        @manifest_url = opts[:manifest_url] || "#{repo_url.rstrip}/index.json"
-        @signature_url = opts[:signature_url] || "#{repo_url.rstrip}/index.json.sig"
-        @timestamp_url = opts[:timestamp_url] || "#{repo_url.rstrip}/timestamp.txt"
+        @manifest_url = opts[:manifest_url] || (explicit_manifest ? supplied_url : "#{@repo_url}/index.json")
+        @signature_url = opts[:signature_url] || "#{@manifest_url}.sig"
+        @timestamp_url = opts[:timestamp_url] || "#{@repo_url}/timestamp.txt"
         @last_sync = nil
         @manifest_etag = nil
         @manifest_mtime = nil
         @manifest_data = nil
         @manifest_hash = nil
+        @manifest_sequence = opts[:manifest_sequence]
       end
 
       def expired?
@@ -91,29 +91,49 @@ module Quarks
           timestamp_url: @timestamp_url,
           last_sync: @last_sync&.iso8601,
           manifest_etag: @manifest_etag,
-          manifest_mtime: @manifest_mtime
+          manifest_mtime: @manifest_mtime,
+          manifest_sequence: @manifest_sequence
         }
       end
 
       def self.from_h(h)
+        raise RepoError, "Repository entry must be a JSON object" unless h.is_a?(Hash)
+
+        h = h.each_with_object({}) { |(key, value), out| out[key.to_s] = value }
+        name = h["name"].to_s
+        raise RepoError, "Invalid repository name" unless name.match?(/\A[A-Za-z0-9][A-Za-z0-9._-]*\z/)
+        priority = Integer(h.fetch("priority", 100), exception: false)
+        raise RepoError, "Repository priority must be between 0 and 10,000" unless priority&.between?(0, 10_000)
+        enabled = h.fetch("enabled", true)
+        allow_insecure = h.fetch("allow_insecure", false)
+        verify_checksums = h.fetch("verify_checksums", true)
+        unless [enabled, allow_insecure, verify_checksums].all? { |value| value == true || value == false }
+          raise RepoError, "Repository booleans must be true or false"
+        end
+        mirrors = h.fetch("mirrors", [])
+        raise RepoError, "Repository mirrors must be an array" unless mirrors.is_a?(Array)
+        raise RepoError, "Repository has too many mirrors" if mirrors.length > 32
+        raise RepoError, "Repository mirror URLs must be strings" unless mirrors.all? { |value| value.is_a?(String) }
+
         m = new(
-          name: h["name"],
+          name: name,
           repo_url: h["repo_url"],
-          priority: h["priority"],
-          enabled: h.fetch("enabled", true)
+          priority: priority,
+          enabled: enabled
         )
         m.gpg_key_id = h["gpg_key_id"]
         m.gpg_key_server = h["gpg_key_server"]
         m.gpg_key_url = h["gpg_key_url"]
-        m.mirrors = h["mirrors"] || []
-        m.verify_checksums = h.fetch("verify_checksums", true)
-        m.allow_insecure = h.fetch("allow_insecure", false)
-        m.manifest_url = h["manifest_url"]
-        m.signature_url = h["signature_url"]
-        m.timestamp_url = h["timestamp_url"]
+        m.mirrors = mirrors
+        m.verify_checksums = verify_checksums
+        m.allow_insecure = allow_insecure
+        m.manifest_url = h["manifest_url"] unless h["manifest_url"].to_s.empty?
+        m.signature_url = h["signature_url"] unless h["signature_url"].to_s.empty?
+        m.timestamp_url = h["timestamp_url"] unless h["timestamp_url"].to_s.empty?
         m.last_sync = h["last_sync"] ? Time.parse(h["last_sync"]) : nil
         m.manifest_etag = h["manifest_etag"]
         m.manifest_mtime = h["manifest_mtime"]
+        m.manifest_sequence = h["manifest_sequence"]
         m
       end
     end
@@ -121,20 +141,17 @@ module Quarks
     class << self
       def repo_config_dir
         dir = File.join(Quarks::Env.state_root, "var", "cache", "quarks", "repos")
-        FileUtils.mkdir_p(dir)
-        dir
+        Security.secure_directory(dir)
       end
 
       def keyring_dir
         dir = File.join(Quarks::Env.state_root, "var", "cache", "quarks", "keys")
-        FileUtils.mkdir_p(dir)
-        dir
+        Security.secure_directory(dir)
       end
 
       def distfiles_dir
         dir = File.join(Quarks::Env.state_root, "var", "cache", "quarks", "distfiles")
-        FileUtils.mkdir_p(dir)
-        dir
+        Security.secure_directory(dir)
       end
 
       def load_repos
@@ -142,25 +159,57 @@ module Quarks
         return {} unless File.exist?(config_file)
 
         begin
+          stat = File.lstat(config_file)
+          raise RepoError, "Repository config must be a regular file" unless stat.file? && !stat.symlink?
+          raise RepoError, "Repository config is group/world writable" if (stat.mode & 0o022).positive?
+          raise RepoError, "Repository config exceeds #{MAX_CONFIG_BYTES} bytes" if stat.size > MAX_CONFIG_BYTES
           data = JSON.parse(File.read(config_file))
+          raise RepoError, "Repository config must contain a JSON object" unless data.is_a?(Hash)
           repos = {}
           data.each do |name, h|
+            raise RepoError, "Repository '#{name}' entry must be a JSON object" unless h.is_a?(Hash)
             repos[name] = RepositoryMetadata.from_h(h.merge("name" => name))
           end
           repos
         rescue JSON::ParserError => e
-          warn "[quarks] Invalid repository config: #{e.message}"
-          {}
+          raise RepoError, "Invalid repository config: #{e.message}"
+        rescue ArgumentError, TypeError => e
+          raise RepoError, "Invalid repository config: #{e.message}"
         end
       end
 
       def save_repos(repos)
         config_file = File.join(repo_config_dir, "repositories.json")
         data = repos.transform_values(&:to_h)
-        File.write(config_file, JSON.pretty_generate(data))
+        Security.atomic_write(config_file, JSON.pretty_generate(data))
       end
 
-      def add_repo(name:, url:, priority: 100, gpg_key_id: nil, gpg_key_server: nil, gpg_key_url: nil, mirrors: [])
+      def add_repo(name:, url:, priority: 100, gpg_key_id: nil, gpg_key_server: nil, gpg_key_url: nil, mirrors: [], allow_insecure: false)
+        raise RepoError, "Invalid repository name" unless name.to_s.match?(/\A[A-Za-z0-9][A-Za-z0-9._-]*\z/)
+        priority = Integer(priority, exception: false)
+        raise RepoError, "Repository priority must be between 0 and 10,000" unless priority&.between?(0, 10_000)
+        if allow_insecure && ENV["QUARKS_ALLOW_UNSIGNED_REPOS"] != "1"
+          raise SignatureError, "Unsigned repositories require QUARKS_ALLOW_UNSIGNED_REPOS=1"
+        end
+        Security.validate_remote_uri!(
+          url,
+          purpose: "repository manifest",
+          allow_http: allow_insecure && ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1",
+          allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+        )
+        unless allow_insecure
+          fingerprint = normalize_key_id(gpg_key_id)
+          raise SignatureError, "A complete 40- or 64-hex signing-key fingerprint is required" unless [40, 64].include?(fingerprint.length)
+          raise SignatureError, "Keyserver acquisition is disabled; use an HTTPS signing-key URL" unless gpg_key_server.to_s.empty?
+          raise SignatureError, "An HTTPS signing-key URL is required" if gpg_key_url.to_s.empty?
+          Security.validate_remote_uri!(
+            gpg_key_url,
+            purpose: "repository signing key",
+            allow_http: false,
+            allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+          )
+        end
+
         repos = load_repos
         repo = RepositoryMetadata.new(
           name: name,
@@ -169,7 +218,8 @@ module Quarks
           gpg_key_id: gpg_key_id,
           gpg_key_server: gpg_key_server,
           gpg_key_url: gpg_key_url,
-          mirrors: mirrors
+          mirrors: mirrors,
+          allow_insecure: allow_insecure
         )
         repos[name] = repo
         save_repos(repos)
@@ -180,27 +230,46 @@ module Quarks
         repos = load_repos
         removed = repos.delete(name)
         save_repos(repos)
+        if removed
+          cache_path = manifest_cache_path(name)
+          FileUtils.rm_f(cache_path)
+          FileUtils.rm_f("#{cache_path}.sig")
+          FileUtils.rm_f("#{cache_path}.meta")
+          safe_name = name.to_s.gsub(/[^a-zA-Z0-9._-]/, "_")
+          FileUtils.rm_f(File.join(keyring_dir, "#{safe_name}-keyring.gpg"))
+        end
         removed
       end
 
       def sync_repo(name, force: false, verify: true, offline_ok: false)
+        raise SignatureError, "Repository signature verification cannot be disabled" unless verify
         repos = load_repos
         repo = repos[name]
         raise RepoError, "Repository not found: #{name}" unless repo
+        if repo.allow_insecure && ENV["QUARKS_ALLOW_UNSIGNED_REPOS"] != "1"
+          raise SignatureError, "Unsigned repository '#{name}' is disabled; set QUARKS_ALLOW_UNSIGNED_REPOS=1 explicitly"
+        end
 
-        cached_manifest = load_cached_manifest(name)
+        cached_manifest = begin
+          load_cached_manifest(name, repo: repo, verify: verify)
+        rescue RepoError => e
+          debug_log "Ignoring unusable cache for #{name}: #{e.message}"
+          nil
+        end
+        fetched = false
 
         if !force && cached_manifest && !repo.expired?
           manifest_data = cached_manifest
         else
           manifest_data = fetch_manifest(repo, use_cache: !force, verify: verify)
+          fetched = true
         end
 
         if manifest_data.nil? && !offline_ok
           raise NetworkError, "Failed to sync repository '#{name}' and offline mode is disabled"
         end
 
-        if manifest_data
+        if manifest_data && fetched
           cache_manifest(name, manifest_data, repo)
           repo.last_sync = Time.now
           save_repos(repos)
@@ -210,6 +279,7 @@ module Quarks
       end
 
       def sync_all(force: false, verify: true, offline_ok: true)
+        raise SignatureError, "Repository signature verification cannot be disabled" unless verify
         repos = load_repos
         results = {}
         errors = []
@@ -233,6 +303,7 @@ module Quarks
       end
 
       def fetch_manifest(repo, use_cache: true, verify: true)
+        raise SignatureError, "Repository signature verification cannot be disabled" unless verify
         retries = MAX_RETRIES
         last_error = nil
 
@@ -250,7 +321,7 @@ module Quarks
         end
 
         if use_cache
-          cached = load_cached_manifest(repo.name)
+          cached = load_cached_manifest(repo.name, repo: repo, verify: true)
           if cached
             warn "[quarks] Using stale cache for '#{repo.name}' due to network errors"
             return cached
@@ -261,12 +332,10 @@ module Quarks
       end
 
       def _do_fetch_manifest(repo, use_cache: true, verify: true)
+        raise SignatureError, "Repository signature verification cannot be disabled" unless verify
         manifest_url = repo.manifest_url
 
-        if use_cache && !force_refresh?(repo)
-          cached = load_cached_manifest(repo.name)
-          return cached if cached
-        end
+        use_cache = false unless File.exist?(manifest_cache_path(repo.name))
 
         uri = URI.parse(manifest_url)
         raise "Invalid manifest URL: #{manifest_url}" unless uri.is_a?(URI::HTTP)
@@ -275,21 +344,33 @@ module Quarks
         headers["If-None-Match"] = repo.manifest_etag if repo.manifest_etag && use_cache
         headers["If-Modified-Since"] = repo.manifest_mtime if repo.manifest_mtime && use_cache
 
-        response = http_request_with_fallback(uri, repo, headers: headers)
+        response = http_request_with_fallback(uri, repo, headers: headers, max_bytes: MAX_MANIFEST_BYTES)
 
         case response
         when Net::HTTPNotModified
-          return load_cached_manifest(repo.name)
+          cached = load_cached_manifest(repo.name, repo: repo, verify: verify)
+          raise NetworkError, "Repository returned 304 but no valid cache exists" unless cached
+
+          cache_path = manifest_cache_path(repo.name)
+          repo.manifest_data = File.binread(cache_path)
+          sig_path = "#{cache_path}.sig"
+          repo.manifest_hash = File.binread(sig_path) if File.exist?(sig_path)
+          return cached
         when Net::HTTPSuccess
           body = response.body
+          raise NetworkError, "Manifest exceeds 16 MiB" if body.bytesize > MAX_MANIFEST_BYTES
           manifest_data = JSON.parse(body)
           repo.manifest_etag = response["ETag"]
           repo.manifest_mtime = response["Last-Modified"]
 
-          if verify && (repo.gpg_key_id || ENV["QUARKS_VERIFY_REPOS"] == "1")
+          if verify && !repo.allow_insecure
+            raise SignatureError, "Repository '#{repo.name}' has no pinned GPG fingerprint" if repo.gpg_key_id.to_s.empty?
             signature = fetch_signature(repo)
             verify_manifest!(body, signature, repo)
+            repo.manifest_hash = signature
           end
+          validate_manifest_metadata!(manifest_data, repo) unless repo.allow_insecure
+          repo.manifest_data = body
 
           manifest_data
         else
@@ -307,25 +388,24 @@ module Quarks
         sig_url = repo.signature_url
         uri = URI.parse(sig_url)
 
-        response = http_request_with_fallback(uri, repo)
+        response = http_request_with_fallback(uri, repo, max_bytes: MAX_SIGNATURE_BYTES)
         case response
         when Net::HTTPSuccess
-          response.body
+          body = response.body.to_s
+          raise NetworkError, "Repository signature exceeds 1 MiB" if body.bytesize > MAX_SIGNATURE_BYTES
+          body
         when Net::HTTPNotFound
-          nil
+          raise SignatureError, "Repository '#{repo.name}' has no detached signature"
         else
           raise NetworkError, "Failed to fetch signature: HTTP #{response.code}"
         end
-      rescue => e
-        warn "[quarks] Could not fetch signature for '#{repo.name}': #{e.message}"
-        nil
       end
 
       def verify_manifest!(manifest_body, signature, repo)
-        return unless signature
+        raise SignatureError, "Missing repository signature for '#{repo.name}'" if signature.to_s.empty?
 
         keyring_path = load_or_fetch_gpg_key(repo)
-        return unless keyring_path
+        raise SignatureError, "No trusted keyring is available for '#{repo.name}'" unless keyring_path
 
         if verify_gpg_signature(signature, manifest_body, keyring_path, repo.gpg_key_id)
           return
@@ -335,99 +415,105 @@ module Quarks
       end
 
       def load_or_fetch_gpg_key(repo)
-        return nil unless repo.gpg_key_id || repo.gpg_key_server || repo.gpg_key_url
+        expected = normalize_key_id(repo.gpg_key_id)
+        raise SignatureError, "A complete GPG fingerprint is required for '#{repo.name}'" unless [40, 64].include?(expected.length)
 
-        keyring_path = File.join(keyring_dir, "#{repo.name}-keyring.gpg")
+        safe_name = repo.name.to_s.gsub(/[^a-zA-Z0-9._-]/, "_")
+        keyring_path = File.join(keyring_dir, "#{safe_name}-keyring.gpg")
 
-        return keyring_path if File.exist?(keyring_path) && !stale_key?(keyring_path)
+        return keyring_path if File.exist?(keyring_path) && keyring_contains?(keyring_path, expected)
 
         if repo.gpg_key_url
-          fetch_gpg_key_from_url(repo.gpg_key_url, keyring_path)
+          fetch_gpg_key_from_url(repo.gpg_key_url, keyring_path, expected)
         elsif repo.gpg_key_server
-          fetch_gpg_key_from_server(repo.gpg_key_server, repo.gpg_key_id, keyring_path)
+          raise SignatureError, "Keyserver acquisition is disabled; configure an HTTPS signing-key URL"
+        else
+          raise SignatureError, "Trusted key for '#{repo.name}' is not installed; configure --gpg-key-url or a keyserver"
         end
 
-        keyring_path if File.exist?(keyring_path)
+        raise SignatureError, "Fetched key does not match pinned fingerprint #{expected}" unless keyring_contains?(keyring_path, expected)
+        keyring_path
       end
 
-      def stale_key?(keyring_path)
-        return true unless File.exist?(keyring_path)
-        mtime = File.mtime(keyring_path)
-        (Time.now - mtime) > 604800
-      end
+      def fetch_gpg_key_from_url(url, dest, expected)
+        uri = Security.validate_remote_uri!(
+          url,
+          purpose: "repository signing key",
+          allow_http: false,
+          allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+        )
+        response = http_request(uri, max_bytes: MAX_SIGNATURE_BYTES)
+        raise NetworkError, "Could not download repository signing key" unless response.is_a?(Net::HTTPSuccess)
+        raise SignatureError, "Repository signing key exceeds 1 MiB" if response.body.to_s.bytesize > 1024 * 1024
 
-      def fetch_gpg_key_from_url(url, dest)
-        uri = URI.parse(url)
-        response = http_request(uri)
-        return unless response.is_a?(Net::HTTPSuccess)
-
-        File.write(dest, response.body)
-        true
-      rescue => e
-        warn "[quarks] Failed to fetch GPG key from #{url}: #{e.message}"
-        false
+        import_gpg_key(response.body, dest, expected)
       end
 
       def fetch_gpg_key_from_server(server, key_id, dest)
-        return unless command_exists?("gpg")
+        raise SignatureError, "Keyserver acquisition is disabled; use an HTTPS signing-key URL"
+      end
 
-        cmd = "gpg --keyserver #{Shellwords.escape(server)} --recv-keys #{Shellwords.escape(key_id)} 2>/dev/null"
-        system(cmd)
+      def import_gpg_key(key_data, dest, expected)
+        gpg = trusted_command("gpg")
+        raise SignatureError, "A trusted system gpg executable is required" unless gpg
 
-        cmd = "gpg --export #{Shellwords.escape(key_id)} > #{Shellwords.escape(dest)} 2>/dev/null"
-        system(cmd)
+        key_file = Tempfile.new(["quarks-repo-key", ".asc"])
+        candidate = "#{dest}.candidate-#{Process.pid}"
+        begin
+          key_file.binmode
+          key_file.write(key_data)
+          key_file.close
+          FileUtils.rm_f(candidate)
+          _out, err, status = Open3.capture3(
+            restricted_process_environment,
+            gpg, "--no-options", "--batch", "--homedir", keyring_dir,
+            "--no-default-keyring", "--keyring", candidate, "--import", key_file.path,
+            unsetenv_others: true
+          )
+          raise SignatureError, "Could not import repository key: #{err.strip}" unless status.success?
+          raise SignatureError, "Imported key does not match pinned fingerprint #{expected}" unless keyring_contains?(candidate, expected)
 
-        File.exist?(dest)
-      rescue => e
-        warn "[quarks] Failed to fetch GPG key from server: #{e.message}"
-        false
+          File.chmod(0o600, candidate)
+          File.rename(candidate, dest)
+          true
+        ensure
+          key_file.unlink rescue nil
+          FileUtils.rm_f(candidate) if File.exist?(candidate)
+        end
+      end
+
+      def keyring_contains?(keyring_path, expected)
+        gpg = trusted_command("gpg")
+        return false unless File.exist?(keyring_path) && gpg
+
+        output, _error, status = Open3.capture3(
+          restricted_process_environment,
+          gpg, "--no-options", "--batch", "--homedir", keyring_dir,
+          "--no-default-keyring", "--keyring", keyring_path, "--with-colons", "--fingerprint",
+          unsetenv_others: true
+        )
+        return false unless status.success?
+
+        wanted = normalize_key_id(expected)
+        output.lines.any? do |line|
+          fields = line.split(":")
+          fields[0] == "fpr" && normalize_key_id(fields[9]) == wanted
+        end
+      end
+
+      def normalize_key_id(value)
+        value.to_s.upcase.delete_prefix("0X").gsub(/[^0-9A-F]/, "")
       end
 
       def verify_gpg_signature(signature, data, keyring_path, expected_key_id)
         return false unless signature
         return false unless File.exist?(keyring_path)
 
-        return false unless command_exists?("gpgv") || command_exists?("gpg")
-
-        if command_exists?("gpgv")
-          verify_with_gpgv(signature, data, keyring_path, expected_key_id)
-        else
-          verify_with_gpg(signature, data, keyring_path, expected_key_id)
-        end
+        return false unless trusted_command("gpgv")
+        verify_with_gpgv(signature, data, keyring_path, expected_key_id)
       end
 
-      def verify_with_gpgv(signature, data, keyring_path, _expected_key_id)
-        sig_file = Tempfile.new(["manifest", ".sig"])
-        data_file = Tempfile.new(["manifest", ".json"])
-        status_file = Tempfile.new(["gpgv", ".status"])
-
-        begin
-          sig_file.write(signature)
-          sig_file.close
-          data_file.write(data)
-          data_file.close
-          status_file.write("0\n")
-          status_file.close
-
-          cmd = [
-            "gpgv",
-            "--status-file", status_file.path,
-            "--keyring", keyring_path,
-            sig_file.path,
-            data_file.path
-          ]
-
-          system(*cmd)
-          status = File.read(status_file.path).lines
-          status.any? { |line| line.include?("[GNUPG:] VALIDSIG") }
-        ensure
-          sig_file.unlink rescue nil
-          data_file.unlink rescue nil
-          status_file.unlink rescue nil
-        end
-      end
-
-      def verify_with_gpg(signature, data, keyring_path, expected_key_id)
+      def verify_with_gpgv(signature, data, keyring_path, expected_key_id)
         sig_file = Tempfile.new(["manifest", ".sig"])
         data_file = Tempfile.new(["manifest", ".json"])
 
@@ -436,36 +522,45 @@ module Quarks
           sig_file.close
           data_file.write(data)
           data_file.close
-
-          cmd = [
-            "gpg",
-            "--no-default-keyring",
-            "--keyring", keyring_path,
-            "--verify",
-            sig_file.path,
-            data_file.path
-          ]
-
-          output = `#{cmd.map { |c| Shellwords.escape(c) }.join(" ")} 2>&1`
-          return false unless $?.success?
-
-          if expected_key_id
-            output.include?(expected_key_id)
-          else
-            true
-          end
+          output, _error, status = Open3.capture3(
+            restricted_process_environment,
+            trusted_command("gpgv"), "--status-fd", "1", "--keyring", keyring_path,
+            sig_file.path, data_file.path,
+            unsetenv_others: true
+          )
+          return false unless status.success?
+          valid_signature_fingerprint?(output, expected_key_id)
         ensure
           sig_file.unlink rescue nil
           data_file.unlink rescue nil
         end
       end
 
-      def load_cached_manifest(name)
+      def valid_signature_fingerprint?(status_output, expected_key_id)
+        wanted = normalize_key_id(expected_key_id)
+        return false unless [40, 64].include?(wanted.length)
+
+        line = status_output.to_s.lines.find { |entry| entry.start_with?("[GNUPG:] VALIDSIG ") }
+        return false unless line
+        fingerprints = line.split.select { |field| field.match?(/\A[0-9A-Fa-f]{40}(?:[0-9A-Fa-f]{24})?\z/) }
+        fingerprints.any? { |fingerprint| normalize_key_id(fingerprint) == wanted }
+      end
+
+      def load_cached_manifest(name, repo: nil, verify: true)
+        raise SignatureError, "Repository signature verification cannot be disabled" unless verify
         cache_path = manifest_cache_path(name)
         return nil unless File.exist?(cache_path)
 
         begin
-          JSON.parse(File.read(cache_path))
+          body = File.read(cache_path)
+          if repo && verify && !repo.allow_insecure
+            sig_path = "#{cache_path}.sig"
+            raise SignatureError, "Trusted cached manifest is missing its signature" unless File.exist?(sig_path)
+            verify_manifest!(body, File.binread(sig_path), repo)
+          end
+          data = JSON.parse(body)
+          validate_manifest_metadata!(data, repo) if repo && !repo.allow_insecure
+          data
         rescue JSON::ParserError
           nil
         end
@@ -474,7 +569,13 @@ module Quarks
       def cache_manifest(name, data, repo)
         cache_path = manifest_cache_path(name)
         FileUtils.mkdir_p(File.dirname(cache_path))
-        File.write(cache_path, JSON.generate(data))
+        body = repo.manifest_data || JSON.generate(data)
+        Security.atomic_write(cache_path, body)
+        if repo.manifest_hash
+          Security.atomic_write("#{cache_path}.sig", repo.manifest_hash)
+        elsif !repo.allow_insecure
+          raise SignatureError, "Refusing to cache an unsigned trusted repository"
+        end
 
         meta_path = "#{cache_path}.meta"
         meta = {
@@ -484,7 +585,7 @@ module Quarks
           mtime: repo.manifest_mtime,
           hash: Digest::SHA256.hexdigest(JSON.generate(data))
         }
-        File.write(meta_path, JSON.generate(meta))
+        Security.atomic_write(meta_path, JSON.generate(meta))
       end
 
       def manifest_cache_path(name)
@@ -492,13 +593,47 @@ module Quarks
         File.join(repo_config_dir, "#{safe_name}.json")
       end
 
-      def http_request_with_fallback(uri, repo, headers: {}, method: "GET", body: nil)
+      def validate_manifest_metadata!(manifest, repo)
+        raise SignatureError, "Repository manifest must be a JSON object" unless manifest.is_a?(Hash)
+        raise SignatureError, "Unsupported repository schema" unless manifest["schema_version"].to_i == 2
+        raise SignatureError, "Repository manifest is missing packages" unless manifest["packages"].is_a?(Array)
+        if manifest["packages"].length > MAX_MANIFEST_PACKAGES
+          raise SignatureError, "Repository manifest contains too many packages"
+        end
+
+        sequence = Integer(manifest["sequence"], exception: false)
+        raise SignatureError, "Repository manifest has an invalid sequence" unless sequence && sequence >= 0
+        previous = Integer(repo.manifest_sequence, exception: false)
+        if previous && sequence < previous
+          raise SignatureError, "Repository manifest rollback detected (#{sequence} < #{previous})"
+        end
+
+        generated_at = Time.iso8601(manifest.fetch("generated_at"))
+        expires_at = Time.iso8601(manifest.fetch("expires_at"))
+        now = Time.now
+        raise ManifestExpiredError, "Repository manifest was generated in the future" if generated_at > now + 300
+        raise ManifestExpiredError, "Repository manifest expired at #{expires_at.iso8601}" if expires_at <= now
+        raise SignatureError, "Repository manifest validity exceeds 30 days" if expires_at > generated_at + (30 * 86_400)
+
+        repo.manifest_sequence = sequence
+        true
+      rescue KeyError, ArgumentError, TypeError => e
+        raise SignatureError, "Invalid repository freshness metadata: #{e.message}"
+      end
+
+      def http_request_with_fallback(uri, repo, headers: {}, max_bytes: MAX_MANIFEST_BYTES)
         urls_to_try = build_url_list(uri, repo)
         last_error = nil
 
         urls_to_try.each do |try_uri|
           begin
-            return http_request(try_uri, headers: headers, method: method, body: body)
+            try_uri = Security.validate_remote_uri!(
+              try_uri,
+              purpose: "repository endpoint",
+              allow_http: repo.allow_insecure && ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1",
+              allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+            )
+            return http_request(try_uri, headers: headers, max_bytes: max_bytes)
           rescue => e
             last_error = e
             debug_log "Failed #{try_uri}: #{e.message}"
@@ -510,7 +645,6 @@ module Quarks
 
       def build_url_list(uri, repo)
         urls = []
-        host = uri.host
 
         urls << uri
 
@@ -524,31 +658,29 @@ module Quarks
           end
         end
 
-        FALLBACK_MIRRORS.each do |pattern, fallbacks|
-          if host&.include?(pattern)
-            fallbacks.each do |fallback|
-              begin
-                base = URI.parse(fallback)
-                path = uri.path.dup
-                urls << base.merge(path)
-              rescue
-              end
-            end
-          end
-        end
-
         urls.uniq
       end
 
-      def http_request(uri, headers: {}, method: "GET", body: nil, timeout: nil)
+      def http_request(uri, headers: {}, timeout: nil, max_bytes: MAX_MANIFEST_BYTES)
         timeout ||= { connect: CONNECT_TIMEOUT, read: READ_TIMEOUT, write: WRITE_TIMEOUT }
 
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = uri.scheme == "https"
+        uri = Security.validate_remote_uri!(
+          uri,
+          purpose: "remote resource",
+          allow_http: ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1",
+          allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+        )
 
-        if ENV["QUARKS_SSL_NO_VERIFY"] == "1" || uri.host == "localhost"
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        end
+        http = Net::HTTP.new(uri.host, uri.port)
+        addresses = if ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+                      Resolv.getaddresses(uri.host)
+                    else
+                      Security.resolve_public_addresses!(uri.host, purpose: "remote resource")
+                    end
+        raise NetworkError, "Remote host did not resolve: #{uri.host}" if addresses.empty?
+        http.ipaddr = addresses.first
+        http.use_ssl = uri.scheme == "https"
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
 
         http.open_timeout = timeout[:connect] || CONNECT_TIMEOUT
         http.read_timeout = timeout[:read] || READ_TIMEOUT
@@ -556,18 +688,23 @@ module Quarks
 
         http.max_retries = 0
 
-        request_class = Net::HTTP.const_get(method.capitalize)
-        request = request_class.new(uri, headers)
+        request = Net::HTTP::Get.new(uri, headers)
         request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
         request["Accept"] = "application/json"
-        request["Accept-Encoding"] = "gzip, deflate"
+        response = nil
+        http.request(request) do |incoming|
+          response = incoming
+          next unless incoming.is_a?(Net::HTTPSuccess)
 
-        if body
-          request.body = body
-          request["Content-Type"] = "application/json"
+          declared = Integer(incoming["Content-Length"], exception: false)
+          raise NetworkError, "Remote response exceeds #{max_bytes} bytes" if declared && declared > max_bytes
+          buffer = +"".b
+          incoming.read_body do |chunk|
+            raise NetworkError, "Remote response exceeds #{max_bytes} bytes" if buffer.bytesize + chunk.bytesize > max_bytes
+            buffer << chunk
+          end
+          incoming.instance_variable_set(:@body, buffer)
         end
-
-        response = http.request(request)
         debug_log "HTTP #{response.code} for #{uri}"
         response
       rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout => e
@@ -576,101 +713,14 @@ module Quarks
         raise NetworkError, "Connection error to #{uri.host}: #{e.message}"
       end
 
-      def fetch_nuclei_recipe(repo_name, package_path, verify: true)
-        repos = load_repos
-        repo = repos[repo_name]
-        raise RepoError, "Repository not found: #{repo_name}" unless repo
-
-        recipe_url = "#{repo.repo_url.rstrip}/nuclei/#{package_path}.nuclei"
-
-        retries = MAX_RETRIES
-        retries.times do |attempt|
-          begin
-            uri = URI.parse(recipe_url)
-            response = http_request_with_fallback(uri, repo)
-            raise NetworkError, "HTTP #{response.code}" unless response.is_a?(Net::HTTPSuccess)
-
-            content = response.body
-            checksum = Digest::SHA256.hexdigest(content)
-
-            if verify && ENV["QUARKS_VERIFY_RECIPES"] == "1"
-              checksum_url = "#{recipe_url}.sha256"
-              checksum_response = http_request(URI.parse(checksum_url))
-              if checksum_response.is_a?(Net::HTTPSuccess)
-                expected_checksum = checksum_response.body.strip.split.first
-                raise ChecksumError, "Recipe checksum mismatch" unless checksum == expected_checksum
-              end
-            end
-
-            return content
-          rescue NetworkError => e
-            if attempt < retries - 1
-              delay = RETRY_DELAY_BASE ** attempt
-              sleep(delay)
-            else
-              raise
-            end
-          end
+      def trusted_command(name)
+        %W[/usr/bin/#{name} /bin/#{name}].find do |path|
+          File.file?(path) && File.executable?(path)
         end
       end
 
-      def download_source(url, expected_checksum: nil, algorithm: "sha256", verify: true)
-        uri = URI.parse(url)
-        filename = File.basename(uri.path)
-        dest_path = File.join(distfiles_dir, filename)
-
-        return dest_path if File.exist?(dest_path) && !verify
-
-        Tempfile.create(["download", ".tmp"], distfiles_dir) do |tmp|
-          tmp.binmode
-
-          http = Net::HTTP.new(uri.host, uri.port)
-          http.use_ssl = uri.scheme == "https"
-          http.open_timeout = CONNECT_TIMEOUT
-          http.read_timeout = READ_TIMEOUT
-
-          http.request_get(uri.path) do |response|
-            case response
-            when Net::HTTPSuccess
-              response.read_body do |chunk|
-                tmp.write(chunk)
-              end
-            when Net::HTTPRedirection
-              redirect_uri = URI.parse(response["location"])
-              return download_source(redirect_uri.to_s, expected_checksum: expected_checksum, algorithm: algorithm, verify: verify)
-            else
-              raise NetworkError, "HTTP #{response.code} for #{url}"
-            end
-          end
-
-          tmp.close
-
-          if verify && expected_checksum
-            actual = Digest.const_get(algorithm.upcase).file(tmp.path).hexdigest
-            unless actual == expected_checksum.downcase
-              raise ChecksumError, "Checksum mismatch for #{filename}\n  Expected: #{expected_checksum}\n  Actual:   #{actual}"
-            end
-            debug_log "Checksum verified for #{filename}"
-          end
-
-          FileUtils.mv(tmp.path, dest_path)
-        end
-
-        dest_path
-      rescue => e
-        debug_log "Download failed: #{e.message}"
-        raise
-      end
-
-      def verify_source_checksum(file_path, expected_checksum, algorithm: "sha256")
-        return true unless expected_checksum
-
-        actual = Digest.const_get(algorithm.upcase).file(file_path).hexdigest
-        actual == expected_checksum.downcase
-      end
-
-      def command_exists?(name)
-        system("command -v #{Shellwords.escape(name)} >/dev/null 2>&1")
+      def restricted_process_environment
+        { "PATH" => "/usr/bin:/bin", "LANG" => "C", "LC_ALL" => "C" }
       end
 
       def debug_log(msg)

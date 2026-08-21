@@ -182,3 +182,6 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# misc
+spec/*
+tools/*

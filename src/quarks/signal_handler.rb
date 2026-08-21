@@ -3,6 +3,9 @@
 require "fileutils"
 require "json"
 require "singleton"
+require "time"
+require "quarks/env"
+require "quarks/security"
 
 module Quarks
   class SignalHandler
@@ -122,7 +125,7 @@ module Quarks
     def save_state(state)
       state[:saved_at] = Time.now.iso8601
       state[:pid] = Process.pid
-      File.write(STATE_FILE, JSON.pretty_generate(state))
+      Quarks::Security.atomic_write(STATE_FILE, JSON.pretty_generate(state))
     end
 
     def load_state
@@ -269,7 +272,13 @@ module Quarks
 
     def to_h
       {
-        packages: @packages.map { |n| n[:package].to_h },
+        packages: @packages.map do |node|
+          node[:package].to_h.merge(
+            dependency_atoms: Array(node[:deps]),
+            status: node[:status].to_s,
+            attempts: node[:attempts]
+          )
+        end,
         completed: @completed.map { |n| n[:package].to_h },
         failed: @failed.map { |n| n[:package].to_h },
         current: @current&.dig(:package)&.to_h,
@@ -283,15 +292,15 @@ module Quarks
 
     def save
       FileUtils.mkdir_p(File.dirname(state_file_path))
-      File.write(state_file_path, JSON.pretty_generate(to_h))
+      Quarks::Security.atomic_write(state_file_path, JSON.pretty_generate(to_h))
     end
 
     def load
       return nil unless File.exist?(state_file_path)
 
       JSON.parse(File.read(state_file_path))
-    rescue
-      nil
+    rescue JSON::ParserError => e
+      raise ArgumentError, "Invalid emerge queue state: #{e.message}"
     end
 
     def clear

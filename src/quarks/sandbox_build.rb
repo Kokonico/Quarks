@@ -1,77 +1,153 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "json"
+require "open3"
 require "shellwords"
+require "time"
+require "timeout"
+require "quarks/env"
+require "quarks/signal_handler"
+require "quarks/version"
+require "quarks/security"
 
 module Quarks
   class SandboxManager
-    SANDBOX_SCRIPT = File.join(Quarks::Env.state_root, "var", "tmp", "quarks", "sandbox.sh")
+    class SandboxUnavailable < StandardError; end
+    BWRAP_PATHS = %w[/usr/bin/bwrap /bin/bwrap].freeze
+
+    def self.available?
+      !bwrap_path.nil?
+    end
 
     def self.enabled?
-      return false if ENV["QUARKS_NO_SANDBOX"] == "1"
-      return true if File.exist?("/usr/bin/sandbox")
-      return true if File.exist?("/usr/sbin/sandbox")
-
-      false
+      ENV["QUARKS_NO_SANDBOX"] != "1"
     end
 
-    def self.sandbox_env
-      {
-        "SANDBOX_WRITE" => "/dev/null:/dev/tty:/dev/urandom:/var/tmp:/tmp",
-        "SANDBOX_READ" => "/:/dev/null",
-        "SANDBOX_X11" => "0",
-        "SANDBOX_NETWORK" => "1"
-      }
+    def self.operational?(network: false)
+      probe(network: network).first
     end
 
-    def self.wrap_command(cmd, cwd: nil, env: {})
-      return cmd unless enabled?
+    def self.assert_operational!(network: false)
+      usable, reason = probe(network: network)
+      return true if usable
 
-      script = generate_sandbox_script(cmd, cwd: cwd, env: env)
-
-      ["/bin/bash", script]
+      raise SandboxUnavailable, "bubblewrap cannot provide the required build isolation: #{reason}"
     end
 
-    def self.generate_sandbox_script(cmd, cwd: nil, env: {})
-      FileUtils.mkdir_p(File.dirname(SANDBOX_SCRIPT))
+    def self.probe(network: false)
+      return [false, "trusted /usr/bin/bwrap or /bin/bwrap is not installed"] unless available?
 
-      lines = [
-        "#!/bin/bash",
-        "",
-        "export HOME=\"#{ENV['HOME'] || '/tmp'}\"",
-        "export SHELL=/bin/bash",
-        "export TERM=${TERM:-dumb}",
-        "",
-        "# Build directories",
-        "export QUARKS_BUILD=#{Quarks::Env.tmpdir}/quarks-build",
-        "export QUARKS_DEST=#{Quarks::Env.tmpdir}/quarks-dest",
-        "",
-        "# User environment",
-        "export PATH=/usr/bin:/bin:/usr/local/bin",
-        "export MAKEFLAGS=-j#{Quarks::Env.jobs}",
-        "",
-        "# Sandbox environment variables"
+      @probe_results ||= {}
+      return @probe_results[network] if @probe_results.key?(network)
+
+      argv = [
+        bwrap_path,
+        "--die-with-parent",
+        "--new-session",
+        "--unshare-all",
+        "--ro-bind", "/usr", "/usr",
+        "--symlink", "usr/bin", "/bin",
+        "--symlink", "usr/sbin", "/sbin",
+        "--symlink", "usr/lib", "/lib",
+        "--symlink", "usr/lib64", "/lib64",
+        "--dev", "/dev",
+        "--proc", "/proc"
       ]
+      argv << "--share-net" if network
+      argv << "/bin/true"
 
-      sandbox_env.each do |key, value|
-        lines << "export #{key}=\"#{value}\""
+      Timeout.timeout(5) do
+        output, status = Open3.capture2e(
+          { "PATH" => "/usr/bin:/bin", "LANG" => "C", "LC_ALL" => "C" },
+          *argv,
+          unsetenv_others: true
+        )
+        reason = output.to_s.strip.byteslice(0, 1024)
+        reason = "probe exited with status #{status.exitstatus}" if reason.to_s.empty? && !status.success?
+        @probe_results[network] = [status.success?, reason]
       end
-
-      env.each do |key, value|
-        lines << "export #{key}=\"#{value}\""
-      end
-
-      lines << ""
-      lines << "cd #{cwd || Quarks::Env.tmpdir}" if cwd
-      lines << ""
-      lines << cmd
-      lines << ""
-
-      File.write(SANDBOX_SCRIPT, lines.join("\n"))
-      File.chmod(0755, SANDBOX_SCRIPT)
-
-      SANDBOX_SCRIPT
+    rescue SystemCallError, Timeout::Error => e
+      [false, e.message]
     end
+
+    def self.command_for(cmd, cwd:, writable_paths:, readable_paths: [], environment: {}, network: false)
+      return ["/bin/bash", "-lc", cmd.to_s] unless enabled?
+      raise SandboxUnavailable, "bubblewrap (bwrap) is required for builds" unless available?
+
+      writable_paths = normalized_mount_paths(writable_paths, kind: "writable")
+      readable_paths = normalized_mount_paths(readable_paths, kind: "read-only")
+
+      argv = [
+        bwrap_path,
+        "--die-with-parent",
+        "--new-session",
+        "--unshare-all",
+        "--ro-bind", "/usr", "/usr",
+        "--ro-bind", "/etc", "/etc",
+        "--symlink", "usr/bin", "/bin",
+        "--symlink", "usr/sbin", "/sbin",
+        "--symlink", "usr/lib", "/lib",
+        "--symlink", "usr/lib64", "/lib64",
+        "--dev", "/dev",
+        "--proc", "/proc",
+        "--tmpfs", "/tmp",
+        "--dir", "/tmp/quarks-home",
+        "--dir", "/tmp/quarks-cache",
+        "--setenv", "HOME", "/tmp/quarks-home",
+        "--setenv", "XDG_CACHE_HOME", "/tmp/quarks-cache"
+      ]
+      argv << "--share-net" if network
+
+      mounts = (writable_paths + readable_paths).uniq
+      mount_parents(mounts).each { |path| argv.concat(["--dir", path]) }
+
+      readable_paths.each do |path|
+        next unless File.exist?(path)
+        argv.concat(["--ro-bind", path, path])
+      end
+
+      writable_paths.each do |path|
+        next unless Dir.exist?(path)
+        argv.concat(["--bind", path, path])
+      end
+
+      environment.each do |key, value|
+        raise ArgumentError, "Invalid sandbox environment key: #{key.inspect}" unless key.to_s.match?(/\A[A-Za-z_][A-Za-z0-9_]*\z/)
+        raise ArgumentError, "Sandbox environment values must not contain NUL" if value.to_s.include?("\0")
+        argv.concat(["--setenv", key.to_s, value.to_s])
+      end
+
+      argv.concat(["--chdir", File.expand_path(cwd), "/bin/bash", "-lc", cmd.to_s])
+      argv
+    end
+
+    def self.bwrap_path
+      BWRAP_PATHS.find { |path| File.file?(path) && File.executable?(path) }
+    end
+
+    def self.mount_parents(paths)
+      system_roots = %w[/usr /etc /bin /sbin /lib /lib64 /dev /proc /tmp]
+      parents = []
+      paths.each do |path|
+        current = File.dirname(path)
+        while current != "/" && !system_roots.include?(current)
+          parents << current
+          current = File.dirname(current)
+        end
+      end
+      parents.uniq.sort_by { |path| [path.count(File::SEPARATOR), path] }
+    end
+
+    def self.normalized_mount_paths(paths, kind:)
+      Array(paths).map { |path| File.expand_path(path.to_s) }.uniq.tap do |expanded|
+        if expanded.include?(File::SEPARATOR)
+          raise ArgumentError, "Refusing to expose the whole host root as a #{kind} sandbox mount"
+        end
+      end
+    end
+
+    private_class_method :bwrap_path, :mount_parents, :normalized_mount_paths, :probe
   end
 
   class BuildEnvironment
@@ -258,9 +334,7 @@ module Quarks
       normalized = normalize_atom(atom)
       return false if contents.include?(normalized)
 
-      File.open(WORLD_FILE, "a") do |f|
-        f.puts(normalized)
-      end
+      Security.atomic_write(WORLD_FILE, (contents + [normalized]).uniq.join("\n") + "\n")
 
       true
     end
@@ -274,7 +348,7 @@ module Quarks
       return false unless original.include?(normalized)
 
       new_contents = original.reject { |a| a == normalized || a == atom }
-      File.write(WORLD_FILE, new_contents.join("\n") + "\n")
+      Security.atomic_write(WORLD_FILE, new_contents.join("\n") + "\n")
 
       true
     end
@@ -354,9 +428,7 @@ module Quarks
     end
 
     def version_gt?(a, b)
-      parts_a = parse_version(a)
-      parts_b = parse_version(b)
-      (parts_a <=> parts_b) == 1
+      Quarks::Versioning.newer?(a, b)
     end
 
     def parse_version(version)

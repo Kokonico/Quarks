@@ -5,10 +5,12 @@ require "json"
 require "fileutils"
 require "digest"
 require "time"
+require "pathname"
 require "quarks/env"
 
 module Quarks
   class Database
+    class DatabaseError < StandardError; end
     QUARKS_ROOT = Env.root.freeze
     STATE_ROOT  = Env.state_root.freeze
 
@@ -16,7 +18,7 @@ module Quarks
     CACHE_ROOT = File.join(STATE_ROOT, "var", "cache", "quarks").freeze
     LOG_ROOT   = File.join(STATE_ROOT, "var", "log", "quarks").freeze
 
-    SCHEMA_VERSION = 4
+    SCHEMA_VERSION = 5
 
     class << self
       def original_user = Env.original_user
@@ -30,17 +32,24 @@ module Quarks
       migrate!
       @ready = true
     rescue SQLite3::Exception => e
-      recover_or_raise!(e)
+      raise DatabaseError, "Could not open or migrate #{DB_PATH}: #{e.message}. The database was left untouched."
     end
 
     def ready?
       !!@ready
     end
 
+    def close
+      @db&.close
+      @ready = false
+      true
+    end
+
     def normalize_name(name_or_atom)
       value = name_or_atom.to_s.strip
       return "" if value.empty?
-      value = value.split("/", 2).last if value.include?("/")
+      slash = value.index("/")
+      value = value[(slash + 1)..] if slash
       value.downcase
     end
 
@@ -48,14 +57,10 @@ module Quarks
       name = normalize_name(name_or_atom)
       return false if name.empty?
       !@db.get_first_value("SELECT 1 FROM packages WHERE name=? LIMIT 1", [name]).nil?
-    rescue
-      false
     end
 
     def list_packages
       @db.execute("SELECT name FROM packages ORDER BY name ASC").map { |row| row["name"] || row[0] }
-    rescue
-      []
     end
 
     def get_package(name_or_atom)
@@ -65,7 +70,18 @@ module Quarks
       row = @db.get_first_row("SELECT * FROM packages WHERE name=? LIMIT 1", [name])
       return nil unless row
 
-      files = @db.execute("SELECT path FROM files WHERE package_name=? ORDER BY path ASC", [name]).map { |r| r["path"] || r[0] }
+      manifest = @db.execute(
+        "SELECT path, sha256, size, mode, kind FROM files WHERE package_name=? ORDER BY path ASC",
+        [name]
+      ).map do |file_row|
+        normalize_file_entry({
+          path: normalize_rel_path!(file_row["path"] || file_row[0]),
+          sha256: file_row["sha256"],
+          size: file_row["size"],
+          mode: file_row["mode"],
+          kind: file_row["kind"]
+        })
+      end
 
       {
         name: row["name"],
@@ -75,13 +91,13 @@ module Quarks
         installed_at: row["installed_at"],
         install_time: row["install_time"],
         metadata: decode_json(row["metadata_json"]),
-        files: files
+        files: manifest.map { |entry| entry[:path] },
+        file_manifest: manifest,
+        world: !@db.get_first_value("SELECT 1 FROM world WHERE atom=? LIMIT 1", [row["atom"]]).nil?
       }
-    rescue
-      nil
     end
 
-    def add_package(package, files:, install_time: nil)
+    def add_package(package, files:, install_time: nil, world: false)
       raise "Database not ready" unless ready?
 
       pkg_name = normalize_name(package&.name)
@@ -98,7 +114,10 @@ module Quarks
 
       metadata_hash = package.respond_to?(:to_metadata) ? package.to_metadata : { name: pkg_name, version: version, atom: atom, category: category }
 
-      rel_files = Array(files).map { |path| normalize_rel_path(path) }.reject(&:empty?).uniq.sort
+      file_manifest = Array(files).map { |entry| normalize_file_entry(entry) }
+                                  .uniq { |entry| entry[:path] }
+                                  .sort_by { |entry| entry[:path] }
+      rel_files = file_manifest.map { |entry| entry[:path] }
       collisions = find_collisions(rel_files, exclude_package: pkg_name)
       if collisions.any?
         preview = collisions.first(15).map { |c| "  #{c[:path]} (owned by #{c[:owner]})" }.join("\n")
@@ -113,6 +132,9 @@ module Quarks
 
       installed_at = Time.now.to_i
       metadata_json = JSON.generate(metadata_hash)
+      existing = @db.get_first_row("SELECT atom FROM packages WHERE name=? LIMIT 1", [pkg_name])
+      existing_atom = existing && (existing["atom"] || existing[0]).to_s
+      existing_world = !existing_atom.to_s.empty? && !@db.get_first_value("SELECT 1 FROM world WHERE atom=? LIMIT 1", [existing_atom]).nil?
 
       transaction do
         @db.execute(<<~SQL, [pkg_name, version, atom, category, installed_at, install_time, metadata_json])
@@ -128,9 +150,14 @@ module Quarks
         SQL
 
         @db.execute("DELETE FROM files WHERE package_name=?", [pkg_name])
-        rel_files.each do |rel|
-          @db.execute("INSERT INTO files(path, package_name) VALUES(?, ?)", [rel, pkg_name])
+        file_manifest.each do |entry|
+          @db.execute(
+            "INSERT INTO files(path, package_name, sha256, size, mode, kind) VALUES(?, ?, ?, ?, ?, ?)",
+            [entry[:path], pkg_name, entry[:sha256], entry[:size], entry[:mode], entry[:kind]]
+          )
         end
+        @db.execute("DELETE FROM world WHERE atom=?", [existing_atom]) if !existing_atom.to_s.empty? && existing_atom != atom
+        @db.execute("INSERT OR IGNORE INTO world(atom) VALUES(?)", [atom]) if world || existing_world
       end
 
       true
@@ -151,8 +178,46 @@ module Quarks
       end
 
       true
-    rescue
-      false
+    end
+
+    def restore_package(snapshot)
+      raise "Database not ready" unless ready?
+      raise ArgumentError, "Invalid package snapshot" unless snapshot.is_a?(Hash) && snapshot[:name]
+
+      transaction do
+        current_atom = @db.get_first_value("SELECT atom FROM packages WHERE name=? LIMIT 1", [snapshot[:name]]).to_s
+        params = [
+          snapshot[:name], snapshot[:version], snapshot[:atom], snapshot[:category],
+          snapshot[:installed_at], snapshot[:install_time], JSON.generate(snapshot[:metadata] || {})
+        ]
+        @db.execute(<<~SQL, params)
+          INSERT INTO packages(name, version, atom, category, installed_at, install_time, metadata_json)
+          VALUES(?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(name) DO UPDATE SET
+            version=excluded.version,
+            atom=excluded.atom,
+            category=excluded.category,
+            installed_at=excluded.installed_at,
+            install_time=excluded.install_time,
+            metadata_json=excluded.metadata_json;
+        SQL
+        @db.execute("DELETE FROM files WHERE package_name=?", [snapshot[:name]])
+        entries = snapshot[:file_manifest] || Array(snapshot[:files])
+        Array(entries).each do |entry|
+          file_entry = normalize_file_entry(entry)
+          @db.execute(
+            "INSERT INTO files(path, package_name, sha256, size, mode, kind) VALUES(?, ?, ?, ?, ?, ?)",
+            [file_entry[:path], snapshot[:name], file_entry[:sha256], file_entry[:size], file_entry[:mode], file_entry[:kind]]
+          )
+        end
+        @db.execute("DELETE FROM world WHERE atom=?", [current_atom]) unless current_atom.empty? || current_atom == snapshot[:atom].to_s
+        if snapshot[:world]
+          @db.execute("INSERT OR IGNORE INTO world(atom) VALUES(?)", [snapshot[:atom]])
+        else
+          @db.execute("DELETE FROM world WHERE atom=?", [snapshot[:atom]])
+        end
+      end
+      true
     end
 
     def world_add(atom)
@@ -160,8 +225,6 @@ module Quarks
       return false if value.empty?
       @db.execute("INSERT OR IGNORE INTO world(atom) VALUES(?)", [value])
       true
-    rescue
-      false
     end
 
     def world_remove(name_or_atom)
@@ -175,8 +238,6 @@ module Quarks
       end
 
       true
-    rescue
-      false
     end
 
     alias add_to_world world_add
@@ -184,8 +245,6 @@ module Quarks
 
     def world_list
       @db.execute("SELECT atom FROM world ORDER BY atom ASC").map { |row| row["atom"] || row[0] }
-    rescue
-      []
     end
 
     def owner_of(path)
@@ -202,8 +261,6 @@ module Quarks
       return nil unless row
 
       { name: row["name"], atom: row["atom"], version: row["version"], path: row["path"] }
-    rescue
-      nil
     end
 
     def which_command(cmd)
@@ -226,8 +283,6 @@ module Quarks
       return nil unless row
 
       { name: row["name"], atom: row["atom"], version: row["version"], path: File.join(QUARKS_ROOT, row["path"]) }
-    rescue
-      nil
     end
 
     def installed_binaries
@@ -247,25 +302,25 @@ module Quarks
       end
 
       out
-    rescue
-      {}
     end
 
     def find_collisions(files, exclude_package: nil)
-      rel_files = Array(files).map { |path| normalize_rel_path(path) }.reject(&:empty?).uniq
+      rel_files = Array(files).map { |path| normalize_rel_path!(path) }.uniq
       return [] if rel_files.empty?
 
-      collisions = []
-      rel_files.each do |rel|
-        owner = @db.get_first_value("SELECT package_name FROM files WHERE path=? LIMIT 1", [rel]) rescue nil
-        next if owner.nil?
-        next if exclude_package && owner.to_s == normalize_name(exclude_package)
-        collisions << { path: rel, owner: owner.to_s }
+      excluded = exclude_package && normalize_name(exclude_package)
+      rel_files.each_slice(500).flat_map do |slice|
+        placeholders = (["?"] * slice.length).join(",")
+        sql = "SELECT path, package_name FROM files WHERE path IN (#{placeholders})"
+        params = slice.dup
+        if excluded
+          sql << " AND package_name != ?"
+          params << excluded
+        end
+        @db.execute(sql, params).map do |row|
+          { path: row["path"] || row[0], owner: (row["package_name"] || row[1]).to_s }
+        end
       end
-
-      collisions
-    rescue
-      []
     end
 
     def cache_dirs
@@ -301,41 +356,47 @@ module Quarks
 
     def open_db!
       @db = SQLite3::Database.new(DB_PATH)
+      File.chmod(0o600, DB_PATH)
       @db.results_as_hash = true
     end
 
     def configure_db!
-      @db.busy_timeout = 5_000 rescue nil
-      @db.execute("PRAGMA foreign_keys = ON;") rescue nil
-      @db.execute("PRAGMA journal_mode = WAL;") rescue nil
-      @db.execute("PRAGMA synchronous = NORMAL;") rescue nil
-      @db.execute("PRAGMA temp_store = MEMORY;") rescue nil
+      @db.busy_timeout = 5_000
+      @db.execute("PRAGMA foreign_keys = ON;")
+      @db.execute("PRAGMA journal_mode = WAL;")
+      @db.execute("PRAGMA synchronous = FULL;")
+      @db.execute("PRAGMA temp_store = MEMORY;")
+      ["#{DB_PATH}-wal", "#{DB_PATH}-shm"].each do |path|
+        File.chmod(0o600, path) if File.exist?(path)
+      end
     end
 
     def migrate!
+      create_meta_table!
       current_version = get_schema_version
+      if current_version > SCHEMA_VERSION
+        raise DatabaseError, "Database schema #{current_version} is newer than supported schema #{SCHEMA_VERSION}"
+      end
 
       migrations.each do |version, migration|
         next if version <= current_version
 
         transaction do
           migration.call(@db)
+          write_schema_version(version)
         end
-        write_schema_version(version)
       end
 
-      unless current_version == SCHEMA_VERSION
-        create_missing_tables!
-        create_missing_indexes!
-      end
+      create_missing_tables!
+      create_missing_indexes!
 
       write_schema_version(SCHEMA_VERSION)
-      @db.execute("PRAGMA user_version = #{SCHEMA_VERSION};") rescue nil
+      @db.execute("PRAGMA user_version = #{SCHEMA_VERSION};")
       true
     end
 
     def get_schema_version
-      @db.get_first_value("SELECT value FROM meta WHERE key='schema_version'").to_i rescue 0
+      @db.get_first_value("SELECT value FROM meta WHERE key='schema_version'").to_i
     end
 
     MIGRATIONS = {
@@ -375,6 +436,12 @@ module Quarks
           CREATE INDEX IF NOT EXISTS idx_packages_atom ON packages(atom);
           CREATE INDEX IF NOT EXISTS idx_packages_name ON packages(name);
         SQL
+      },
+      5 => -> db {
+        db.execute("ALTER TABLE files ADD COLUMN sha256 TEXT")
+        db.execute("ALTER TABLE files ADD COLUMN size INTEGER")
+        db.execute("ALTER TABLE files ADD COLUMN mode INTEGER")
+        db.execute("ALTER TABLE files ADD COLUMN kind TEXT")
       }
     }.freeze
 
@@ -421,6 +488,10 @@ module Quarks
         CREATE TABLE IF NOT EXISTS files(
           path TEXT PRIMARY KEY,
           package_name TEXT NOT NULL,
+          sha256 TEXT,
+          size INTEGER,
+          mode INTEGER,
+          kind TEXT,
           FOREIGN KEY(package_name) REFERENCES packages(name) ON DELETE CASCADE
         );
       SQL
@@ -443,25 +514,6 @@ module Quarks
 
     def write_schema_version(version)
       @db.execute("INSERT OR REPLACE INTO meta(key, value) VALUES('schema_version', ?)", [version.to_i.to_s])
-    rescue
-      nil
-    end
-
-    def recover_or_raise!(error)
-      message = "#{error.class}: #{error.message}"
-
-      if File.exist?(DB_PATH)
-        FileUtils.cp(DB_PATH, "#{DB_PATH}.bak.#{Time.now.to_i}") rescue nil
-        FileUtils.mv(DB_PATH, "#{DB_PATH}.broken.#{Time.now.to_i}") rescue nil
-      end
-
-      open_db!
-      configure_db!
-      migrate!
-      @ready = true
-      warn "[quarks] Database recovered from error: #{message}" if Env.debug?
-    rescue => e
-      raise "Database failed to recover: #{message} (recovery error: #{e.class}: #{e.message})"
     end
 
     def transaction
@@ -477,7 +529,40 @@ module Quarks
       value = path.to_s.strip
       value = value.sub(%r{^/+}, "")
       value.tr!("\\", "/")
-      value
+      clean = Pathname.new(value).cleanpath.to_s
+      return "" if clean == "." || clean == ".." || clean.start_with?("../") || clean.include?("\0")
+      clean
+    end
+
+    def normalize_rel_path!(path)
+      clean = normalize_rel_path(path)
+      raise ArgumentError, "Invalid package file path: #{path.inspect}" if clean.empty?
+      clean
+    end
+
+    def normalize_file_entry(entry)
+      if entry.is_a?(Hash)
+        data = entry.transform_keys(&:to_sym)
+        sha256 = data[:sha256]&.to_s
+        unless sha256.nil? || sha256.match?(/\A[0-9a-f]{64}\z/)
+          raise ArgumentError, "Invalid file SHA-256: #{sha256.inspect}"
+        end
+        kind = data[:kind]&.to_s
+        raise ArgumentError, "Invalid file kind: #{kind.inspect}" unless kind.nil? || %w[file symlink].include?(kind)
+        size = data[:size].nil? ? nil : Integer(data[:size], exception: false)
+        raise ArgumentError, "Invalid file size: #{data[:size].inspect}" unless size.nil? || size >= 0
+        mode = data[:mode].nil? ? nil : Integer(data[:mode], exception: false)
+        raise ArgumentError, "Invalid file mode: #{data[:mode].inspect}" unless mode.nil? || mode.between?(0, 0o7777)
+        {
+          path: normalize_rel_path!(data[:path]),
+          sha256: sha256,
+          size: size,
+          mode: mode,
+          kind: kind
+        }
+      else
+        { path: normalize_rel_path!(entry), sha256: nil, size: nil, mode: nil, kind: nil }
+      end
     end
 
     def normalize_lookup_path(path)
@@ -499,8 +584,8 @@ module Quarks
     def decode_json(value)
       return {} if value.nil? || value.to_s.strip.empty?
       JSON.parse(value.to_s, symbolize_names: true)
-    rescue
-      {}
+    rescue JSON::ParserError => e
+      raise DatabaseError, "Invalid package metadata JSON: #{e.message}"
     end
 
     def binary_rel_path?(rel)

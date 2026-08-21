@@ -2,6 +2,7 @@
 
 require "set"
 require "fileutils"
+require "quarks/version"
 
 module Quarks
   class SmartResolver
@@ -56,8 +57,6 @@ module Quarks
       @repository = repository
       @database = database
       @use_config = use_config || USEConfig.new
-      @slot_manager = SLOTManager.new
-
       @resolution_order = []
       @conflicts = []
       @conflicts_resolved = []
@@ -65,29 +64,64 @@ module Quarks
       @stack = []
       @resolution_context = {}
       @build_deps_mode = false
+      @dependency_details_cache = {}
+      @dependency_atoms_cache = {}
     end
 
-    def resolve(package_name, build_deps: false, deep: true)
+    def resolve(package_name, build_deps: true, deep: true)
+      resolve_all([package_name], build_deps: build_deps, deep: deep)
+    end
+
+    def resolve_all(package_names, build_deps: true, deep: true)
       @build_deps_mode = build_deps
       @resolution_order.clear
       @conflicts.clear
       @conflicts_resolved.clear
       @visited.clear
       @stack.clear
+      @resolution_context.clear
+      @dependency_details_cache.clear
+      @dependency_atoms_cache.clear
 
-      pkg = @repository.find_package(package_name)
-      unless pkg
-        raise MissingDependencyError.new(package_name, package_name)
+      requested = Array(package_names).map(&:to_s).reject(&:empty?).uniq
+      packages = requested.map do |package_name|
+        pkg = @repository.find_package(package_name)
+        raise MissingDependencyError.new(package_name, package_name) unless pkg
+        pkg
       end
 
       load_blockers_for_all!
-      resolve_recursive(pkg)
+      packages.each { |package| resolve_recursive(package) }
+      validate_resolution!
 
-      if deep
-        @resolution_order.reverse!
-      else
-        @resolution_order
+      deep ? @resolution_order : packages
+    end
+
+    def dependency_atoms_for(package)
+      atom = package.atom.to_s.downcase
+      @dependency_atoms_cache[atom] ||= dependency_details_for(package).map { |dependency| dependency[:atom] }.freeze
+      @dependency_atoms_cache[atom].dup
+    end
+
+    def dependency_details_for(package)
+      atom = package.atom.to_s.downcase
+      cached = @dependency_details_cache[atom]
+      return cached.map(&:dup) if cached
+
+      dependencies = []
+      expand_use_dependencies(package, Array(package.dependencies)).each do |dependency|
+        dependencies << [dependency, :runtime]
       end
+      if @build_deps_mode
+        Array(package.build_dependencies).each { |dependency| dependencies << [dependency, :build] }
+      end
+
+      details = dependencies.filter_map do |dependency, type|
+        resolved = @repository.find_package(@repository.normalize_name(dependency))
+        { atom: resolved.atom, type: type } if resolved
+      end.uniq.freeze
+      @dependency_details_cache[atom] = details
+      details.map(&:dup)
     end
 
     def resolve_deps_only(package_name)
@@ -103,7 +137,6 @@ module Quarks
 
       issues.concat(check_missing_deps(package))
       issues.concat(check_blockers(package))
-      issues.concat(check_slot_conflicts(package))
       issues.concat(check_use_deps(package))
       issues.concat(check_circular_deps(package))
 
@@ -117,12 +150,6 @@ module Quarks
           raise MissingDependencyError.new(conflict[:package], conflict[:dependency])
         when :blocked
           raise BlockedPackageError.new(conflict[:package], conflict[:blocker])
-        when :slot_conflict
-          raise SlotConflictError.new(
-            conflict[:package],
-            conflict[:installed],
-            conflict[:slot]
-          )
         when :circular
           raise CircularDependencyError.new(conflict[:cycle])
         end
@@ -196,8 +223,11 @@ module Quarks
     def resolve_recursive(package, depth = 0)
       raise ResolutionError, "Dependency tree too deep (max #{MAX_DEPTH})" if depth > MAX_DEPTH
 
-      name = package.name.to_s.downcase
       atom = package.atom.to_s.downcase
+      validate_required_use!(package)
+
+      blocker_issues = blocker_conflicts_for(package)
+      @conflicts.concat(blocker_issues)
 
       if @stack.include?(atom)
         cycle = @stack[@stack.index(atom)..-1] + [atom]
@@ -214,16 +244,13 @@ module Quarks
       deps.each do |dep_name|
         dep_pkg = @repository.find_package(dep_name)
         unless dep_pkg
-          if @build_deps_mode
-            next
-          else
-            @conflicts << {
-              type: :missing_dep,
-              package: package.atom,
-              dependency: dep_name
-            }
-            next
-          end
+          next if @database.installed?(dep_name)
+          @conflicts << {
+            type: :missing_dep,
+            package: package.atom,
+            dependency: dep_name
+          }
+          next
         end
 
         if @database.installed?(dep_pkg.name) && !needs_update?(dep_pkg)
@@ -234,7 +261,7 @@ module Quarks
       end
 
       @stack.pop
-      @resolution_order << package unless @resolution_order.any? { |p| p.atom == package.atom }
+      @resolution_order << package
     end
 
     def collect_dependencies(package)
@@ -249,13 +276,30 @@ module Quarks
       deps.map { |d| @repository.normalize_name(d) }.uniq
     end
 
+    def validate_required_use!(package)
+      requirements = Array(package.required_use).map(&:to_s)
+      return if requirements.empty?
+
+      enabled = @use_config.flags_for_package(package).reject { |flag| flag.start_with?("-") }.to_set
+      unmet = requirements.reject do |requirement|
+        if requirement.start_with?("-")
+          !enabled.include?(requirement.delete_prefix("-"))
+        else
+          enabled.include?(requirement)
+        end
+      end
+      return if unmet.empty?
+
+      raise ResolutionError, "#{package.atom} has unmet required USE flags: #{unmet.join(' ')}"
+    end
+
     def expand_use_dependencies(package, base_deps)
       return base_deps unless package.respond_to?(:use_dependencies)
 
       use_deps = Array(package.use_dependencies)
       return base_deps if use_deps.empty?
 
-      enabled_flags = @use_config.flags_for_package(package.atom)
+      enabled_flags = @use_config.flags_for_package(package.atom).reject { |flag| flag.start_with?("-") }.to_set
       expanded = base_deps.dup
 
       use_deps.each do |use_dep|
@@ -267,11 +311,9 @@ module Quarks
         when :enabled
           if enabled_flags.include?(flag.to_s)
             expanded.concat(flag_deps)
-          elsif enabled_flags.include?("-#{flag}")
-            expanded.concat(flag_deps.map { |d| "-#{d}" })
           end
         when :disabled
-          if enabled_flags.include?("-#{flag}")
+          unless enabled_flags.include?(flag.to_s)
             expanded.concat(flag_deps)
           end
         end
@@ -301,13 +343,11 @@ module Quarks
       installed_version = installed[:version]
       available_version = package.version
 
-      version_compare(available_version, installed_version) > 0
+      Quarks::Versioning.newer?(available_version, installed_version)
     end
 
     def version_compare(a, b)
-      parts_a = parse_version(a)
-      parts_b = parse_version(b)
-      parts_a <=> parts_b
+      Quarks::Versioning.compare(a, b)
     end
 
     def parse_version(version)
@@ -362,29 +402,19 @@ module Quarks
       issues
     end
 
-    def check_slot_conflicts(package)
-      return [] unless package.slot
-      return [] if package.slot.to_s.empty? || package.slot == "0" || package.slot == "default"
+    def blocker_conflicts_for(package)
+      issues = check_blockers(package)
+      target = package.name.to_s.downcase
+      target_atom = package.atom.to_s.downcase
 
-      slot_atoms = @slot_manager.slot_atoms(package.name, package.slot)
-      return [] if slot_atoms.empty?
+      @resolution_context.fetch(:blockers, {}).each do |blocker_atom, blocked_names|
+        next unless blocked_names.include?(target) || blocked_names.include?(target_atom)
+        blocker_name = @repository.normalize_name(blocker_atom)
+        next unless @database.installed?(blocker_name) || @stack.include?(blocker_atom.downcase)
 
-      conflicts = []
-      slot_atoms.each do |atom|
-        next if atom == package.atom
-
-        pkg = @database.get_package(@repository.normalize_name(atom))
-        next unless pkg
-
-        conflicts << {
-          type: :slot_conflict,
-          package: package.atom,
-          installed: pkg[:atom],
-          slot: package.slot
-        }
+        issues << { type: :blocked, package: package.atom, blocker: blocker_atom }
       end
-
-      conflicts
+      issues.uniq
     end
 
     def check_use_deps(package)
@@ -459,101 +489,4 @@ module Quarks
     MAX_DEPTH = 500
   end
 
-  class ConfigProtection
-    PROTECTED_DIRS = [
-      "/etc",
-      "/var/db"
-    ].freeze
-
-    PROTECTED_PATTERNS = [
-      /\/etc\/passwd$/,
-      /\/etc\/shadow$/,
-      /\/etc\/group$/,
-      /\/etc\/gshadow$/,
-      /\/etc\/shells$/,
-      /\/etc\/fstab$/,
-      /\/etc\/resolv\.conf$/,
-      /\/etc\/hosts\.deny$/,
-      /\/etc\/hosts$/,
-      /\/etc\/hostname$/,
-      /\/etc\/localtime$/,
-      /\/etc\/timezone$/,
-      /\/etc\/sysctl\.conf$/,
-      /\/etc\/modprobe\.d\//,
-      /\/etc\/modules$/,
-      /\/etc\/udev\/rules\.d\//
-    ].freeze
-
-    CONFIG_BACKUP_DIR = File.join(Quarks::Env.state_root, "var", "backup", "quarks")
-
-    def initialize
-      @protected = Set.new
-      load_protected!
-    end
-
-    def protected?(path)
-      return true if PROTECTED_PATTERNS.any? { |p| path =~ p }
-
-      PROTECTED_DIRS.any? do |dir|
-        path.start_with?(dir) && !path.start_with?("#{dir}/quarks")
-      end
-    end
-
-    def protect(path)
-      @protected.add(File.expand_path(path))
-      save_protected!
-    end
-
-    def unprotect(path)
-      @protected.delete(File.expand_path(path))
-      save_protected!
-    end
-
-    def protect_file(path)
-      return unless protected?(path)
-
-      backup_path = backup_file(path)
-      return if File.exist?(backup_path)
-
-      FileUtils.cp(path, backup_path)
-      backup_path
-    end
-
-    def restore_file(path)
-      backup_path = backup_file(path)
-      return false unless File.exist?(backup_path)
-
-      FileUtils.cp(backup_path, path)
-      true
-    end
-
-    def backup_file(path)
-      safe_name = path.gsub("/", "_").gsub("\\", "_")
-      File.join(CONFIG_BACKUP_DIR, safe_name)
-    end
-
-    def list_protected
-      @protected.to_a
-    end
-
-    def load_protected!
-      file = protected_list_file
-      return unless File.exist?(file)
-
-      @protected.clear
-      File.readlines(file).each do |line|
-        line = line.strip
-        @protected.add(line) unless line.empty?
-      end
-    end
-
-    def save_protected!
-      FileUtils.mkdir_p(File.dirname(protected_list_file))
-      File.write(protected_list_file, @protected.to_a.join("\n"))
-    end
-
-    def protected_list_file
-      File.join(CONFIG_BACKUP_DIR, "protected.list")
-    end
-  end
 end

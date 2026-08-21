@@ -2,9 +2,39 @@
 
 require "fileutils"
 require "find"
+require "json"
+require "pathname"
+require "quarks/env"
+require "quarks/security"
 
 module Quarks
   class SystemIntegration
+    SYSTEM_PATHS = %w[/usr/bin /usr/sbin /bin /sbin].freeze
+
+    def self.trusted_command(name)
+      return nil unless name.to_s.match?(/\A[A-Za-z0-9][A-Za-z0-9+_.-]*\z/)
+      SYSTEM_PATHS.map { |directory| File.join(directory, name.to_s) }
+                  .find { |path| File.file?(path) && File.executable?(path) }
+    end
+
+    def self.command_available?(name)
+      !trusted_command(name).nil?
+    end
+
+    def self.run_quiet(*argv, elevate: false)
+      executable = trusted_command(argv.shift)
+      return false unless executable
+
+      environment = { "PATH" => "/usr/bin:/usr/sbin:/bin:/sbin", "LANG" => "C", "LC_ALL" => "C" }
+      command = [executable, *argv]
+      if elevate && !Process.euid.zero?
+        sudo = trusted_command("sudo")
+        return false unless sudo
+        command.unshift(sudo)
+      end
+      system(environment, *command, out: File::NULL, err: File::NULL, unsetenv_others: true)
+    end
+
     LIBRARY_PATTERNS = [
       /\blib.*\.so(\.\d+)*$/,
       /\blib.*\.a$/,
@@ -51,6 +81,8 @@ module Quarks
       process_man_pages(files)
       process_alternatives(files)
       process_info_pages(files)
+      process_mime_data(files)
+      process_icon_themes(files)
       register_shared_libraries(files)
     end
 
@@ -128,6 +160,16 @@ module Quarks
       }
     end
 
+    def process_mime_data(files)
+      return unless files.any? { |file| file[:rel].start_with?("usr/share/mime/", "usr/local/share/mime/") }
+      @actions << { type: :mimedb, trigger: true }
+    end
+
+    def process_icon_themes(files)
+      return unless files.any? { |file| file[:rel].start_with?("usr/share/icons/", "usr/local/share/icons/") }
+      @actions << { type: :gtk_icon_cache, trigger: true }
+    end
+
     def register_shared_libraries(files)
       lib_files = files.select { |f| library_file?(f[:rel]) }
       return if lib_files.empty?
@@ -142,7 +184,6 @@ module Quarks
     def library_file?(path)
       return false if path.nil? || path.empty?
 
-      ext = File.extname(path)
       return true if [".so", ".a", ".la"].any? { |e| path.end_with?(e) }
 
       if path.include?("/lib") || path.include?("/lib64")
@@ -182,7 +223,7 @@ module Quarks
 
     def info_page?(path)
       return false if path.nil? || path.empty?
-      path.end_with?(".info") || path.include?("/info/")
+      File.basename(path).match?(/\.info(?:\.(?:gz|bz2|xz|zst))?\z/)
     end
 
     def categorize_man_pages(files)
@@ -217,14 +258,15 @@ module Quarks
   end
 
   class LdconfigManager
-    def self.update_ldconfig(dry_run: false)
+    def self.update_ldconfig(install_root: "/", dry_run: false, elevate: false)
+      return true unless File.expand_path(install_root) == "/"
+      return true unless SystemIntegration.command_available?("ldconfig")
       if dry_run
         puts "[quarks] Would run: ldconfig"
         return true
       end
 
-      system("ldconfig 2>/dev/null")
-      $?.success?
+      SystemIntegration.run_quiet("ldconfig", elevate: elevate)
     rescue => e
       warn "[quarks] ldconfig update failed: #{e.message}"
       false
@@ -284,20 +326,25 @@ module Quarks
   end
 
   class DesktopDatabaseManager
-    def self.update_desktop_database(install_root, dry_run: false)
+    def self.update_desktop_database(install_root, dry_run: false, elevate: false)
       desktop_files = find_desktop_files(install_root)
-      return if desktop_files.empty?
+      return true if desktop_files.empty?
 
       if dry_run
         puts "[quarks] Would update desktop database with #{desktop_files.length} file(s)"
         return true
       end
 
-      desktop_files.each do |file|
-        validate_desktop_file(file)
+      unless desktop_files.all? { |file| validate_desktop_file(file) }
+        return false
       end
 
-      true
+      return true unless SystemIntegration.command_available?("update-desktop-database")
+
+      directories = desktop_files.map { |file| File.dirname(file) }.uniq
+      directories.all? do |directory|
+        SystemIntegration.run_quiet("update-desktop-database", directory, elevate: elevate)
+      end
     rescue => e
       warn "[quarks] Desktop database update failed: #{e.message}"
       false
@@ -320,56 +367,50 @@ module Quarks
     end
 
     def self.validate_desktop_file(file)
-      return true unless command_exists?("desktop-file-validate")
+      return true unless SystemIntegration.command_available?("desktop-file-validate")
 
-      system("desktop-file-validate #{Shellwords.escape(file)} 2>/dev/null")
-      $?.success?
+      SystemIntegration.run_quiet("desktop-file-validate", file)
     rescue
       false
     end
 
-    def self.command_exists?(name)
-      system("command -v #{Shellwords.escape(name)} >/dev/null 2>&1")
-    end
   end
 
   class GIODesktopManager
     def self.register_desktop_file(file, dry_run: false)
-      return false unless command_exists?("gio")
+      return false unless SystemIntegration.command_available?("gio")
 
       if dry_run
         puts "[quarks] Would register desktop file: #{file}"
         return true
       end
 
-      system("gio set #{Shellwords.escape(file)} metadata::trusted true 2>/dev/null")
-      $?.success?
+      SystemIntegration.run_quiet("gio", "set", file, "metadata::trusted", "true")
     rescue => e
       warn "[quarks] GIO desktop registration failed: #{e.message}"
       false
     end
 
-    def self.command_exists?(name)
-      system("command -v #{Shellwords.escape(name)} >/dev/null 2>&1")
-    end
   end
 
   class UpdateAlternativesManager
+    SAFE_NAME = /\A[A-Za-z0-9][A-Za-z0-9+_.-]*\z/.freeze
     ALT_DB_PATH = File.join(Quarks::Env.state_root, "var", "lib", "quarks", "alternatives.json")
 
     def self.initialize!
       FileUtils.mkdir_p(File.dirname(ALT_DB_PATH))
       unless File.exist?(ALT_DB_PATH)
-        File.write(ALT_DB_PATH, JSON.generate({}))
+        Quarks::Security.atomic_write(ALT_DB_PATH, JSON.generate({}))
       end
     end
 
     def self.register(name, path, priority: 50, dry_run: false)
+      validate_name!(name)
       initialize!
 
       db = load_db
-      db[name] ||= { priority: priority, links: {} }
-      db[name][:links][path] = { priority: priority }
+      db[name] ||= { "priority" => priority, "links" => {} }
+      db[name]["links"][path] = { "priority" => priority }
 
       if dry_run
         puts "[quarks] Would register alternative: #{name} -> #{path} (priority: #{priority})"
@@ -381,23 +422,22 @@ module Quarks
     end
 
     def self.unregister(name, path, dry_run: false)
+      validate_name!(name)
       db = load_db
       return false unless db[name]
+      return true if dry_run
 
-      db[name][:links].delete(path)
+      db[name]["links"].delete(path)
 
-      if db[name][:links].empty?
+      if db[name]["links"].empty?
         db.delete(name)
-      end
-
-      if dry_run
-        puts "[quarks] Would unregister alternative: #{name} -> #{path}"
       end
 
       save_db(db)
     end
 
     def self.query(name)
+      validate_name!(name)
       db = load_db
       db[name]
     end
@@ -407,10 +447,11 @@ module Quarks
     end
 
     def self.set_active(name, path, dry_run: false)
+      validate_name!(name)
       db = load_db
-      return false unless db[name] && db[name][:links][path]
+      return false unless db[name] && db[name]["links"][path]
 
-      db[name][:active] = path
+      db[name]["active"] = path
 
       if dry_run
         puts "[quarks] Would set active alternative: #{name} -> #{path}"
@@ -427,77 +468,84 @@ module Quarks
       return {} unless File.exist?(ALT_DB_PATH)
 
       JSON.parse(File.read(ALT_DB_PATH))
-    rescue JSON::ParserError
-      {}
+    rescue JSON::ParserError => e
+      raise "Invalid alternatives database: #{e.message}"
     end
 
     def self.save_db(db)
-      File.write(ALT_DB_PATH, JSON.pretty_generate(db))
+      Quarks::Security.atomic_write(ALT_DB_PATH, JSON.pretty_generate(db))
     end
 
     def self.create_symlink(name, target_path)
-      link_path = File.join("/usr/bin", name)
-      return false unless target_path.start_with?("/")
+      validate_name!(name)
+      root = File.expand_path(Quarks::Env.root)
+      target = File.expand_path(target_path.to_s)
+      return false unless Quarks::Security.path_within?(target, root, allow_root: false)
+
+      link_path = File.join(root, "usr", "bin", name)
+      FileUtils.mkdir_p(File.dirname(link_path))
 
       begin
         if File.exist?(link_path) || File.symlink?(link_path)
+          return false unless File.symlink?(link_path)
           FileUtils.rm_f(link_path)
         end
-        FileUtils.ln_s(target_path, link_path)
+        FileUtils.ln_s(Pathname.new(target).relative_path_from(Pathname.new(File.dirname(link_path))).to_s, link_path)
         true
       rescue => e
         warn "[quarks] Failed to create alternative symlink: #{e.message}"
         false
       end
     end
+
+    def self.validate_name!(name)
+      value = name.to_s
+      raise ArgumentError, "Invalid alternative name: #{value.inspect}" unless value.match?(SAFE_NAME)
+      value
+    end
   end
 
   class MimedbManager
-    def self.update_mime_database(install_root, dry_run: false)
-      return true unless command_exists?("update-mime-database")
+    def self.update_mime_database(install_root, dry_run: false, elevate: false)
+      return true unless SystemIntegration.command_available?("update-mime-database")
 
       mime_dirs = [
         File.join(install_root, "usr", "share", "mime"),
         File.join(install_root, "usr", "local", "share", "mime")
       ]
 
-      updated = false
+      success = true
       mime_dirs.each do |dir|
         next unless Dir.exist?(dir)
 
         if dry_run
           puts "[quarks] Would update MIME database in: #{dir}"
         else
-          system("update-mime-database #{Shellwords.escape(dir)} 2>/dev/null")
-          updated ||= $?.success?
+          success = false unless SystemIntegration.run_quiet("update-mime-database", dir, elevate: elevate)
         end
       end
 
-      updated
+      success
     end
 
-    def self.command_exists?(name)
-      system("command -v #{Shellwords.escape(name)} >/dev/null 2>&1")
-    end
   end
 
   class GTKIconCacheManager
-    def self.update_icon_cache(install_root, dry_run: false)
-      return true unless command_exists?("gtk-update-icon-cache")
+    def self.update_icon_cache(install_root, dry_run: false, elevate: false)
+      return true unless SystemIntegration.command_available?("gtk-update-icon-cache")
 
       icon_dirs = find_icon_directories(install_root)
-      updated = false
+      success = true
 
       icon_dirs.each do |dir|
         if dry_run
           puts "[quarks] Would update icon cache in: #{dir}"
         else
-          system("gtk-update-icon-cache -f -t #{Shellwords.escape(dir)} 2>/dev/null")
-          updated ||= $?.success?
+          success = false unless SystemIntegration.run_quiet("gtk-update-icon-cache", "-f", "-t", dir, elevate: elevate)
         end
       end
 
-      updated
+      success
     end
 
     def self.find_icon_directories(root)
@@ -519,8 +567,5 @@ module Quarks
       dirs
     end
 
-    def self.command_exists?(name)
-      system("command -v #{Shellwords.escape(name)} >/dev/null 2>&1")
-    end
   end
 end

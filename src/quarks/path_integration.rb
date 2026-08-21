@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "shellwords"
+require "quarks/security"
 
 module Quarks
   module PathIntegration
@@ -13,6 +15,9 @@ module Quarks
     end
 
     def setup_path!
+      if Process.euid.zero? && Database.original_user != "root"
+        raise "Run 'quarks setup-path' as the target user, not through sudo"
+      end
       FileUtils.mkdir_p(shim_dir)
 
       home = Database.original_user_home
@@ -30,10 +35,9 @@ module Quarks
       if rc_file && File.writable?(rc_file)
         content = File.read(rc_file) rescue ""
         unless content.include?("quarks setup-path")
-          File.open(rc_file, "a") do |f|
-            f.puts
-            f.puts snippet
-          end
+          mode = File.stat(rc_file).mode & 0o777 rescue 0o644
+          updated = content.end_with?("\n") ? content : "#{content}\n"
+          Quarks::Security.atomic_write(rc_file, "#{updated}\n#{snippet}", mode: mode)
           puts "#{UI::COLORS[:green]}>>>#{UI::COLORS[:reset]} Added Quarks PATH snippet to #{rc_file}"
         end
       end
@@ -54,6 +58,7 @@ module Quarks
       desired = {}
 
       bins.each do |name, target|
+        next unless name.match?(/\A[a-zA-Z0-9+_.-]+\z/)
         shim_name = choose_shim_name(name, target)
         desired[shim_name] = target
         desired["quarks-#{name}"] ||= target
@@ -63,16 +68,28 @@ module Quarks
       desired.each { |shim, target| write_shim(shim, target) }
     end
 
+    def environment_lines
+      root = Database::QUARKS_ROOT
+      bin_paths = %w[usr/bin usr/sbin usr/local/bin usr/local/sbin bin sbin].map { |path| File.join(root, path) }
+      lib_paths = %w[usr/lib usr/lib64 usr/local/lib usr/local/lib64 lib lib64].map { |path| File.join(root, path) }
+      pkg_paths = lib_paths.map { |path| File.join(path, "pkgconfig") } + [File.join(root, "usr", "share", "pkgconfig")]
+      cmake_paths = [root, File.join(root, "usr"), File.join(root, "usr", "local")]
+      man_paths = [File.join(root, "usr", "share", "man"), File.join(root, "usr", "local", "share", "man")]
+
+      [
+        "export QUARKS_ROOT=#{Shellwords.escape(root)}",
+        "export QUARKS_STATE_ROOT=#{Shellwords.escape(Database::STATE_ROOT)}",
+        "export PATH=\"$PATH\":#{Shellwords.escape(([shim_dir] + bin_paths).join(':'))}",
+        "export PKG_CONFIG_PATH=#{Shellwords.escape(pkg_paths.join(':'))}:\"${PKG_CONFIG_PATH:-}\"",
+        "export CMAKE_PREFIX_PATH=#{Shellwords.escape(cmake_paths.join(':'))}:\"${CMAKE_PREFIX_PATH:-}\"",
+        "export MANPATH=#{Shellwords.escape(man_paths.join(':'))}:\"${MANPATH:-}\""
+      ]
+    end
+
     private
 
     def path_snippet
-      <<~SH
-        # >>> quarks setup-path >>>
-        export QUARKS_ROOT="${QUARKS_ROOT:-$HOME/.local/quarks}"
-        export QUARKS_STATE_ROOT="${QUARKS_STATE_ROOT:-$HOME/.local/state/quarks}"
-        export PATH="$PATH:$QUARKS_ROOT/usr/bin:$QUARKS_ROOT/usr/sbin:$QUARKS_ROOT/usr/local/bin:$QUARKS_ROOT/usr/local/sbin:$QUARKS_STATE_ROOT/var/shims"
-        # <<< quarks setup-path <<<
-      SH
+      (["# >>> quarks setup-path >>>"] + environment_lines + ["# <<< quarks setup-path <<<", ""]).join("\n")
     end
 
     def choose_shim_name(bin_name, target_path)
@@ -113,11 +130,11 @@ module Quarks
       script = <<~SH
         #!/bin/sh
         # #{SHIM_MARKER}
-        exec "#{target}" "$@"
+        export LD_LIBRARY_PATH=#{Shellwords.escape(runtime_library_path)}:"${LD_LIBRARY_PATH:-}"
+        exec #{Shellwords.escape(target)} "$@"
       SH
 
-      File.write(path, script)
-      FileUtils.chmod(0o755, path)
+      Quarks::Security.atomic_write(path, script, mode: 0o755)
     rescue
       nil
     end
@@ -137,6 +154,12 @@ module Quarks
       end
     rescue
       nil
+    end
+
+    def runtime_library_path
+      %w[usr/lib usr/lib64 usr/local/lib usr/local/lib64 lib lib64]
+        .map { |path| File.join(Database::QUARKS_ROOT, path) }
+        .join(":")
     end
   end
 end

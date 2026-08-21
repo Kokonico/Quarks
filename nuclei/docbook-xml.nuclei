@@ -4,7 +4,7 @@ nuclei "docbook-xml", "4.5" do
   license "MIT"
   category "app-text"
   
-  source "http://www.docbook.org/xml/4.5/docbook-xml-4.5.zip",
+  source "https://www.docbook.org/xml/4.5/docbook-xml-4.5.zip",
          checksum: "533a1ca5d6595793725bca7641d9461a0f00dd1732dded3e4281196f5dd21736",
          algorithm: "sha256"
   

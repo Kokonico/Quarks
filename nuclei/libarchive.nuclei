@@ -17,10 +17,10 @@ nuclei "libarchive", "3.7.4" do
 
   build_depends "pkg-config",
                 "make",
-                "gcc",
                 "autoconf",
-                "automake",
-                "libtool"
+                "automake"
+
+  host_tools "gcc", "libtool"
 
   build do
     run "./configure --prefix=/usr --disable-static"

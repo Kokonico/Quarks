@@ -3,6 +3,8 @@
 require "fileutils"
 require "json"
 require "find"
+require "set"
+require "digest"
 
 module Quarks
   class QueryCommands
@@ -105,22 +107,24 @@ module Quarks
       max_depth = (args[1] || 3).to_i
       output = "Dependency tree for #{pkg.atom}-#{pkg.version}:\n\n"
 
-      print_tree(pkg, repository, database, output, 0, max_depth)
+      print_tree(pkg, repository, database, output, 0, max_depth, Set.new)
 
       [output, nil]
     end
 
-    def print_tree(pkg, repository, database, output, depth, max_depth)
+    def print_tree(pkg, repository, database, output, depth, max_depth, visited)
       return if depth > max_depth
 
       indent = "  " * depth
       installed = database.installed?(pkg.name) ? "[*]" : "[ ]"
-      output += "#{indent}#{installed} #{pkg.atom}-#{pkg.version}\n"
+      output << "#{indent}#{installed} #{pkg.atom}-#{pkg.version}\n"
+      return if visited.include?(pkg.atom)
+      visited.add(pkg.atom)
 
       Array(pkg.dependencies).each do |dep_name|
         dep = repository.find_package(dep_name)
         if dep
-          print_tree(dep, repository, database, output, depth + 1, max_depth)
+          print_tree(dep, repository, database, output, depth + 1, max_depth, visited)
         end
       end
     end
@@ -214,6 +218,7 @@ module Quarks
     end
 
     def format_size(bytes)
+      return "0 B" unless bytes.to_i.positive?
       units = ["B", "KB", "MB", "GB", "TB"]
       exp = (Math.log(bytes) / Math.log(1024)).floor
       exp = [exp, units.length - 1].min
@@ -296,8 +301,7 @@ module Quarks
     end
 
     def query_clean(args, repository, database)
-      world = WorldManager.new
-      world_atoms = Set.new(world.contents)
+      world_atoms = Set.new(database.world_list)
 
       orphans = []
 
@@ -441,13 +445,32 @@ module Quarks
       output = "Verifying #{pkg[:atom]}...\n\n"
       issues = []
 
-      pkg[:files].each do |rel_path|
+      manifest = Array(pkg[:file_manifest])
+      manifest = Array(pkg[:files]).map { |path| { path: path } } if manifest.empty?
+      manifest.each do |entry|
+        rel_path = entry[:path]
         abs = File.join(Database::QUARKS_ROOT, rel_path)
-        issues << "Missing: #{rel_path}" unless File.exist?(abs)
+        unless File.exist?(abs) || File.symlink?(abs)
+          issues << "Missing: #{rel_path}"
+          next
+        end
+
+        next unless entry[:sha256]
+        actual = if File.symlink?(abs)
+                   Digest::SHA256.hexdigest("symlink\0#{File.readlink(abs)}")
+                 elsif File.file?(abs)
+                   Digest::SHA256.file(abs).hexdigest
+                 end
+        issues << "Modified: #{rel_path}" unless actual == entry[:sha256]
+        stat = File.lstat(abs)
+        actual_kind = stat.symlink? ? "symlink" : (stat.file? ? "file" : "special")
+        issues << "Type changed: #{rel_path}" if entry[:kind] && actual_kind != entry[:kind]
+        issues << "Mode changed: #{rel_path}" if entry[:mode] && (stat.mode & 0o7777) != entry[:mode]
+        issues << "Size changed: #{rel_path}" if entry[:size] && stat.size != entry[:size]
       end
 
       if issues.empty?
-        output += "  All #{pkg[:files].length} files verified OK\n"
+        output += "  All #{manifest.length} files passed integrity verification\n"
       else
         output += "  Issues: #{issues.length}\n"
         issues.first(10).each { |i| output += "    #{i}\n" }
@@ -461,7 +484,7 @@ module Quarks
 
       installed = database.list_packages.length
       available = repository.list_atoms.length
-      world = WorldManager.new.contents.length
+      world = database.world_list.length
 
       by_category = Hash.new(0)
       database.list_packages.each do |name|
@@ -479,7 +502,7 @@ module Quarks
       end
 
       cache_size = 0
-      Database.new.cache_dirs.each do |dir|
+      database.cache_dirs.each do |dir|
         next unless Dir.exist?(dir)
         Find.find(dir) { |f| cache_size += File.size(f) if File.file?(f) }
       end
