@@ -13,7 +13,7 @@ task default: :test
 
 desc "Compile every shipped Ruby entry point"
 task :syntax do
-  paths = Dir["src/**/*.rb", "tools/*.rb", "exe/*"] + ["quarks", "quarks-package-manager.gemspec", "Rakefile"]
+  paths = Dir["src/**/*.rb", "tools/*.rb", "exe/*"] + ["quarks", "install.rb", "quarks-package-manager.gemspec", "Rakefile"]
   paths.sort.each do |path|
     ruby "-c", path, out: File::NULL
   end

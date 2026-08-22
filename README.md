@@ -19,6 +19,35 @@ Some things worth knowing up front:
 
 ## Installing
 
+For a guided Linux installation from a checkout, run:
+
+```sh
+git clone https://github.com/RobertFlexx/Quarks.git
+cd Quarks
+ruby install.rb
+```
+
+The installer offers three profiles: a rootless personal install, a managed
+installation owned by a dedicated `quarks` Linux account, and a staged
+distribution/LFS package tree. It uses only the Ruby standard library and can
+also run unattended:
+
+```sh
+# Personal installation
+ruby install.rb --mode personal --yes
+
+# Dedicated account plus a system-wide launcher
+ruby install.rb --mode managed --user quarks --yes
+
+# Distribution package staging (dependencies remain distro-managed)
+ruby install.rb --mode distribution --destdir "$PWD/pkg" --yes
+```
+
+Use `ruby install.rb --help` for custom prefixes, dependency handling, color,
+and dry-run options.
+
+RubyGems remains the shortest installation method:
+
 ```sh
 gem install quarks-package-manager
 quarks version

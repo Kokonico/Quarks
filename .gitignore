@@ -184,4 +184,5 @@ Temporary Items
 
 # misc
 spec/*
+!/spec/install_test.rb
 tools/*
