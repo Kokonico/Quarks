@@ -192,3 +192,5 @@ tools/*
 !/spec/uninstall_safety_test.rb
 !/spec/database_migration_test.rb
 !/spec/self_update_test.rb
+!/spec/sandbox_probe_test.rb
+!/spec/environment_cli_test.rb

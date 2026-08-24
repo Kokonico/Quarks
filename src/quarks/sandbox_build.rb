@@ -47,6 +47,7 @@ module Quarks
         "--new-session",
         "--unshare-all",
         "--ro-bind", "/usr", "/usr",
+        "--ro-bind", "/etc", "/etc",
         "--symlink", "usr/bin", "/bin",
         "--symlink", "usr/sbin", "/sbin",
         "--symlink", "usr/lib", "/lib",

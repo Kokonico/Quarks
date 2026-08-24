@@ -1,25 +1,29 @@
 # Quarks
 
-Quarks is a source-based package manager for Linux. You ask for a package, it works out the dependencies, builds everything in a sandbox under your own user, and installs it. If an install fails partway through, your system stays as it was.
+Quarks is a source-based package manager for Linux. It is for people who want to build packages from reviewed recipes, choose build options, and install them under their own user account. It can also stage packages for a managed system or a Linux distribution.
 
-Some things worth knowing up front:
+Quarks is not a replacement for a full distribution package manager yet. The catalog is small, and packages still need the compilers and other build tools they use. Expect gaps.
 
-- Builds run in a Bubblewrap sandbox as a regular user. No network, no access to your home directory.
-- Downloads are checked against exact SHA-256 or SHA-512 checksums over HTTPS.
-- Installs are transactional. A failed merge rolls back cleanly.
-- Package repositories are GPG signed. Unsigned ones are rejected by default.
-- Packages support per-package USE flags if you want that level of control.
+## How it works
+
+A package is described by a `.nuclei` recipe. Quarks resolves its dependencies, downloads the listed source archives, checks their SHA-256 or SHA-512 checksums, and builds them in a Bubblewrap sandbox. Builds run as a regular user, without access to your home directory or the network by default.
+
+The finished files are merged into the install root as one transaction. If the merge fails, Quarks rolls it back. A system-wide install may use `sudo` for the final copy, but the build itself does not run as root.
+
+Remote package repositories are GPG signed and are rejected by default if the signature is missing or invalid. Source downloads use HTTPS and exact checksums. Unsafe overrides exist for unusual environments, but they are not the default.
 
 ## Requirements
 
-- Linux with Ruby 3.2 through 4.0
-- Bubblewrap (`bwrap`) for sandboxed builds
-- `gpg` and `gpgv` for signed repositories
-- GNU `cp`, `tar`, `unzip`, and `patch`, plus whatever toolchain a package needs
+- Linux
+- Ruby 3.2 through 4.0
+- Bubblewrap (`bwrap`)
+- `gpg` and `gpgv`
+- GNU `cp`, `tar`, `unzip`, and `patch`
+- The compiler and build tools required by each package
 
-## Installing
+## Install Quarks
 
-For a guided Linux installation from a checkout, run:
+For the guided installer, clone the repository and run `install.rb`:
 
 ```sh
 git clone https://github.com/RobertFlexx/Quarks.git
@@ -27,45 +31,32 @@ cd Quarks
 ruby install.rb
 ```
 
-The installer offers three profiles: a rootless personal install, a managed
-installation owned by a dedicated `quarks` Linux account, and a staged
-distribution/LFS package tree. It uses only the Ruby standard library and can
-also run unattended:
+The installer has three modes:
+
+- `personal` installs a rootless copy for one user.
+- `managed` creates or uses a dedicated `quarks` Linux account and adds a system-wide launcher.
+- `distribution` stages a package tree for a distribution or LFS build. Its dependencies remain managed by the distribution.
+
+The installer uses only the Ruby standard library. It can run unattended:
 
 ```sh
-# Personal installation
 ruby install.rb --mode personal --yes
-
-# Dedicated account plus a system-wide launcher
 ruby install.rb --mode managed --user quarks --yes
-
-# Distribution package staging (dependencies remain distro-managed)
 ruby install.rb --mode distribution --destdir "$PWD/pkg" --yes
 ```
 
-Use `ruby install.rb --help` for custom prefixes, dependency handling, color,
-and dry-run options.
+Run `ruby install.rb --help` for prefix, dependency, color, and dry-run options.
 
-Re-running the same install command performs a clean staged replacement and
-keeps atomic rollback backups. Run the same command with `--uninstall` to fully
-remove Quarks, package data, state, configuration, PATH snippets, and installer
-backups. Use `--remove-program-only` when package data must be preserved.
+Running the same install command again creates a clean staged replacement and keeps atomic rollback backups. Add `--uninstall` to remove Quarks, its package data, state, configuration, PATH snippets, and installer backups. Add `--remove-program-only` if you need to keep package data.
 
-Repository-installed copies can check their tracked HTTPS upstream during an
-ordinary `quarks sync` without slowing down other commands. Use
-`quarks self-update --check` to force a check or `quarks self-update` to verify,
-confirm, and transactionally install an available update. Self-update is
-enabled only when the installed commit has a valid Git signature; every update
-must match the pinned signing fingerprint recorded at installation.
-
-RubyGems remains the shortest installation method:
+You can also install the gem:
 
 ```sh
 gem install quarks-package-manager
 quarks version
 ```
 
-Or run it straight from a checkout:
+Or run Quarks from a checkout:
 
 ```sh
 git clone https://github.com/RobertFlexx/Quarks.git
@@ -74,34 +65,43 @@ bundle install
 ./quarks version
 ```
 
-Everything lives under `~/.local/quarks` by default, with state in `~/.local/state/quarks`. Builds never run as root. If you point Quarks at a system-wide install root, only the final copy step uses `sudo`.
+The default install root is `~/.local/quarks`. State is stored in `~/.local/state/quarks`.
 
-## First steps
+## Updates and trust
+
+A copy installed from the repository can check its tracked HTTPS upstream during `quarks sync`. Other commands do not wait for this check.
 
 ```sh
-quarks setup-path        # put quarks-installed apps on your PATH
-quarks search hello      # find packages
-quarks info hello        # see details
-quarks install hello     # build and install
+quarks self-update --check   # check now
+quarks self-update           # verify, confirm, and install an update
 ```
 
-Builds ask before doing anything. Add `--yes` to skip the prompt. Other commands you will probably want at some point:
+Self-update is enabled only if the installed commit has a valid Git signature. The installer records that signature's fingerprint. Every later update must match the pinned fingerprint, and installation is transactional.
+
+## First commands
 
 ```sh
-quarks upgrade               # update everything in your world file
+quarks setup-path        # add Quarks-installed commands to PATH
+quarks search hello      # search the catalog
+quarks info hello        # inspect a package
+quarks install hello     # build and install it
+```
+
+Quarks shows the planned build and asks before starting. Use `--yes` to skip the prompt.
+
+```sh
+quarks upgrade               # upgrade packages in the world file
 quarks remove hello
-quarks world                 # what you have explicitly installed
-quarks owner usr/bin/hello   # which package owns a file
-quarks doctor                # check that your setup is healthy
+quarks world                 # list explicitly installed packages
+quarks owner usr/bin/hello   # find the package that owns a file
+quarks doctor                # check the local setup
 ```
 
-Run `quarks help` for the full list.
+Run `quarks help` for all commands.
 
 ## Configuration
 
-Quarks reads `/etc/quarks/quarks.conf`, then `~/.config/quarks/quarks.conf`, then the `QUARKS_CONFIG` environment variable. Later files win. Unknown keys are errors, not warnings.
-
-A small example:
+Quarks looks for configuration in `/etc/quarks/quarks.conf`, `~/.quarks.conf`, and the user config path (`$XDG_CONFIG_HOME/quarks/quarks.conf`, normally `~/.config/quarks/quarks.conf`). `QUARKS_CONFIG` can name an additional file. Later files win, but an environment variable that is already set takes precedence. Unknown keys are errors.
 
 ```conf
 jobs = 12
@@ -109,32 +109,39 @@ sandbox = true
 use = "ssl unicode -static-libs"
 ```
 
-Most settings can also come from environment variables:
+Settings can also be supplied as environment variables. These are common examples:
 
-| Variable | Purpose |
-|---|---|
-| `QUARKS_ROOT` | Installation root |
-| `QUARKS_JOBS` | Build parallelism |
-| `QUARKS_SIZE_PROBE_MS` | Download-size lookup budget in milliseconds; `0` disables probing |
+| Variable | Meaning |
+| --- | --- |
+| `QUARKS_ROOT` | Package install root |
+| `QUARKS_STATE_ROOT` | Database, cache, log, and operation state root |
+| `QUARKS_TMPDIR` | Build workspace |
+| `QUARKS_JOBS` | Number of parallel build jobs |
+| `QUARKS_SIZE_PROBE_MS` | Download-size lookup budget in milliseconds; `0` disables it |
 | `QUARKS_USE` | Global USE flags |
-| `QUARKS_TMPDIR` | Where builds happen |
-| `QUARKS_NO_SANDBOX=1` | Disable Bubblewrap (unsafe) |
+| `QUARKS_NUCLEI_PATHS` | Additional local recipe directories, separated by `:` |
+| `QUARKS_REPO_URLS` | Additional remote repository manifests |
+| `QUARKS_NO_SANDBOX=1` | Disable Bubblewrap isolation; unsafe |
 
-Run `quarks env` to print shell exports for everything Quarks installs. `quarks setup-path` adds them to your shell config for you.
+Run `quarks environment` for the full formatted variable reference. It groups variables by purpose, shows defaults or current values, marks unsafe settings, and includes examples.
+
+`quarks env` does something different: it prints shell exports for the paths provided by installed packages. `quarks setup-path` writes the required setup to your shell configuration.
 
 ## USE flags
 
-Global flags live in `~/.config/quarks/use.conf`, and per-package rules go in `package.use` next to it. Prefix a flag with `-` to turn it off.
+USE flags select optional package features. Global flags are stored in `~/.config/quarks/use.conf`. Per-package rules are stored in `~/.config/quarks/package.use`. Prefix a flag with `-` to disable it.
 
 ```sh
 quarks use set ssl unicode -gtk
 quarks use package app-editors/vim gui -python
-quarks use explain app-editors/vim    # show where each flag came from
+quarks use explain app-editors/vim
 ```
 
-## Writing your own recipes
+The last command shows where each effective flag came from.
 
-Packages are described by `.nuclei` files. These are data files with Ruby-like syntax, and nothing in them gets executed while loading. Sources must be HTTPS with an exact checksum.
+## Package recipes
+
+Recipes use the `.nuclei` format. The syntax looks like Ruby, but Quarks parses recipes as data and does not execute them while loading. Sources must use HTTPS and include an exact checksum by default.
 
 ```ruby
 nuclei "hello", "2.12.1" do
@@ -161,13 +168,13 @@ nuclei "hello", "2.12.1" do
 end
 ```
 
-Point `QUARKS_NUCLEI_PATHS` (or `nuclei_paths` in your config) at a directory and your recipes show up alongside the packaged ones.
+Set `QUARKS_NUCLEI_PATHS`, or `nuclei_paths` in `quarks.conf`, to load recipes from another directory. They appear alongside the packaged recipes.
 
-If you package something new, consider sending it upstream. Recipes are meant to be shared the same way Gentoo handles ebuilds: open a pull request against this repository with your `.nuclei` file, and once it is reviewed and verified it ships to everyone in the next catalog update. Local recipes are fine for quick personal use, but the catalog only grows because people contribute theirs.
+Local recipes are useful for personal packages. To add one to the shared catalog, open a pull request with the `.nuclei` file. Reviewed and verified recipes are included in a later catalog update.
 
-## Signed repositories
+## Remote repositories
 
-You can also add remote repositories. They must be GPG signed:
+Remote repository manifests must be GPG signed by default:
 
 ```sh
 quarks add-repo main https://packages.example/index.json \
@@ -177,23 +184,26 @@ quarks sync
 quarks list-repos
 ```
 
-Repository manifests expire after at most 30 days and carry a sequence number that only ever goes up, so a repository cannot hand you stale or rolled-back metadata.
+Manifests expire after no more than 30 days. Their sequence numbers must increase, which prevents a repository from serving older metadata as current.
 
-## Safety basics
+## Safety limits
 
-- Recipe files are parsed as data. Nothing runs while loading them.
-- Build commands stay inside a sandbox with no network and no view of your home directory.
-- Downloads cannot be redirected to private-network addresses, and redirects get checked again.
-- Root builds are refused, and installs will not overwrite files Quarks does not own unless you pass `--force`.
-- If the database looks damaged, Quarks stops and tells you instead of quietly rebuilding it.
+- Recipe files are parsed as data before any build command runs.
+- Sandboxed builds have no network or home-directory access by default.
+- Download redirects are checked again and cannot point to private-network addresses by default.
+- Quarks refuses root builds by default.
+- Quarks does not overwrite files it does not own unless you pass `--force`.
+- Quarks stops if its database appears damaged instead of silently rebuilding it.
 
-## Status
+## Project status
 
-The core workflow works well, but the package catalog is still small. About 115 recipes ship today and more are being verified over time. Expect gaps.
+The install, build, upgrade, remove, and rollback workflow is available. The catalog currently contains about 115 recipes, so it will not cover every package. More recipes are being verified over time.
 
 ## Contributing
 
-Bug reports and pull requests are welcome. New package recipes are the most useful contribution of all; see "Writing your own recipes" above for the format. To work on Quarks itself:
+Bug reports, fixes, and package recipes are welcome. New recipes are especially useful; see [Package recipes](#package-recipes) for the format.
+
+To work on Quarks itself:
 
 ```sh
 git clone https://github.com/RobertFlexx/Quarks.git
@@ -202,8 +212,8 @@ bundle install
 ./quarks version
 ```
 
-Test and release tooling is kept outside the public tree. If something here does not make sense, open an issue.
+Test and release tooling is kept outside the public repository. Open an issue if the public code or documentation is unclear.
 
 ## License
 
-BSD 3-Clause. See [LICENSE](LICENSE).
+Quarks uses the BSD 3-Clause license. See [LICENSE](LICENSE).

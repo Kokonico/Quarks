@@ -163,35 +163,6 @@ module Quarks
       false
     end
 
-    def help_section
-      <<~TXT
-
-      ENVIRONMENT
-      QUARKS_ROOT         Installation directory (default: ~/.local/quarks)
-      QUARKS_STATE_ROOT   State/cache/log root (default: ~/.local/state/quarks)
-      QUARKS_TMPDIR       Build temp dir (default: $QUARKS_STATE_ROOT/var/tmp/quarks)
-      QUARKS_JOBS         Parallel build jobs (default: CPU count)
-      QUARKS_SIZE_PROBE_MS Download-size probe budget in ms (default: 600, 0 disables)
-      QUARKS_VERBOSE      Enable verbose output (1/0)
-      QUARKS_QUIET        Enable quiet output (1/0)
-      QUARKS_DEBUG        Show debug information (1/0)
-      QUARKS_WARNINGS     Show compiler warnings (1/0)
-      QUARKS_TRACE_SYSTEM Trace executed system calls (1/0)
-      QUARKS_CONFIG       Explicit configuration file
-      QUARKS_NUCLEI_PATHS Additional local repo paths separated by ':'
-      QUARKS_REPO_URLS    Remote repo manifest URLs separated by comma/space
-      QUARKS_NO_SANDBOX   Disable Bubblewrap isolation (unsafe, 1/0)
-      QUARKS_BUILD_NETWORK Allow build network access (unsafe, 1/0)
-      QUARKS_ALLOW_PRIVATE_NETWORKS Allow private remote addresses (unsafe, 1/0)
-      QUARKS_ALLOW_INSECURE_SOURCES Allow HTTP sources (unsafe, 1/0)
-      QUARKS_ALLOW_INSECURE_REPOS Allow HTTP repositories (unsafe, 1/0)
-      QUARKS_ALLOW_UNSIGNED_REPOS Allow unsigned repositories (unsafe, 1/0)
-      QUARKS_ALLOW_DUPLICATES Allow duplicate package definitions (1/0)
-      QUARKS_SELF_UPDATE_CHECK Check for Quarks updates during repository sync (1/0)
-      QUARKS_SELF_UPDATE_TTL Minimum seconds between Quarks update checks (default: 86400)
-      TXT
-    end
-
     def dump_lines
       %w[
         QUARKS_ROOT QUARKS_STATE_ROOT QUARKS_TMPDIR QUARKS_JOBS QUARKS_SIZE_PROBE_MS

@@ -164,6 +164,7 @@ module Quarks
       when "help", "-h", "--help" then show_help
       when "paths" then show_paths
       when "env" then print_env
+      when "environment", "env-help" then show_environment
       when "setup-path" then setup_path
       when "compact-db" then compact_db
       when "add-repo" then add_repository(args)
@@ -413,6 +414,7 @@ module Quarks
       puts "  #{UI::COLORS[:cyan]}doctor#{UI::COLORS[:reset]}                System health check"
       puts "  #{UI::COLORS[:cyan]}paths#{UI::COLORS[:reset]}                 Show Quarks paths"
       puts "  #{UI::COLORS[:cyan]}env#{UI::COLORS[:reset]}                   Print exports for shell"
+      puts "  #{UI::COLORS[:cyan]}environment, env-help#{UI::COLORS[:reset]} Browse environment variables and examples"
       puts "  #{UI::COLORS[:cyan]}setup-path#{UI::COLORS[:reset]}            Install PATH integration"
       puts "  #{UI::COLORS[:cyan]}compact-db#{UI::COLORS[:reset]}            Vacuum SQLite DB"
       puts "  #{UI::COLORS[:cyan]}add-repo#{UI::COLORS[:reset]}              Add web repository"
@@ -435,7 +437,6 @@ module Quarks
       puts "  #{UI::COLORS[:brand]}hook#{UI::COLORS[:reset]}                 Hook script management"
       puts "  #{UI::COLORS[:brand]}sync-mode#{UI::COLORS[:reset]}            Set persistent repository sync mode"
       puts "  #{UI::COLORS[:brand]}status#{UI::COLORS[:reset]}               System status overview"
-      puts Quarks::Env.help_section
     end
 
     def install_packages(package_names)
@@ -1370,6 +1371,85 @@ module Quarks
 
     def print_env
       puts PathIntegration.environment_lines
+    end
+
+    def show_environment
+      groups = {
+        "Paths and configuration" => [
+          ["QUARKS_ROOT", "~/.local/quarks", "Installed package filesystem root"],
+          ["QUARKS_STATE_ROOT", "~/.local/state/quarks", "Database, cache, logs, and operation state"],
+          ["QUARKS_TMPDIR", "$QUARKS_STATE_ROOT/var/tmp/quarks", "Private build workspace"],
+          ["QUARKS_CONFIG", "auto-discovered", "Explicit quarks.conf path"],
+          ["QUARKS_SYSTEM_CONFIG_DIR", "/etc/quarks", "System configuration directory"],
+          ["QUARKS_NUCLEI_PATHS", "packaged repositories", "Additional local recipe paths separated by ':'"],
+          ["QUARKS_REPO_URLS", "none", "Additional repository manifest URLs separated by comma or space"]
+        ],
+        "Build controls" => [
+          ["QUARKS_JOBS", "CPU count", "Parallel build jobs (1-1024)"],
+          ["QUARKS_USE", "none", "Global USE flags separated by spaces"],
+          ["QUARKS_SIZE_PROBE_MS", "600", "Download-size probe budget in milliseconds; 0 disables"],
+          ["QUARKS_MAX_SOURCE_BYTES", "4 GiB", "Maximum downloaded source size"],
+          ["QUARKS_MAX_EXTRACTED_BYTES", "20 GiB", "Maximum extracted source size"],
+          ["QUARKS_MAX_EXTRACTED_FILES", "250000", "Maximum files in an extracted source"],
+          ["QUARKS_MAX_LOG_BYTES", "64 MiB", "Maximum build log size"],
+          ["QUARKS_BUILD_NETWORK", "0", "Allow network access inside build sandbox (unsafe)"],
+          ["QUARKS_NO_SANDBOX", "0", "Disable Bubblewrap isolation (unsafe)"],
+          ["QUARKS_ALLOW_ROOT_BUILD", "0", "Allow builds as root (unsafe)"],
+          ["QUARKS_FORCE_OVERWRITE", "0", "Allow approved unmanaged path replacement"]
+        ],
+        "Output and behavior" => [
+          ["QUARKS_VERBOSE", "1", "Enable normal verbose output"],
+          ["QUARKS_QUIET", "0", "Suppress nonessential output"],
+          ["QUARKS_DEBUG", "0", "Show diagnostics and stack traces"],
+          ["QUARKS_WARNINGS", "0", "Show compiler warnings"],
+          ["QUARKS_TRACE_SYSTEM", "0", "Trace external process execution"],
+          ["QUARKS_THEME", "default", "CLI theme: default, midnight, forest, or ocean"],
+          ["QUARKS_DISABLE_SHIMS", "0", "Disable command shim synchronization"],
+          ["QUARKS_STATE_MAX_AGE", "86400", "Maximum resumable-operation age in seconds"]
+        ],
+        "Repository security" => [
+          ["QUARKS_ALLOW_PRIVATE_NETWORKS", "0", "Allow repository/source hosts on private networks (unsafe)"],
+          ["QUARKS_ALLOW_INSECURE_SOURCES", "0", "Allow HTTP source downloads (unsafe)"],
+          ["QUARKS_ALLOW_INSECURE_REPOS", "0", "Allow HTTP repository manifests (unsafe)"],
+          ["QUARKS_ALLOW_UNSIGNED_REPOS", "0", "Allow unsigned repositories (unsafe)"],
+          ["QUARKS_ALLOW_DUPLICATES", "0", "Allow duplicate package definitions"],
+          ["QUARKS_FORCE_SYNC", "0", "Force a full repository synchronization"],
+          ["QUARKS_SELF_UPDATE_CHECK", "1", "Check for Quarks updates after repository sync"],
+          ["QUARKS_SELF_UPDATE_TTL", "86400", "Minimum seconds between update checks"]
+        ],
+        "Recipe build context (read-only)" => [
+          ["QUARKS_SRCDIR", "set per build", "Extracted source directory"],
+          ["QUARKS_BUILDDIR", "set per build", "Active build directory"],
+          ["QUARKS_DESTDIR", "set per build", "Staged installation image"],
+          ["QUARKS_PKG_NAME", "set per build", "Current package name"],
+          ["QUARKS_PKG_VERSION", "set per build", "Current package version"],
+          ["QUARKS_ENABLED_USE", "set per build", "Enabled USE flags"]
+        ]
+      }
+
+      puts
+      puts "#{UI::COLORS[:bold]}#{UI::COLORS[:bright_cyan]}Quarks Environment Reference#{UI::COLORS[:reset]}"
+      puts "#{UI::COLORS[:dim]}Set a variable for one command, export it for a shell session, or use the matching quarks.conf key where available.#{UI::COLORS[:reset]}"
+      puts
+      puts "  #{UI::COLORS[:green]}QUARKS_JOBS=8 quarks install vim#{UI::COLORS[:reset]}"
+      puts "  #{UI::COLORS[:green]}export QUARKS_THEME=forest#{UI::COLORS[:reset]}"
+      puts "  #{UI::COLORS[:green]}self_update_ttl = 3600#{UI::COLORS[:reset]}  #{UI::COLORS[:dim]}# in quarks.conf#{UI::COLORS[:reset]}"
+
+      groups.each do |title, variables|
+        puts
+        puts "#{UI::COLORS[:bold]}#{title}#{UI::COLORS[:reset]}"
+        variables.each do |name, default, description|
+          current = ENV[name].to_s
+          value = current.empty? ? "default: #{default}" : "current: #{current}"
+          unsafe = description.include?("unsafe") ? " #{UI::COLORS[:yellow]}[unsafe]#{UI::COLORS[:reset]}" : ""
+          clean_description = description.sub(" (unsafe)", "")
+          puts "  #{UI::COLORS[:cyan]}#{name}#{UI::COLORS[:reset]}#{unsafe}"
+          puts "    #{clean_description} #{UI::COLORS[:dim]}(#{value})#{UI::COLORS[:reset]}"
+        end
+      end
+
+      puts
+      puts "#{UI::COLORS[:dim]}Tip: #{UI::COLORS[:cyan]}quarks env#{UI::COLORS[:reset]}#{UI::COLORS[:dim]} prints shell exports for Quarks paths.#{UI::COLORS[:reset]}"
     end
 
     def setup_path
