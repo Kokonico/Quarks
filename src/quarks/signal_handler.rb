@@ -13,35 +13,37 @@ module Quarks
 
     attr_reader :interrupted, :shutdown_requested, :received_signals
 
+    SIGNALS = %w[INT TERM HUP QUIT].freeze
+
     def initialize
       @interrupted = false
       @shutdown_requested = false
       @received_signals = []
       @handlers = {}
       @state_savers = []
+      @pending_signal = nil
+      @previous_traps = {}
     end
 
     def setup!
       return if @setup
 
-      trap("INT") { handle_signal("INT") }
-      trap("TERM") { handle_signal("TERM") }
-      trap("HUP") { handle_signal("HUP") }
-      trap("QUIT") { handle_signal("QUIT") }
-
+      SIGNALS.each do |signal|
+        @previous_traps[signal] = trap(signal) { record_signal(signal) }
+      end
       @setup = true
     end
 
     def teardown!
       return unless @setup
 
-      Signal.list.keys.each do |sig|
+      @previous_traps.each do |signal, handler|
         begin
-          trap(sig, "DEFAULT")
+          trap(signal, handler)
         rescue ArgumentError
         end
       end
-
+      @previous_traps.clear
       @setup = false
     end
 
@@ -54,30 +56,38 @@ module Quarks
       @state_savers << saver
     end
 
-    def handle_signal(sig)
-      @received_signals << sig
-      @interrupted = true
-
-      case sig
-      when "INT"
+    def record_signal(sig)
+      @pending_signal = sig
+      if sig == "INT"
         @interrupted = true
-      when "TERM", "QUIT", "HUP"
+      else
         @shutdown_requested = true
       end
+      nil
+    end
+
+    def handle_signal(sig)
+      record_signal(sig.to_s.upcase)
+      process_pending!
+    end
+
+    def process_pending!
+      sig = @pending_signal
+      return false unless sig
+      @pending_signal = nil
+      @received_signals << sig
 
       if ENV["QUARKS_DEBUG"]
         warn "[quarks] Received signal: #{sig} (#{@received_signals.length} total)"
       end
 
       save_state!
-
-      (@handlers[sig] || []).each { |h| h.call(sig) }
-      (@handlers["ALL"] || []).each { |h| h.call(sig) }
+      (@handlers[sig] || []).each { |handler| handler.call(sig) }
+      (@handlers["ALL"] || []).each { |handler| handler.call(sig) }
+      true
     end
 
     def save_state!
-      return if @state_savers.empty?
-
       @state_savers.each do |saver|
         begin
           saver.call
@@ -90,6 +100,7 @@ module Quarks
     def reset!
       @interrupted = false
       @shutdown_requested = false
+      @pending_signal = nil
     end
 
     def interrupted?
@@ -101,12 +112,9 @@ module Quarks
     end
 
     def check_and_raise!
-      if @interrupted
-        raise InterruptedError, "Operation interrupted by signal"
-      end
-      if @shutdown_requested
-        raise ShutdownError, "Shutdown requested"
-      end
+      process_pending!
+      raise ShutdownError, "Shutdown requested" if @shutdown_requested
+      raise InterruptedError, "Operation interrupted by signal" if @interrupted
     end
   end
 

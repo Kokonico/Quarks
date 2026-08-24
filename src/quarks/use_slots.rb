@@ -407,7 +407,7 @@ module Quarks
         blocked_name = @repository.normalize_name(blocked)
 
         if @database.installed?(blocked_name)
-          pkg = @database.get_package(blocked_name)
+          pkg = @database.package_summary(blocked_name)
           conflicts << {
             type: :blocks,
             package: package.atom,
@@ -434,7 +434,7 @@ module Quarks
       @blockers.each do |atom, blocks|
         next unless blocks.include?(package.name) || blocks.include?(package.atom)
 
-        pkg = @database.get_package(@repository.normalize_name(atom))
+        pkg = @database.package_summary(@repository.normalize_name(atom))
         blocked << (pkg ? pkg[:atom] : atom)
       end
       blocked

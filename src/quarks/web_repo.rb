@@ -66,7 +66,7 @@ module Quarks
       end
 
       def expired?
-        return false if @last_sync.nil?
+        return true if @last_sync.nil?
         (Time.now - @last_sync) > OFFLINE_GRACE_PERIOD
       end
 
@@ -261,8 +261,14 @@ module Quarks
         if !force && cached_manifest && !repo.expired?
           manifest_data = cached_manifest
         else
-          manifest_data = fetch_manifest(repo, use_cache: !force, verify: verify)
-          fetched = true
+          begin
+            manifest_data = fetch_manifest(repo, use_cache: !force, verify: verify)
+            fetched = true
+          rescue NetworkError
+            raise unless offline_ok && cached_manifest
+            warn "[quarks] Using previously verified cache for '#{name}' because the repository is unreachable"
+            manifest_data = cached_manifest
+          end
         end
 
         if manifest_data.nil? && !offline_ok
@@ -317,14 +323,6 @@ module Quarks
               warn "[quarks] Retry #{attempt + 1}/#{retries} for #{repo.name} after #{delay}s: #{e.message}"
               sleep(delay)
             end
-          end
-        end
-
-        if use_cache
-          cached = load_cached_manifest(repo.name, repo: repo, verify: true)
-          if cached
-            warn "[quarks] Using stale cache for '#{repo.name}' due to network errors"
-            return cached
           end
         end
 
@@ -502,7 +500,9 @@ module Quarks
       end
 
       def normalize_key_id(value)
-        value.to_s.upcase.delete_prefix("0X").gsub(/[^0-9A-F]/, "")
+        normalized = value.to_s.strip.upcase.delete_prefix("0X")
+        return "" unless normalized.match?(/\A[0-9A-F]+\z/)
+        normalized
       end
 
       def verify_gpg_signature(signature, data, keyring_path, expected_key_id)
@@ -552,10 +552,15 @@ module Quarks
         return nil unless File.exist?(cache_path)
 
         begin
-          body = File.read(cache_path)
+          stat = File.lstat(cache_path)
+          raise RepoError, "Cached repository manifest must be a regular file" unless stat.file? && !stat.symlink?
+          raise RepoError, "Cached repository manifest exceeds 16 MiB" if stat.size > MAX_MANIFEST_BYTES
+          body = File.binread(cache_path)
           if repo && verify && !repo.allow_insecure
             sig_path = "#{cache_path}.sig"
-            raise SignatureError, "Trusted cached manifest is missing its signature" unless File.exist?(sig_path)
+            raise SignatureError, "Trusted cached manifest is missing its signature" unless File.file?(sig_path) && !File.symlink?(sig_path)
+            sig_stat = File.lstat(sig_path)
+            raise SignatureError, "Cached repository signature exceeds 1 MiB" if sig_stat.size > MAX_SIGNATURE_BYTES
             verify_manifest!(body, File.binread(sig_path), repo)
           end
           data = JSON.parse(body)
@@ -570,12 +575,11 @@ module Quarks
         cache_path = manifest_cache_path(name)
         FileUtils.mkdir_p(File.dirname(cache_path))
         body = repo.manifest_data || JSON.generate(data)
-        Security.atomic_write(cache_path, body)
-        if repo.manifest_hash
-          Security.atomic_write("#{cache_path}.sig", repo.manifest_hash)
-        elsif !repo.allow_insecure
+        if !repo.allow_insecure && repo.manifest_hash.to_s.empty?
           raise SignatureError, "Refusing to cache an unsigned trusted repository"
         end
+        Security.atomic_write("#{cache_path}.sig", repo.manifest_hash) if repo.manifest_hash
+        Security.atomic_write(cache_path, body)
 
         meta_path = "#{cache_path}.meta"
         meta = {
@@ -633,7 +637,12 @@ module Quarks
               allow_http: repo.allow_insecure && ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1",
               allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
             )
-            return http_request(try_uri, headers: headers, max_bytes: max_bytes)
+            return http_request(
+              try_uri,
+              headers: headers,
+              max_bytes: max_bytes,
+              allow_http: repo.allow_insecure && ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1"
+            )
           rescue => e
             last_error = e
             debug_log "Failed #{try_uri}: #{e.message}"
@@ -661,56 +670,70 @@ module Quarks
         urls.uniq
       end
 
-      def http_request(uri, headers: {}, timeout: nil, max_bytes: MAX_MANIFEST_BYTES)
+      def http_request(uri, headers: {}, timeout: nil, max_bytes: MAX_MANIFEST_BYTES, allow_http: false)
         timeout ||= { connect: CONNECT_TIMEOUT, read: READ_TIMEOUT, write: WRITE_TIMEOUT }
-
-        uri = Security.validate_remote_uri!(
+        allow_private = ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+        current_uri = Security.validate_remote_uri!(
           uri,
           purpose: "remote resource",
-          allow_http: ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1",
-          allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+          allow_http: allow_http,
+          allow_private: allow_private,
+          resolve: false
         )
 
-        http = Net::HTTP.new(uri.host, uri.port)
-        addresses = if ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
-                      Resolv.getaddresses(uri.host)
-                    else
-                      Security.resolve_public_addresses!(uri.host, purpose: "remote resource")
-                    end
-        raise NetworkError, "Remote host did not resolve: #{uri.host}" if addresses.empty?
-        http.ipaddr = addresses.first
-        http.use_ssl = uri.scheme == "https"
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
+        6.times do
+          http = Net::HTTP.new(current_uri.host, current_uri.port, nil, nil)
+          addresses = Security.network_addresses!(current_uri.host, purpose: "remote resource", allow_private: allow_private)
+          raise NetworkError, "Remote host did not resolve: #{current_uri.host}" if addresses.empty?
+          http.ipaddr = addresses.first
+          http.use_ssl = current_uri.scheme == "https"
+          http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
+          http.open_timeout = timeout[:connect] || CONNECT_TIMEOUT
+          http.read_timeout = timeout[:read] || READ_TIMEOUT
+          http.write_timeout = timeout[:write] || WRITE_TIMEOUT
+          http.max_retries = 0
 
-        http.open_timeout = timeout[:connect] || CONNECT_TIMEOUT
-        http.read_timeout = timeout[:read] || READ_TIMEOUT
-        http.write_timeout = timeout[:write] || WRITE_TIMEOUT
-
-        http.max_retries = 0
-
-        request = Net::HTTP::Get.new(uri, headers)
-        request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
-        request["Accept"] = "application/json"
-        response = nil
-        http.request(request) do |incoming|
-          response = incoming
-          next unless incoming.is_a?(Net::HTTPSuccess)
-
-          declared = Integer(incoming["Content-Length"], exception: false)
-          raise NetworkError, "Remote response exceeds #{max_bytes} bytes" if declared && declared > max_bytes
-          buffer = +"".b
-          incoming.read_body do |chunk|
-            raise NetworkError, "Remote response exceeds #{max_bytes} bytes" if buffer.bytesize + chunk.bytesize > max_bytes
-            buffer << chunk
+          request = Net::HTTP::Get.new(current_uri, headers)
+          request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
+          request["Accept"] = "application/json"
+          request["Accept-Encoding"] = "identity"
+          response = nil
+          http.request(request) do |incoming|
+            response = incoming
+            if incoming.is_a?(Net::HTTPSuccess)
+              declared = Integer(incoming["Content-Length"].to_s, exception: false)
+              raise NetworkError, "Remote response exceeds #{max_bytes} bytes" if declared && declared > max_bytes
+              buffer = +"".b
+              incoming.read_body do |chunk|
+                raise NetworkError, "Remote response exceeds #{max_bytes} bytes" if buffer.bytesize + chunk.bytesize > max_bytes
+                buffer << chunk
+              end
+              incoming.instance_variable_set(:@body, buffer)
+            end
           end
-          incoming.instance_variable_set(:@body, buffer)
+          debug_log "HTTP #{response.code} for #{current_uri}"
+
+          return response unless response.is_a?(Net::HTTPRedirection)
+          location = response["location"].to_s
+          raise NetworkError, "Redirect from #{current_uri} is missing a location" if location.empty?
+          target = URI.join(current_uri.to_s, location)
+          if current_uri.scheme == "https" && target.scheme != "https" && !allow_http
+            raise NetworkError, "Refusing HTTPS downgrade redirect to #{target}"
+          end
+          current_uri = Security.validate_remote_uri!(
+            target,
+            purpose: "remote resource redirect",
+            allow_http: allow_http,
+            allow_private: allow_private,
+            resolve: false
+          )
         end
-        debug_log "HTTP #{response.code} for #{uri}"
-        response
+
+        raise NetworkError, "Too many redirects while fetching #{uri}"
       rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout => e
-        raise NetworkError, "Timeout connecting to #{uri.host}: #{e.message}"
-      rescue SocketError, Errno::ECONNRESET, Errno::ECONNREFUSED => e
-        raise NetworkError, "Connection error to #{uri.host}: #{e.message}"
+        raise NetworkError, "Timeout connecting to #{current_uri&.host || uri}: #{e.message}"
+      rescue SocketError, Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT => e
+        raise NetworkError, "Connection error to #{current_uri&.host || uri}: #{e.message}"
       end
 
       def trusted_command(name)

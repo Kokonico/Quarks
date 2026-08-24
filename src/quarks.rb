@@ -486,24 +486,6 @@ module Quarks
       end
       requested_atoms = package_names.filter_map { |name| @repository.find_package(name)&.atom }.to_set
 
-      policy_manager = PolicyManager.new
-      denied = all_packages.select { |pkg| policy_manager.is_masked?(pkg.name) || policy_manager.is_held?(pkg.name) }
-      unless denied.empty?
-        denied.each { |pkg| quarks_msg("Package is held or masked: #{pkg.atom}", :error) }
-        exit 1
-      end
-
-      all_packages.each do |pkg|
-        blocker_mgr.load_blockers!(pkg)
-        blockers = blocker_mgr.check_blockers(pkg)
-        unless blockers.empty?
-          blockers.each do |block|
-            quarks_msg("Blocker: #{block[:message]}", :error)
-          end
-          exit 1
-        end
-      end
-
       if all_packages.empty?
         puts
         quarks_msg("No packages to install")
@@ -514,12 +496,35 @@ module Quarks
         return
       end
 
-      puts
-      puts "#{UI::COLORS[:bold]}These are the packages that would be merged, in order:#{UI::COLORS[:reset]}"
-      puts
-
       source_sizes = SourceSize.new
-      size_by_atom = all_packages.to_h { |package| [package.atom, source_sizes.measure(package)] }
+      size_by_atom = nil
+      size_worker = Thread.new do
+        Thread.current.report_on_exception = false
+        begin
+          size_by_atom = source_sizes.measure_many(all_packages, probe_remote: true)
+        rescue
+          size_by_atom = nil
+        end
+      end
+
+      policy_manager = PolicyManager.new
+      denied = all_packages.select { |pkg| policy_manager.is_masked?(pkg.name) || policy_manager.is_held?(pkg.name) }
+      unless denied.empty?
+        denied.each { |pkg| quarks_msg("Package is held or masked: #{pkg.atom}", :error) }
+        exit 1
+      end
+
+      all_packages.each { |pkg| blocker_mgr.load_blockers!(pkg) }
+      all_packages.each do |pkg|
+        blockers = blocker_mgr.check_blockers(pkg)
+        unless blockers.empty?
+          blockers.each do |block|
+            quarks_msg("Blocker: #{block[:message]}", :error)
+          end
+          exit 1
+        end
+      end
+
       dependency_reasons = Hash.new { |hash, atom| hash[atom] = [] }
       unless @options[:nodeps]
         all_packages.each do |parent|
@@ -528,6 +533,13 @@ module Quarks
           end
         end
       end
+      size_by_atom = size_worker.value
+      size_by_atom ||= source_sizes.measure_many(all_packages, probe_remote: false)
+
+      puts
+      puts "#{UI::COLORS[:bold]}These are the packages that would be merged, in order:#{UI::COLORS[:reset]}"
+      puts
+
       all_packages.each do |pkg|
         marker = @database.installed?(pkg.name) ? "R" : "N"
         size = format_source_size(size_by_atom.fetch(pkg.atom))
@@ -555,9 +567,15 @@ module Quarks
         total
       end
       puts
-      total_label = total_size.unknown_sources.positive? ? "at least #{UI.format_bytes(total_size.download_bytes)}" : UI.format_bytes(total_size.download_bytes)
+      total_label = if total_size.unknown_sources.zero?
+                      UI.format_bytes(total_size.download_bytes)
+                    elsif total_size.download_bytes.positive?
+                      "#{UI.format_bytes(total_size.download_bytes)} + #{total_size.unknown_sources} unknown source#{'s' unless total_size.unknown_sources == 1}"
+                    else
+                      "unknown (#{total_size.unknown_sources} source#{'s' unless total_size.unknown_sources == 1})"
+                    end
       puts "#{UI::COLORS[:bold]}Total:#{UI::COLORS[:reset]} #{all_packages.length} package(s), Downloads: #{total_label}"
-      puts "#{UI::COLORS[:dim]}Cached sources: #{UI.format_bytes(total_size.cached_bytes)}#{", Unknown source sizes: #{total_size.unknown_sources}" if total_size.unknown_sources.positive?}#{UI::COLORS[:reset]}"
+      puts "#{UI::COLORS[:dim]}Cached sources: #{UI.format_bytes(total_size.cached_bytes)}#{UI::COLORS[:reset]}" if total_size.cached_bytes.positive?
 
       if @options[:pretend]
         puts
@@ -584,7 +602,7 @@ module Quarks
         puts
         quarks_msg("Fetching sources only (--fetchonly)")
         all_packages.each do |pkg|
-          Builder.new(pkg, 1, 1, @options.merge(use_flags: @use_config.flags_for_package(pkg))).fetch_only
+          Builder.new(pkg, 1, 1, @options.merge(use_flags: @use_config.flags_for_package(pkg), source_size_tracker: source_sizes)).fetch_only
         end
         return
       end
@@ -634,7 +652,7 @@ module Quarks
         begin
           @emerge_queue.mark_start(package.name)
           @emerge_queue.save
-          build_options = @options.merge(resume: false, use_flags: @use_config.flags_for_package(package))
+          build_options = @options.merge(resume: false, use_flags: @use_config.flags_for_package(package), source_size_tracker: source_sizes)
           builder = Builder.new(package, current, total, build_options)
           dest_dir = builder.build
 
@@ -711,9 +729,10 @@ module Quarks
         exit 1
       end
 
-      resolved_names = package_names.map { |name| @database.normalize_name(name) }
-      to_remove = resolved_names.select do |name|
-        if @database.installed?(name)
+      requested = package_names.map { |name| @database.normalize_name(name) }.reject(&:empty?).uniq
+      package_by_name, dependencies, reverse_dependencies = installed_dependency_state
+      to_remove = requested.select do |name|
+        if package_by_name.key?(name)
           true
         else
           quarks_msg("Package '#{name}' is not installed", :warn)
@@ -726,14 +745,12 @@ module Quarks
         return
       end
 
+      selected = to_remove.to_set
       unless @options[:force]
-        blocked = to_remove.each_with_object({}) do |name, result|
-          info = @database.get_package(name)
-          next unless info
-          dependents = find_dependents(info).reject do |atom|
-            to_remove.include?(@database.normalize_name(atom))
-          end
-          result[info[:atom] || name] = dependents unless dependents.empty?
+        blocked = {}
+        to_remove.each do |name|
+          dependents = reverse_dependencies.fetch(name, []).reject { |dependent| selected.include?(dependent[:name]) }
+          blocked[package_by_name[name][:atom] || name] = dependents.map { |dependent| dependent[:atom] }.uniq unless dependents.empty?
         end
         unless blocked.empty?
           blocked.each do |atom, dependents|
@@ -744,12 +761,14 @@ module Quarks
         end
       end
 
+      to_remove = removal_order(to_remove, dependencies)
+
       puts
       puts "#{UI::COLORS[:bold]}These are the packages that would be unmerged:#{UI::COLORS[:reset]}"
       puts
 
       to_remove.each do |name|
-        pkg = @database.get_package(name)
+        pkg = package_by_name.fetch(name)
         atom = pkg[:atom] || name
         version = pkg[:version] || "?"
         puts "#{UI::COLORS[:red]}[uninstall]#{UI::COLORS[:reset]} #{UI::COLORS[:bold]}#{atom}-#{version}#{UI::COLORS[:reset]}"
@@ -774,32 +793,100 @@ module Quarks
       removed = 0
       failures = []
       to_remove.each do |name|
-        info = @database.get_package(name)
-        next unless info
-
+        info = package_by_name.fetch(name)
         package = Package.new(name)
         package.version = info[:version] || "?"
-        package.category = info[:metadata].dig(:category) || info[:category] || "app"
+        package.category = info[:category] || "app"
+        atom = info[:atom] || name
 
-        puts "#{UI::COLORS[:yellow]}>>>#{UI::COLORS[:reset]} Unmerging #{info[:atom] || name}-#{package.version}..."
+        puts "#{UI::COLORS[:yellow]}>>>#{UI::COLORS[:reset]} Unmerging #{atom}-#{package.version}..."
 
         begin
           Installer.new(package, @database, options: @options).uninstall
-          PathIntegration.sync!(@database)
           removed += 1
-          puts "#{UI::COLORS[:green]}>>>#{UI::COLORS[:reset]} Successfully unmerged #{info[:atom] || name}"
+          puts "#{UI::COLORS[:green]}>>>#{UI::COLORS[:reset]} Successfully unmerged #{atom}"
         rescue => e
-          failures << { atom: info[:atom] || name, error: e.message }
-          quarks_msg("Failed to unmerge #{info[:atom] || name}: #{e.message}", :error)
+          failures << { atom: atom, error: e.message }
+          quarks_msg("Failed to unmerge #{atom}: #{e.message}", :error)
+          quarks_msg("Stopping unmerge to keep remaining dependency relationships intact", :warn)
+          break
+        end
+      end
+
+      if removed.positive?
+        begin
+          PathIntegration.sync!(@database)
+        rescue => e
+          failures << { atom: "PATH integration", error: e.message }
+          quarks_msg("Failed to refresh PATH integration: #{e.message}", :error)
         end
       end
 
       puts
       puts "#{UI::COLORS[:green]}>>>#{UI::COLORS[:reset]} Unmerge complete: #{removed} package(s) removed"
       unless failures.empty?
-        puts "#{UI::COLORS[:red]}!!!#{UI::COLORS[:reset]} #{failures.length} package(s) failed to unmerge"
+        puts "#{UI::COLORS[:red]}!!!#{UI::COLORS[:reset]} #{failures.length} operation(s) failed"
         exit 1
       end
+    end
+
+    def installed_dependency_state
+      packages = @database.list_package_metadata
+      package_by_name = {}
+      packages.each do |package|
+        name = @database.normalize_name(package[:name])
+        package_by_name[name] = package unless name.empty?
+      end
+
+      dependencies = {}
+      reverse = Hash.new { |hash, key| hash[key] = [] }
+      packages.each do |package|
+        name = @database.normalize_name(package[:name])
+        next if name.empty?
+
+        raw_dependencies = Array(package.dig(:metadata, :dependencies)) + Array(package.dig(:metadata, :build_dependencies))
+        normalized = raw_dependencies.filter_map do |dependency|
+          dependency_name = @database.normalize_name(dependency)
+          dependency_name if !dependency_name.empty? && dependency_name != name && package_by_name.key?(dependency_name)
+        end.uniq
+        dependencies[name] = normalized
+        normalized.each do |dependency_name|
+          reverse[dependency_name] << { name: name, atom: package[:atom] || name }
+        end
+      end
+
+      [package_by_name, dependencies, reverse]
+    end
+
+    def removal_order(names, dependencies)
+      selected = names.to_set
+      indegree = names.to_h { |name| [name, 0] }
+      names.each do |name|
+        dependencies.fetch(name, []).each do |dependency|
+          indegree[dependency] += 1 if selected.include?(dependency)
+        end
+      end
+
+      position = names.each_with_index.to_h
+      ready = names.select { |name| indegree[name].zero? }
+      result = []
+      until ready.empty?
+        name = ready.shift
+        result << name
+        dependencies.fetch(name, []).each do |dependency|
+          next unless selected.include?(dependency)
+          indegree[dependency] -= 1
+          next unless indegree[dependency].zero?
+          insert_at = ready.bsearch_index { |candidate| position[candidate] > position[dependency] } || ready.length
+          ready.insert(insert_at, dependency)
+        end
+      end
+
+      if result.length < names.length
+        seen = result.to_set
+        names.each { |name| result << name unless seen.include?(name) }
+      end
+      result
     end
 
     def search_packages(terms)
@@ -858,7 +945,7 @@ module Quarks
 
       puts
       packages.each do |name|
-        pkg = @database.get_package(name)
+        pkg = @database.package_summary(name)
         next unless pkg
         puts "#{UI::COLORS[:bold]}#{pkg[:atom] || name}-#{pkg[:version]}#{UI::COLORS[:reset]}"
       end
@@ -1106,6 +1193,7 @@ module Quarks
       successful = 0
       failed = []
       started_at = Time.now
+      source_sizes = SourceSize.new
 
       packages_to_build.each_with_index do |package, index|
         current = index + 1
@@ -1117,7 +1205,7 @@ module Quarks
         builder = nil
         begin
           pkg_started_at = Time.now
-          builder = Builder.new(package, current, total, @options.merge(use_flags: @use_config.flags_for_package(package)))
+          builder = Builder.new(package, current, total, @options.merge(use_flags: @use_config.flags_for_package(package), source_size_tracker: source_sizes))
           dest_dir = builder.build
 
           installer = Installer.new(package, @database, options: @options)
@@ -1570,33 +1658,51 @@ module Quarks
     def depclean_packages
       quarks_msg("Starting depclean")
 
-      world_atoms = Set.new(@database.world_list)
-
-      installed = @database.list_packages
-      to_remove = []
-
-      installed.each do |name|
-        pkg = @database.get_package(name)
-        next unless pkg
-        next unless pkg[:atom]
-
-        atom = pkg[:atom].to_s.downcase
-        category_name = pkg[:category] || "unknown"
-
-        next if world_atoms.include?(atom)
-        next if world_atoms.include?(category_name + "/" + name)
-        next if world_atoms.include?(name)
-
-        next if system_package?(pkg)
-
-        dependents = find_dependents(pkg)
-        if dependents.any?
-          puts "#{UI::COLORS[:yellow]}Skipping #{pkg[:atom]}: required by #{dependents.join(', ')}#{UI::COLORS[:reset]}"
-          next
-        end
-
-        to_remove << pkg
+      packages = @database.list_package_metadata
+      by_name = packages.each_with_object({}) do |package, index|
+        name = @database.normalize_name(package[:name])
+        index[name] = package unless name.empty?
       end
+      world_names = @database.world_list.each_with_object(Set.new) do |entry, names|
+        normalized = @database.normalize_name(entry)
+        names << normalized unless normalized.empty?
+      end
+
+      dependencies = {}
+      packages.each do |package|
+        name = @database.normalize_name(package[:name])
+        next if name.empty?
+        raw = Array(package.dig(:metadata, :dependencies)) + Array(package.dig(:metadata, :build_dependencies))
+        dependencies[name] = raw.filter_map do |dependency|
+          normalized = @database.normalize_name(dependency)
+          normalized if !normalized.empty? && normalized != name && by_name.key?(normalized)
+        end.uniq
+      end
+
+      required = Set.new
+      queue = packages.filter_map do |package|
+        name = @database.normalize_name(package[:name])
+        name if world_names.include?(name) || system_package?(package)
+      end
+      cursor = 0
+      while cursor < queue.length
+        name = queue[cursor]
+        cursor += 1
+        next unless required.add?(name)
+        dependencies.fetch(name, []).each { |dependency| queue << dependency unless required.include?(dependency) }
+      end
+
+      removable = by_name.keys.reject { |name| required.include?(name) }.to_set
+      order = []
+      visited = Set.new
+      visit = lambda do |name|
+        return if visited.include?(name)
+        visited << name
+        dependencies.fetch(name, []).each { |dependency| visit.call(dependency) if removable.include?(dependency) }
+        order << name
+      end
+      removable.each { |name| visit.call(name) }
+      to_remove = order.reverse.filter_map { |name| by_name[name] }
 
       if to_remove.empty?
         puts
@@ -1607,60 +1713,43 @@ module Quarks
       puts
       puts "#{UI::COLORS[:bold]}Packages to be removed:#{UI::COLORS[:reset]}"
       puts
-
-      to_remove.each do |pkg|
-        puts "  #{UI::COLORS[:red]}#{pkg[:atom]}#{UI::COLORS[:reset]}"
-      end
-
+      to_remove.each { |package| puts "  #{UI::COLORS[:red]}#{package[:atom]}#{UI::COLORS[:reset]}" }
       puts
       puts "#{UI::COLORS[:dim]}Total: #{to_remove.length} packages#{UI::COLORS[:reset]}"
 
-      if @options[:pretend]
-        return
-      end
-
-      if @options[:ask] && !confirm?("Remove these packages?")
-        exit 0
-      end
+      return if @options[:pretend]
+      exit 0 if @options[:ask] && !confirm?("Remove these packages?")
 
       removed = 0
-      to_remove.each do |pkg|
+      failures = []
+      to_remove.each do |package_info|
         begin
-          package = Package.new(pkg[:name])
-          package.version = pkg[:version]
-          package.category = pkg[:category]
+          package = Package.new(package_info[:name])
+          package.version = package_info[:version]
+          package.category = package_info[:category]
           Installer.new(package, @database, options: @options).uninstall
-          puts "#{UI::COLORS[:green]}Removed #{pkg[:atom]}#{UI::COLORS[:reset]}"
+          puts "#{UI::COLORS[:green]}Removed #{package_info[:atom]}#{UI::COLORS[:reset]}"
           removed += 1
         rescue => e
-          puts "#{UI::COLORS[:red]}Failed to remove #{pkg[:atom]}: #{e.message}#{UI::COLORS[:reset]}"
+          failures << { atom: package_info[:atom], error: e.message }
+          puts "#{UI::COLORS[:red]}Failed to remove #{package_info[:atom]}: #{e.message}#{UI::COLORS[:reset]}"
+          quarks_msg("Stopping depclean to keep remaining dependency relationships intact", :warn)
+          break
+        end
+      end
+
+      if removed.positive?
+        begin
+          PathIntegration.sync!(@database)
+        rescue => e
+          failures << { atom: "PATH integration", error: e.message }
+          quarks_msg("Failed to refresh PATH integration: #{e.message}", :error)
         end
       end
 
       puts
       quarks_msg("Depclean complete: #{removed} packages removed")
-    end
-
-    def find_dependents(package)
-      dependents = []
-      installed = @database.list_packages
-
-      installed.each do |name|
-        next if name == package[:name]
-
-        pkg = @database.get_package(name)
-        next unless pkg
-        next unless pkg[:metadata]
-
-        all_deps = Array(pkg[:metadata][:dependencies]) +
-                   Array(pkg[:metadata][:build_dependencies])
-
-        if all_deps.include?(package[:name])
-          dependents << pkg[:atom]
-        end
-      end
-
-      dependents
+      exit 1 unless failures.empty?
     end
 
     def system_package?(package)
@@ -1836,47 +1925,44 @@ module Quarks
     end
 
     def command_exists?(name)
-      return false unless name.to_s.match?(/\A[A-Za-z0-9][A-Za-z0-9+_.-]*\z/)
-      ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? do |directory|
-        File.executable?(File.join(directory, name.to_s))
+      value = name.to_s
+      return false unless value.match?(/\A[A-Za-z0-9][A-Za-z0-9+_.-]*\z/)
+      @command_exists_cache ||= {}
+      key = [ENV.fetch("PATH", ""), value]
+      return @command_exists_cache[key] if @command_exists_cache.key?(key)
+      @command_exists_cache[key] = key[0].split(File::PATH_SEPARATOR).any? do |directory|
+        File.executable?(File.join(directory, value))
       end
     end
 
     def levenshtein_distance(a, b)
-      m = a.length
-      n = b.length
-      return m if n.zero?
-      return n if m.zero?
+      a, b = b, a if a.length < b.length
+      return a.length if b.empty?
 
-      d = Array.new(m + 1) { Array.new(n + 1) }
-      (0..m).each { |i| d[i][0] = i }
-      (0..n).each { |j| d[0][j] = j }
-
-      (1..n).each do |j|
-        (1..m).each do |i|
-          d[i][j] = if a[i - 1] == b[j - 1]
-                      d[i - 1][j - 1]
-                    else
-                      [d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + 1].min
-                    end
+      previous = (0..b.length).to_a
+      a.each_char.with_index(1) do |a_char, i|
+        current = [i]
+        b.each_char.with_index(1) do |b_char, j|
+          current[j] = if a_char == b_char
+                         previous[j - 1]
+                       else
+                         [previous[j] + 1, current[j - 1] + 1, previous[j - 1] + 1].min
+                       end
         end
+        previous = current
       end
-
-      d[m][n]
+      previous[b.length]
     end
 
     def format_source_size(size)
-      if size.download_bytes.positive?
-        label = "download #{UI.format_bytes(size.download_bytes)}"
-      elsif size.cached_bytes.positive?
-        label = "cached #{UI.format_bytes(size.cached_bytes)}"
-      elsif size.unknown_sources.zero?
-        label = "no download"
-      else
-        label = "download size unknown"
+      parts = []
+      parts << "download #{UI.format_bytes(size.download_bytes)}" if size.download_bytes.positive?
+      parts << "cached #{UI.format_bytes(size.cached_bytes)}" if size.cached_bytes.positive?
+      if size.unknown_sources.positive?
+        parts << "#{size.unknown_sources} source#{'s' unless size.unknown_sources == 1} unknown"
       end
-      label += ", #{size.unknown_sources} unknown" if size.unknown_sources.positive? && size.download_bytes.positive?
-      label
+      parts << "no download" if parts.empty?
+      parts.join(", ")
     end
 
     def format_time(seconds)

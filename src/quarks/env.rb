@@ -80,12 +80,12 @@ module Quarks
     def jobs_default
       if Etc.respond_to?(:nprocessors)
         n = Etc.nprocessors.to_i
-        return n if n.positive?
+        return [n, 1024].min if n.positive?
       end
 
       if File.exist?("/proc/cpuinfo")
         n = File.read("/proc/cpuinfo").scan(/^processor\s*:/).size
-        return n if n.positive?
+        return [n, 1024].min if n.positive?
       end
 
       2
@@ -97,8 +97,8 @@ module Quarks
       v = ENV["QUARKS_JOBS"].to_s.strip
       return jobs_default if v.empty?
 
-      n = v.to_i
-      n.positive? ? n : jobs_default
+      n = Integer(v, exception: false)
+      n&.positive? ? [n, 1024].min : jobs_default
     end
 
     def quiet?
@@ -171,6 +171,7 @@ module Quarks
       QUARKS_STATE_ROOT   State/cache/log root (default: ~/.local/state/quarks)
       QUARKS_TMPDIR       Build temp dir (default: $QUARKS_STATE_ROOT/var/tmp/quarks)
       QUARKS_JOBS         Parallel build jobs (default: CPU count)
+      QUARKS_SIZE_PROBE_MS Download-size probe budget in ms (default: 600, 0 disables)
       QUARKS_VERBOSE      Enable verbose output (1/0)
       QUARKS_QUIET        Enable quiet output (1/0)
       QUARKS_DEBUG        Show debug information (1/0)
@@ -191,7 +192,7 @@ module Quarks
 
     def dump_lines
       %w[
-        QUARKS_ROOT QUARKS_STATE_ROOT QUARKS_TMPDIR QUARKS_JOBS
+        QUARKS_ROOT QUARKS_STATE_ROOT QUARKS_TMPDIR QUARKS_JOBS QUARKS_SIZE_PROBE_MS
         QUARKS_VERBOSE QUARKS_QUIET QUARKS_DEBUG QUARKS_WARNINGS
         QUARKS_TRACE_SYSTEM QUARKS_CONFIG QUARKS_NUCLEI_PATHS QUARKS_REPO_URLS
         QUARKS_NO_SANDBOX QUARKS_BUILD_NETWORK QUARKS_ALLOW_PRIVATE_NETWORKS

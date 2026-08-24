@@ -38,6 +38,7 @@ module Quarks
       @cache_by_name = {}
       @source_by_atom = {}
       @source_by_name = {}
+      @blockers_by_target = {}
       @sorted_atoms = nil
       @errors = []
       @warnings = []
@@ -139,6 +140,12 @@ module Quarks
       @sorted_atoms.dup
     end
 
+    def blockers_for(name_or_atom)
+      target = normalize_name(name_or_atom)
+      return [] if target.empty?
+      Array(@blockers_by_target[target]).dup
+    end
+
     def source_overview
       @sources.map do |source|
         {
@@ -154,6 +161,7 @@ module Quarks
       @cache_by_name.clear
       @source_by_atom.clear
       @source_by_name.clear
+      @blockers_by_target.clear
       @sorted_atoms = nil
       @errors.clear
       @warnings.clear
@@ -362,6 +370,12 @@ module Quarks
       @cache_by_name[name] = pkg
       @source_by_atom[atom] = source_path
       @source_by_name[name] = source_path
+      Array(pkg.blocks).each do |blocked|
+        target = normalize_name(blocked)
+        next if target.empty?
+        blockers = (@blockers_by_target[target] ||= [])
+        blockers << atom unless blockers.include?(atom)
+      end
       @sorted_atoms = nil
     end
 
@@ -381,8 +395,7 @@ module Quarks
 
     def remote_cache_dir
       dir = File.join(Env.state_root, "var", "cache", "quarks", "repositories")
-      FileUtils.mkdir_p(dir)
-      dir
+      Security.secure_directory(dir)
     end
 
     def load_remote_manifest(source, refresh: false)
@@ -448,47 +461,66 @@ module Quarks
     end
 
     def fetch_url(url)
-      uri = Security.validate_remote_uri!(
+      allow_http = ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1"
+      allow_private = ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+      current_uri = Security.validate_remote_uri!(
         url,
         purpose: "unsigned repository manifest",
-        allow_http: ENV["QUARKS_ALLOW_INSECURE_REPOS"] == "1",
-        allow_private: ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
+        allow_http: allow_http,
+        allow_private: allow_private,
+        resolve: false
       )
 
-      http = Net::HTTP.new(uri.host, uri.port)
-      addresses = if ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
-                    Resolv.getaddresses(uri.host)
-                  else
-                    Security.resolve_public_addresses!(uri.host, purpose: "unsigned repository manifest")
-                  end
-      raise "Repository host did not resolve: #{uri.host}" if addresses.empty?
-      http.ipaddr = addresses.first
-      http.use_ssl = uri.scheme == "https"
-      http.open_timeout = 10
-      http.read_timeout = 30
-      http.write_timeout = 30 if http.respond_to?(:write_timeout=)
-      http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
-      http.max_retries = 0
+      6.times do
+        http = Net::HTTP.new(current_uri.host, current_uri.port, nil, nil)
+        addresses = Security.network_addresses!(current_uri.host, purpose: "unsigned repository manifest", allow_private: allow_private)
+        raise "Repository host did not resolve: #{current_uri.host}" if addresses.empty?
+        http.ipaddr = addresses.first
+        http.use_ssl = current_uri.scheme == "https"
+        http.open_timeout = 10
+        http.read_timeout = 30
+        http.write_timeout = 30 if http.respond_to?(:write_timeout=)
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
+        http.max_retries = 0
 
-      http.start do
-        request = Net::HTTP::Get.new(uri)
-        request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
         body = +"".b
         response = nil
-        http.request(request) do |incoming|
-          response = incoming
-          next unless incoming.is_a?(Net::HTTPSuccess)
+        http.start do
+          request = Net::HTTP::Get.new(current_uri)
+          request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
+          request["Accept-Encoding"] = "identity"
+          http.request(request) do |incoming|
+            response = incoming
+            next unless incoming.is_a?(Net::HTTPSuccess)
 
-          declared = Integer(incoming["Content-Length"], exception: false)
-          raise "Repository manifest exceeds 16 MiB" if declared && declared > 16 * 1024 * 1024
-          incoming.read_body do |chunk|
-            raise "Repository manifest exceeds 16 MiB" if body.bytesize + chunk.bytesize > 16 * 1024 * 1024
-            body << chunk
+            declared = Integer(incoming["Content-Length"].to_s, exception: false)
+            raise "Repository manifest exceeds 16 MiB" if declared && declared > 16 * 1024 * 1024
+            incoming.read_body do |chunk|
+              raise "Repository manifest exceeds 16 MiB" if body.bytesize + chunk.bytesize > 16 * 1024 * 1024
+              body << chunk
+            end
           end
         end
-        raise "HTTP #{response.code} #{response.message}" unless response.is_a?(Net::HTTPSuccess)
-        body
+
+        return body if response.is_a?(Net::HTTPSuccess)
+        unless response.is_a?(Net::HTTPRedirection)
+          raise "HTTP #{response.code} #{response.message}"
+        end
+        location = response["location"].to_s
+        raise "Repository redirect is missing a location" if location.empty?
+        target = URI.join(current_uri.to_s, location)
+        if current_uri.scheme == "https" && target.scheme != "https" && !allow_http
+          raise "Refusing repository HTTPS downgrade redirect"
+        end
+        current_uri = Security.validate_remote_uri!(
+          target,
+          purpose: "unsigned repository redirect",
+          allow_http: allow_http,
+          allow_private: allow_private,
+          resolve: false
+        )
       end
+      raise "Too many redirects while fetching repository manifest"
     end
 
     def stringify_hash(obj)

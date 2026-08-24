@@ -185,4 +185,8 @@ Temporary Items
 # misc
 spec/*
 !/spec/install_test.rb
+!/spec/source_size_test.rb
+!/spec/resolver_fastpath_test.rb
 tools/*
+!/spec/remove_planner_test.rb
+!/spec/uninstall_safety_test.rb
