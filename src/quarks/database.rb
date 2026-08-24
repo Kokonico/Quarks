@@ -7,6 +7,8 @@ require "digest"
 require "time"
 require "pathname"
 require "quarks/env"
+require "quarks/generated_paths"
+require "quarks/security"
 
 module Quarks
   class Database
@@ -18,7 +20,7 @@ module Quarks
     CACHE_ROOT = File.join(STATE_ROOT, "var", "cache", "quarks").freeze
     LOG_ROOT   = File.join(STATE_ROOT, "var", "log", "quarks").freeze
 
-    SCHEMA_VERSION = 5
+    SCHEMA_VERSION = 6
 
     class << self
       def original_user = Env.original_user
@@ -30,6 +32,7 @@ module Quarks
       open_db!
       configure_db!
       migrate!
+      @package_summary_cache = nil
       @ready = true
     rescue SQLite3::Exception => e
       raise DatabaseError, "Could not open or migrate #{DB_PATH}: #{e.message}. The database was left untouched."
@@ -56,11 +59,30 @@ module Quarks
     def installed?(name_or_atom)
       name = normalize_name(name_or_atom)
       return false if name.empty?
-      !@db.get_first_value("SELECT 1 FROM packages WHERE name=? LIMIT 1", [name]).nil?
+      package_summaries.key?(name)
     end
 
     def list_packages
-      @db.execute("SELECT name FROM packages ORDER BY name ASC").map { |row| row["name"] || row[0] }
+      package_summaries.keys.sort
+    end
+
+    def package_summary(name_or_atom)
+      name = normalize_name(name_or_atom)
+      return nil if name.empty?
+      summary = package_summaries[name]
+      summary&.dup
+    end
+
+    def list_package_metadata
+      @db.execute("SELECT name, version, atom, category, metadata_json FROM packages ORDER BY name ASC").map do |row|
+        {
+          name: row["name"],
+          version: row["version"],
+          atom: row["atom"],
+          category: row["category"],
+          metadata: decode_json(row["metadata_json"])
+        }
+      end
     end
 
     def get_package(name_or_atom)
@@ -115,6 +137,7 @@ module Quarks
       metadata_hash = package.respond_to?(:to_metadata) ? package.to_metadata : { name: pkg_name, version: version, atom: atom, category: category }
 
       file_manifest = Array(files).map { |entry| normalize_file_entry(entry) }
+                                  .reject { |entry| GeneratedPaths.generated?(entry[:path]) }
                                   .uniq { |entry| entry[:path] }
                                   .sort_by { |entry| entry[:path] }
       rel_files = file_manifest.map { |entry| entry[:path] }
@@ -150,16 +173,14 @@ module Quarks
         SQL
 
         @db.execute("DELETE FROM files WHERE package_name=?", [pkg_name])
-        file_manifest.each do |entry|
-          @db.execute(
-            "INSERT INTO files(path, package_name, sha256, size, mode, kind) VALUES(?, ?, ?, ?, ?, ?)",
-            [entry[:path], pkg_name, entry[:sha256], entry[:size], entry[:mode], entry[:kind]]
-          )
-        end
+        insert_file_manifest!(pkg_name, file_manifest)
         @db.execute("DELETE FROM world WHERE atom=?", [existing_atom]) if !existing_atom.to_s.empty? && existing_atom != atom
         @db.execute("INSERT OR IGNORE INTO world(atom) VALUES(?)", [atom]) if world || existing_world
       end
 
+      if @package_summary_cache
+        @package_summary_cache[pkg_name] = { name: pkg_name, version: version, atom: atom, category: category }.freeze
+      end
       true
     end
 
@@ -177,6 +198,7 @@ module Quarks
         world_remove(name)
       end
 
+      @package_summary_cache.delete(name) if @package_summary_cache
       true
     end
 
@@ -203,19 +225,20 @@ module Quarks
         SQL
         @db.execute("DELETE FROM files WHERE package_name=?", [snapshot[:name]])
         entries = snapshot[:file_manifest] || Array(snapshot[:files])
-        Array(entries).each do |entry|
-          file_entry = normalize_file_entry(entry)
-          @db.execute(
-            "INSERT INTO files(path, package_name, sha256, size, mode, kind) VALUES(?, ?, ?, ?, ?, ?)",
-            [file_entry[:path], snapshot[:name], file_entry[:sha256], file_entry[:size], file_entry[:mode], file_entry[:kind]]
-          )
-        end
+        file_manifest = Array(entries).map { |entry| normalize_file_entry(entry) }
+                                      .reject { |entry| GeneratedPaths.generated?(entry[:path]) }
+                                      .uniq { |entry| entry[:path] }
+        insert_file_manifest!(snapshot[:name], file_manifest)
         @db.execute("DELETE FROM world WHERE atom=?", [current_atom]) unless current_atom.empty? || current_atom == snapshot[:atom].to_s
         if snapshot[:world]
           @db.execute("INSERT OR IGNORE INTO world(atom) VALUES(?)", [snapshot[:atom]])
         else
           @db.execute("DELETE FROM world WHERE atom=?", [snapshot[:atom]])
         end
+      end
+      if @package_summary_cache
+        name = snapshot[:name].to_s.downcase
+        @package_summary_cache[name] = { name: snapshot[:name], version: snapshot[:version], atom: snapshot[:atom], category: snapshot[:category] }.freeze
       end
       true
     end
@@ -249,7 +272,7 @@ module Quarks
 
     def owner_of(path)
       rel = normalize_lookup_path(path)
-      return nil if rel.empty?
+      return nil if rel.empty? || GeneratedPaths.generated?(rel)
 
       row = @db.get_first_row(<<~SQL, [rel])
         SELECT p.name, p.atom, p.version, f.path
@@ -305,7 +328,7 @@ module Quarks
     end
 
     def find_collisions(files, exclude_package: nil)
-      rel_files = Array(files).map { |path| normalize_rel_path!(path) }.uniq
+      rel_files = Array(files).map { |path| normalize_rel_path!(path) }.reject { |path| GeneratedPaths.generated?(path) }.uniq
       return [] if rel_files.empty?
 
       excluded = exclude_package && normalize_name(exclude_package)
@@ -348,13 +371,31 @@ module Quarks
 
     private
 
+    def package_summaries
+      @package_summary_cache ||= @db.execute("SELECT name, version, atom, category FROM packages").each_with_object({}) do |row, summaries|
+        name = (row["name"] || row[0]).to_s.downcase
+        next if name.empty?
+        summaries[name] = {
+          name: row["name"],
+          version: row["version"],
+          atom: row["atom"],
+          category: row["category"]
+        }.freeze
+      end
+    end
+
     def ensure_dirs!
-      FileUtils.mkdir_p(File.dirname(DB_PATH))
-      FileUtils.mkdir_p(CACHE_ROOT)
-      FileUtils.mkdir_p(LOG_ROOT)
+      Security.secure_directory(File.dirname(DB_PATH))
+      Security.secure_directory(CACHE_ROOT)
+      Security.secure_directory(LOG_ROOT)
     end
 
     def open_db!
+      if File.exist?(DB_PATH) || File.symlink?(DB_PATH)
+        stat = File.lstat(DB_PATH)
+        raise DatabaseError, "Database path must be a regular file: #{DB_PATH}" unless stat.file? && !stat.symlink?
+        raise DatabaseError, "Database path is group/world writable: #{DB_PATH}" if (stat.mode & 0o022).positive?
+      end
       @db = SQLite3::Database.new(DB_PATH)
       File.chmod(0o600, DB_PATH)
       @db.results_as_hash = true
@@ -442,6 +483,13 @@ module Quarks
         db.execute("ALTER TABLE files ADD COLUMN size INTEGER")
         db.execute("ALTER TABLE files ADD COLUMN mode INTEGER")
         db.execute("ALTER TABLE files ADD COLUMN kind TEXT")
+      },
+      6 => -> db {
+        GeneratedPaths::EXACT.each { |path| db.execute("DELETE FROM files WHERE path=?", [path]) }
+        db.execute("DELETE FROM files WHERE path LIKE 'usr/share/icons/%/icon-theme.cache'")
+        db.execute("DELETE FROM files WHERE path LIKE 'usr/local/share/icons/%/icon-theme.cache'")
+        db.execute("DROP INDEX IF EXISTS idx_files_path")
+        db.execute("DROP INDEX IF EXISTS idx_packages_name")
       }
     }.freeze
 
@@ -507,9 +555,18 @@ module Quarks
 
     def create_indexes!
       @db.execute("CREATE INDEX IF NOT EXISTS idx_files_pkg ON files(package_name);")
-      @db.execute("CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);")
       @db.execute("CREATE INDEX IF NOT EXISTS idx_packages_atom ON packages(atom);")
-      @db.execute("CREATE INDEX IF NOT EXISTS idx_packages_name ON packages(name);")
+    end
+
+    def insert_file_manifest!(package_name, manifest)
+      return if manifest.empty?
+
+      @db.prepare("INSERT INTO files(path, package_name, sha256, size, mode, kind) VALUES(?, ?, ?, ?, ?, ?)") do |statement|
+        manifest.each do |entry|
+          result = statement.execute(entry[:path], package_name, entry[:sha256], entry[:size], entry[:mode], entry[:kind])
+          result.close if result.respond_to?(:close)
+        end
+      end
     end
 
     def write_schema_version(version)

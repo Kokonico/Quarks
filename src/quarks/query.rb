@@ -301,41 +301,34 @@ module Quarks
     end
 
     def query_clean(args, repository, database)
-      world_atoms = Set.new(database.world_list)
-
-      orphans = []
-
-      database.list_packages.each do |name|
-        pkg = database.get_package(name)
-        next unless pkg
-
-        atom = pkg[:atom].to_s.downcase
-        next if world_atoms.include?(atom)
-
-        dependents = []
-        database.list_packages.each do |other_name|
-          next if other_name == name
-          other = database.get_package(other_name)
-          next unless other
-
-          all_deps = Array(other[:metadata][:dependencies]) +
-                     Array(other[:metadata][:build_dependencies])
-
-          dependents << other[:atom] if all_deps.include?(name)
+      world_names = database.world_list.each_with_object(Set.new) do |entry, names|
+        normalized = repository.normalize_name(entry).to_s rescue entry.to_s.split("/", 2).last
+        names << normalized.downcase unless normalized.to_s.empty?
+      end
+      packages = database.list_package_metadata
+      reverse = Hash.new { |hash, key| hash[key] = [] }
+      packages.each do |package|
+        dependencies = Array(package.dig(:metadata, :dependencies)) + Array(package.dig(:metadata, :build_dependencies))
+        dependencies.each do |dependency|
+          normalized = repository.normalize_name(dependency).to_s rescue dependency.to_s.split("/", 2).last
+          reverse[normalized.downcase] << package[:atom]
         end
+      end
 
-        orphans << { name: name, atom: pkg[:atom], deps: dependents }
+      orphans = packages.filter_map do |package|
+        name = package[:name].to_s.downcase
+        next if world_names.include?(name)
+        { name: name, atom: package[:atom], deps: reverse[name].uniq }
       end
 
       output = "Orphans: #{orphans.length}\n\n"
-
-      safe = orphans.select { |o| o[:deps].empty? }
+      safe = orphans.select { |orphan| orphan[:deps].empty? }
       output += "  Safe to remove: #{safe.length}\n"
       output += "  Protected: #{orphans.length - safe.length}\n\n"
 
       if safe.any?
         output += "Safe orphans:\n"
-        safe.each { |o| output += "  #{o[:atom]}\n" }
+        safe.each { |orphan| output += "  #{orphan[:atom]}\n" }
       end
 
       [output, nil]

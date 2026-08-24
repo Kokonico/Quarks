@@ -26,6 +26,7 @@ module Quarks
     }.freeze
     INTEGER_KEYS = {
       "jobs" => ["QUARKS_JOBS", 1, 1024],
+      "size_probe_ms" => ["QUARKS_SIZE_PROBE_MS", 0, 5000],
       "max_source_bytes" => ["QUARKS_MAX_SOURCE_BYTES", 1, 1 << 50],
       "max_extracted_bytes" => ["QUARKS_MAX_EXTRACTED_BYTES", 1, 1 << 50],
       "max_extracted_files" => ["QUARKS_MAX_EXTRACTED_FILES", 1, 10_000_000],

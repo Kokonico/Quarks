@@ -2,8 +2,9 @@
 
 require "fileutils"
 require "ipaddr"
-require "resolv"
 require "securerandom"
+require "socket"
+require "thread"
 require "uri"
 
 module Quarks
@@ -21,15 +22,21 @@ module Quarks
       2001::/23 2001:db8::/32 2002::/16 3fff::/20 5f00::/16
       fec0::/10
     ].map { |cidr| IPAddr.new(cidr) }.freeze
+    DNS_CACHE_TTL = 30.0
+    DNS_CACHE_MAX = 256
 
-    def validate_remote_uri!(value, purpose:, allow_http: false, allow_private: false)
+    @dns_cache = {}
+    @dns_cache_mutex = Mutex.new
+    @dns_locks = Array.new(32) { Mutex.new }.freeze
+
+    def validate_remote_uri!(value, purpose:, allow_http: false, allow_private: false, resolve: true)
       uri = value.is_a?(URI) ? value : URI.parse(value.to_s)
       schemes = allow_http ? %w[http https] : %w[https]
       raise SecurityViolation, "#{purpose} must use #{schemes.join(' or ')}" unless schemes.include?(uri.scheme)
       raise SecurityViolation, "#{purpose} URL must include a host" if uri.host.to_s.empty?
       raise SecurityViolation, "#{purpose} URL must not contain credentials" if uri.userinfo
 
-      resolve_public_addresses!(uri.host, purpose: purpose) unless allow_private
+      network_addresses!(uri.host, purpose: purpose, allow_private: allow_private) if resolve
       uri
     rescue URI::InvalidURIError => e
       raise SecurityViolation, "Invalid #{purpose} URL: #{e.message}"
@@ -40,9 +47,9 @@ module Quarks
       true
     end
 
-    def resolve_public_addresses!(host, purpose:)
-      addresses = Resolv.getaddresses(host.to_s)
-      raise SecurityViolation, "#{purpose} host did not resolve: #{host}" if addresses.empty?
+    def network_addresses!(host, purpose:, allow_private: false)
+      addresses = resolve_addresses!(host, purpose: purpose)
+      return addresses if allow_private
 
       addresses.each do |address|
         ip = IPAddr.new(address)
@@ -52,8 +59,63 @@ module Quarks
         end
       end
       addresses
-    rescue Resolv::ResolvError, IPAddr::InvalidAddressError => e
+    rescue IPAddr::InvalidAddressError => e
       raise SecurityViolation, "Could not validate #{purpose} host #{host}: #{e.message}"
+    end
+
+    def resolve_public_addresses!(host, purpose:)
+      network_addresses!(host, purpose: purpose, allow_private: false)
+    end
+
+    def resolve_addresses!(host, purpose:)
+      value = host.to_s.strip
+      raise SecurityViolation, "#{purpose} host is empty" if value.empty?
+
+      literal = IPAddr.new(value) rescue nil
+      return [literal.to_s] if literal
+
+      now = monotonic_time
+      cached = cached_addresses(value, now)
+      return cached if cached
+
+      @dns_locks[value.hash % @dns_locks.length].synchronize do
+        now = monotonic_time
+        cached = cached_addresses(value, now)
+        return cached if cached
+
+        addresses = Addrinfo.getaddrinfo(value, nil, nil, :STREAM).filter_map do |address|
+          address.ip_address if address.ip?
+        end.uniq
+        raise SecurityViolation, "#{purpose} host did not resolve: #{value}" if addresses.empty?
+
+        addresses.sort_by! do |address|
+          ip = IPAddr.new(address)
+          ip.ipv4? ? 0 : 1
+        rescue IPAddr::InvalidAddressError
+          2
+        end
+
+        @dns_cache_mutex.synchronize do
+          @dns_cache.delete_if { |_key, entry| entry[:expires_at] <= now }
+          @dns_cache.shift while @dns_cache.length >= DNS_CACHE_MAX
+          @dns_cache[value] = { addresses: addresses.freeze, expires_at: now + DNS_CACHE_TTL }
+        end
+        addresses.dup
+      end
+    rescue SocketError => e
+      raise SecurityViolation, "Could not resolve #{purpose} host #{value}: #{e.message}"
+    end
+
+    def cached_addresses(host, now)
+      @dns_cache_mutex.synchronize do
+        entry = @dns_cache[host]
+        entry && entry[:expires_at] > now ? entry[:addresses].dup : nil
+      end
+    end
+
+    def clear_dns_cache!
+      @dns_cache_mutex.synchronize { @dns_cache.clear }
+      true
     end
 
     def path_within?(path, root, allow_root: true)
@@ -100,6 +162,10 @@ module Quarks
       raise SecurityViolation, "Secure directory became a symlink: #{destination}" if stat.symlink?
       File.chmod(mode, destination)
       destination
+    end
+
+    def monotonic_time
+      Process.clock_gettime(Process::CLOCK_MONOTONIC)
     end
   end
 end

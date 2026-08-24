@@ -12,9 +12,17 @@ module Quarks
     SYSTEM_PATHS = %w[/usr/bin /usr/sbin /bin /sbin].freeze
 
     def self.trusted_command(name)
-      return nil unless name.to_s.match?(/\A[A-Za-z0-9][A-Za-z0-9+_.-]*\z/)
-      SYSTEM_PATHS.map { |directory| File.join(directory, name.to_s) }
-                  .find { |path| File.file?(path) && File.executable?(path) }
+      value = name.to_s
+      return nil unless value.match?(/\A[A-Za-z0-9][A-Za-z0-9+_.-]*\z/)
+
+      @trusted_commands ||= {}
+      cached = @trusted_commands[value]
+      return cached if cached && File.file?(cached) && File.executable?(cached)
+
+      found = SYSTEM_PATHS.lazy.map { |directory| File.join(directory, value) }
+                          .find { |path| File.file?(path) && File.executable?(path) }
+      @trusted_commands[value] = found if found
+      found
     end
 
     def self.command_available?(name)
@@ -83,6 +91,7 @@ module Quarks
       process_info_pages(files)
       process_mime_data(files)
       process_icon_themes(files)
+      process_gsettings(files)
       register_shared_libraries(files)
     end
 
@@ -168,6 +177,13 @@ module Quarks
     def process_icon_themes(files)
       return unless files.any? { |file| file[:rel].start_with?("usr/share/icons/", "usr/local/share/icons/") }
       @actions << { type: :gtk_icon_cache, trigger: true }
+    end
+
+    def process_gsettings(files)
+      return unless files.any? do |file|
+        file[:rel].match?(%r{\Ausr/(?:local/)?share/glib-2\.0/schemas/.*\.gschema\.(?:xml|override)\z})
+      end
+      @actions << { type: :gsettings, trigger: true }
     end
 
     def register_shared_libraries(files)
@@ -528,6 +544,32 @@ module Quarks
       success
     end
 
+  end
+
+  class GSettingsSchemaManager
+    def self.compile(install_root, dry_run: false, elevate: false)
+      return true unless SystemIntegration.command_available?("glib-compile-schemas")
+
+      schema_dirs = [
+        File.join(install_root, "usr", "share", "glib-2.0", "schemas"),
+        File.join(install_root, "usr", "local", "share", "glib-2.0", "schemas")
+      ]
+
+      schema_dirs.all? do |directory|
+        next true unless Dir.exist?(directory)
+        next true if Dir.glob(File.join(directory, "*.gschema.{xml,override}"), File::FNM_EXTGLOB).empty?
+
+        if dry_run
+          puts "[quarks] Would compile GSettings schemas in: #{directory}"
+          true
+        else
+          SystemIntegration.run_quiet("glib-compile-schemas", directory, elevate: elevate)
+        end
+      end
+    rescue => e
+      warn "[quarks] GSettings schema compilation failed: #{e.message}"
+      false
+    end
   end
 
   class GTKIconCacheManager

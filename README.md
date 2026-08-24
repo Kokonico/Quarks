@@ -103,6 +103,7 @@ Most settings can also come from environment variables:
 |---|---|
 | `QUARKS_ROOT` | Installation root |
 | `QUARKS_JOBS` | Build parallelism |
+| `QUARKS_SIZE_PROBE_MS` | Download-size lookup budget in milliseconds; `0` disables probing |
 | `QUARKS_USE` | Global USE flags |
 | `QUARKS_TMPDIR` | Where builds happen |
 | `QUARKS_NO_SANDBOX=1` | Disable Bubblewrap (unsafe) |

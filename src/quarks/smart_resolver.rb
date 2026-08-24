@@ -61,8 +61,8 @@ module Quarks
       @conflicts = []
       @conflicts_resolved = []
       @visited = Set.new
+      @selected_names = Set.new
       @stack = []
-      @resolution_context = {}
       @build_deps_mode = false
       @dependency_details_cache = {}
       @dependency_atoms_cache = {}
@@ -78,8 +78,8 @@ module Quarks
       @conflicts.clear
       @conflicts_resolved.clear
       @visited.clear
+      @selected_names.clear
       @stack.clear
-      @resolution_context.clear
       @dependency_details_cache.clear
       @dependency_atoms_cache.clear
 
@@ -90,7 +90,6 @@ module Quarks
         pkg
       end
 
-      load_blockers_for_all!
       packages.each { |package| resolve_recursive(package) }
       validate_resolution!
 
@@ -203,23 +202,6 @@ module Quarks
 
     private
 
-    def load_blockers_for_all!
-      @repository.list_atoms.each do |atom|
-        pkg = @repository.find_package(atom)
-        next unless pkg
-
-        blockers = Array(pkg.blocks)
-        blockers.each do |blocked|
-          blocked_name = @repository.normalize_name(blocked)
-          unless @resolution_context[:blockers]
-            @resolution_context[:blockers] = {}
-          end
-          @resolution_context[:blockers][pkg.atom] ||= []
-          @resolution_context[:blockers][pkg.atom] << blocked_name
-        end
-      end
-    end
-
     def resolve_recursive(package, depth = 0)
       raise ResolutionError, "Dependency tree too deep (max #{MAX_DEPTH})" if depth > MAX_DEPTH
 
@@ -237,6 +219,7 @@ module Quarks
       return if @visited.include?(atom)
 
       @visited.add(atom)
+      @selected_names.add(package.name.to_s.downcase)
       @stack << atom
 
       deps = collect_dependencies(package)
@@ -337,7 +320,7 @@ module Quarks
     end
 
     def needs_update?(package)
-      installed = @database.get_package(package.name)
+      installed = @database.package_summary(package.name)
       return true unless installed
 
       installed_version = installed[:version]
@@ -383,38 +366,34 @@ module Quarks
     end
 
     def check_blockers(package)
-      return [] unless @resolution_context[:blockers]
-
       issues = []
-      blockers = @resolution_context[:blockers][package.atom] || []
+      package_atom = package.atom.to_s.downcase
 
-      blockers.each do |blocked_name|
-        if @database.installed?(blocked_name)
-          installed = @database.get_package(blocked_name)
+      Array(package.blocks).each do |blocked|
+        blocked_name = @repository.normalize_name(blocked).to_s.downcase
+        next if blocked_name.empty?
+        if @database.installed?(blocked_name) || @selected_names.include?(blocked_name)
+          installed = @database.package_summary(blocked_name)
           issues << {
             type: :blocked,
             package: package.atom,
-            blocker: installed ? installed[:atom] : blocked_name
+            blocker: installed ? installed[:atom] : blocked.to_s
           }
         end
       end
 
-      issues
-    end
-
-    def blocker_conflicts_for(package)
-      issues = check_blockers(package)
-      target = package.name.to_s.downcase
-      target_atom = package.atom.to_s.downcase
-
-      @resolution_context.fetch(:blockers, {}).each do |blocker_atom, blocked_names|
-        next unless blocked_names.include?(target) || blocked_names.include?(target_atom)
-        blocker_name = @repository.normalize_name(blocker_atom)
-        next unless @database.installed?(blocker_name) || @stack.include?(blocker_atom.downcase)
+      @repository.blockers_for(package.name).each do |blocker_atom|
+        blocker_name = @repository.normalize_name(blocker_atom).to_s.downcase
+        next if blocker_atom.to_s.downcase == package_atom
+        next unless @database.installed?(blocker_name) || @visited.include?(blocker_atom.to_s.downcase)
 
         issues << { type: :blocked, package: package.atom, blocker: blocker_atom }
       end
       issues.uniq
+    end
+
+    def blocker_conflicts_for(package)
+      check_blockers(package)
     end
 
     def check_use_deps(package)
@@ -466,10 +445,7 @@ module Quarks
       all = collect_all_deps(package)
       unique_names = all.map { |d| @repository.normalize_name(d) }.uniq
 
-      blockers = []
-      if @resolution_context[:blockers]
-        blockers = @resolution_context[:blockers][package.atom] || []
-      end
+      blockers = Array(package.blocks).map(&:to_s)
 
       use_flags = []
       if package.respond_to?(:use_dependencies)

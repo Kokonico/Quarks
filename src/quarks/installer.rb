@@ -5,7 +5,10 @@ require "find"
 require "shellwords"
 require "tmpdir"
 require "digest"
+require "open3"
+require "securerandom"
 
+require "quarks/generated_paths"
 require "quarks/operation_lock"
 require "quarks/system_integration"
 
@@ -15,6 +18,8 @@ module Quarks
     class RollbackError < StandardError; end
     class PostInstallError < StandardError; end
     PROCESS_ENV = { "PATH" => "/usr/bin:/usr/sbin:/bin:/sbin", "LANG" => "C", "LC_ALL" => "C" }.freeze
+    PRIVILEGED_ROLLBACK_BASE = "/var/tmp".freeze
+    PRIVILEGED_ROLLBACK_PREFIX = "quarks-rollback-".freeze
 
     def initialize(package, database, options: {})
       @package = package
@@ -40,8 +45,6 @@ module Quarks
 
       install_root = Database::QUARKS_ROOT
       ensure_install_root!(install_root)
-
-      validate_staging_directory(dest_dir)
 
       @file_manifest = collect_image_manifest(dest_dir)
       @installed_files = @file_manifest.map { |entry| entry[:path] }
@@ -69,13 +72,14 @@ module Quarks
       start_time = Time.now
       previous = @database.get_package(@package.name)
       backup_paths = (@installed_files + Array(previous&.dig(:files))).uniq
-      rollback_dir = create_rollback_dir
+      rollback_dir = create_rollback_dir(sudo: sudo_needed)
       backed_up = []
 
       begin
         backed_up = backup_existing_paths(backup_paths, install_root, rollback_dir, sudo: sudo_needed)
         perform_install(dest_dir, install_root, sudo: sudo_needed)
         verify_installed_manifest!(install_root)
+        remove_obsolete_upgrade_files(previous, install_root, sudo: sudo_needed)
         install_time = Time.now - start_time
         ok = @database.add_package(
           @package,
@@ -85,8 +89,7 @@ module Quarks
         )
         raise InstallError, "Failed to register package in database" unless ok
 
-        perform_post_install_tasks(dest_dir, install_root, sudo: sudo_needed)
-        remove_obsolete_upgrade_files(previous, install_root, sudo: sudo_needed)
+        perform_post_install_tasks(dest_dir, install_root, previous: previous, sudo: sudo_needed)
 
       rescue => e
         rollback_failures = perform_rollback(
@@ -108,6 +111,10 @@ module Quarks
         rescue => database_exception
           database_error = database_exception.message
           false
+        end
+        cache_files = (@installed_files + Array(previous&.dig(:files))).uniq
+        unless refresh_system_caches(cache_files, install_root, sudo: sudo_needed, dry_run: false)
+          rollback_failures << { path: install_root, error: "system caches could not be restored" }
         end
         unless rollback_failures.empty? && database_restored
           details = rollback_failures.first(5).map { |failure| "#{failure[:path]}: #{failure[:error]}" }.join("; ")
@@ -134,7 +141,7 @@ module Quarks
       removed = 0
       preserved = []
       failed_removals = []
-      rollback_dir = create_rollback_dir
+      rollback_dir = create_rollback_dir(sudo: sudo_needed)
       backed_up = []
 
       begin
@@ -176,7 +183,7 @@ module Quarks
           raise InstallError, "Files were removed but package registration could not be removed"
         end
 
-        perform_post_uninstall_tasks(install_root, sudo: sudo_needed)
+        perform_post_uninstall_tasks(pkg_info, install_root, sudo: sudo_needed)
       rescue => e
         rollback_failures = perform_rollback(
           install_root,
@@ -191,6 +198,9 @@ module Quarks
         rescue => database_exception
           database_error = database_exception.message
           false
+        end
+        unless refresh_system_caches(Array(pkg_info[:files]), install_root, sudo: sudo_needed, dry_run: false)
+          rollback_failures << { path: install_root, error: "system caches could not be restored" }
         end
         unless rollback_failures.empty? && database_restored
           details = rollback_failures.first(5).map { |failure| "#{failure[:path]}: #{failure[:error]}" }.join("; ")
@@ -287,32 +297,59 @@ module Quarks
 
       @installed_files.each do |rel|
         target = File.join(root, rel)
-        parent = File.dirname(target)
-        until parent == root
-          unless Security.path_within?(parent, root, allow_root: false)
-            raise InstallError, "Destination path escapes the install root: #{target}"
-          end
-          raise InstallError, "Destination path traverses a symlink: #{parent}" if File.symlink?(parent)
-          parent = File.dirname(parent)
+        validate_target_parent!(target, root)
+        next unless File.exist?(target) || File.symlink?(target)
+
+        stat = File.lstat(target)
+        raise InstallError, "Refusing to replace a destination directory: #{target}" if stat.directory?
+        unless stat.file? || stat.symlink?
+          raise InstallError, "Refusing to replace a special destination object: #{target}"
         end
 
-        next unless File.exist?(target) || File.symlink?(target)
         owner = @database.owner_of(rel)
         if owner.nil? && !force
           raise InstallError, "Refusing to overwrite unmanaged path: #{target} (use --force to approve)"
         end
 
         staged = File.join(dest_dir, rel)
-        if File.directory?(target) != File.directory?(staged)
-          raise InstallError, "Refusing file/directory type replacement: #{target}"
+        staged_stat = File.lstat(staged)
+        unless staged_stat.file? || staged_stat.symlink?
+          raise InstallError, "Unsupported staged object: #{staged}"
         end
       end
     end
 
-    def create_rollback_dir
-      base = File.join(Quarks::Env.state_root, "var", "tmp", "quarks", "rollback")
-      FileUtils.mkdir_p(base, mode: 0o700)
-      Dir.mktmpdir("#{@package.name}-", base)
+    def validate_target_parent!(target, root)
+      parent = File.dirname(target)
+      until parent == root
+        unless Security.path_within?(parent, root, allow_root: false)
+          raise InstallError, "Destination path escapes the install root: #{target}"
+        end
+        raise InstallError, "Destination path traverses a symlink: #{parent}" if File.symlink?(parent)
+        if File.exist?(parent) && !File.directory?(parent)
+          raise InstallError, "Destination parent is not a directory: #{parent}"
+        end
+        parent = File.dirname(parent)
+      end
+    end
+
+    def create_rollback_dir(sudo: false)
+      unless sudo
+        base = File.join(Quarks::Env.state_root, "var", "tmp", "quarks", "rollback")
+        Security.secure_directory(base)
+        return Dir.mktmpdir("#{@package.name}-", base)
+      end
+
+      mktemp_tool = SystemIntegration.trusted_command("mktemp")
+      raise InstallError, "Trusted system temporary-directory tools are unavailable" unless mktemp_tool && sudo_path
+
+      template = "#{PRIVILEGED_ROLLBACK_PREFIX}#{@package.name.to_s.gsub(/[^A-Za-z0-9._-]/, "_")}-XXXXXXXX"
+      output, status = Open3.capture2e(PROCESS_ENV, sudo_path, mktemp_tool, "-d", "-p", PRIVILEGED_ROLLBACK_BASE, template, unsetenv_others: true)
+      path = output.to_s.strip
+      unless status.success? && Security.path_within?(path, PRIVILEGED_ROLLBACK_BASE, allow_root: false)
+        raise InstallError, "Could not create privileged rollback directory"
+      end
+      path
     end
 
     def backup_existing_paths(paths, install_root, rollback_dir, sudo: false)
@@ -321,7 +358,7 @@ module Quarks
         next unless File.exist?(source) || File.symlink?(source)
 
         destination = File.join(rollback_dir, rel)
-        FileUtils.mkdir_p(File.dirname(destination), mode: 0o700)
+        ensure_parent_directory(destination, sudo: sudo, mode: 0o700)
         copy_path(source, destination, sudo: sudo)
         backed_up << rel
       end
@@ -345,10 +382,29 @@ module Quarks
     end
 
     def copy_path(source, destination, sudo: false)
-      FileUtils.mkdir_p(File.dirname(destination)) unless sudo
+      ensure_parent_directory(destination, sudo: sudo)
       argv = ["/bin/cp", "-a", "--", source, destination]
       ok = sudo ? run_process(sudo_path, *argv) : run_process(*argv)
       raise InstallError, "Failed to copy #{source} to #{destination}" unless ok
+      true
+    end
+
+    def ensure_parent_directory(path, sudo: false, mode: 0o755)
+      parent = File.dirname(path)
+      if File.exist?(parent) || File.symlink?(parent)
+        raise InstallError, "Parent directory is a symlink: #{parent}" if File.symlink?(parent)
+        raise InstallError, "Parent path is not a directory: #{parent}" unless File.directory?(parent)
+        return true
+      end
+
+      if sudo
+        install_tool = SystemIntegration.trusted_command("install")
+        raise InstallError, "Trusted system install tool is unavailable" unless install_tool
+        ok = run_process(sudo_path, install_tool, "-d", "-m", format("%04o", mode), parent)
+        raise InstallError, "Could not create directory: #{parent}" unless ok
+      else
+        FileUtils.mkdir_p(parent, mode: mode)
+      end
       true
     end
 
@@ -364,8 +420,9 @@ module Quarks
     end
 
     def cleanup_rollback_dir(path, sudo: false)
-      base = File.join(Quarks::Env.state_root, "var", "tmp", "quarks", "rollback")
-      return unless path && File.expand_path(path).start_with?(File.expand_path(base) + File::SEPARATOR)
+      base = sudo ? PRIVILEGED_ROLLBACK_BASE : File.join(Quarks::Env.state_root, "var", "tmp", "quarks", "rollback")
+      return unless path && Security.path_within?(path, base, allow_root: false)
+      return if sudo && !File.basename(path).start_with?(PRIVILEGED_ROLLBACK_PREFIX)
 
       if sudo
         run_process(sudo_path, "/bin/rm", "-rf", "--", path)
@@ -374,74 +431,59 @@ module Quarks
       end
     end
 
-    def perform_post_install_tasks(dest_dir, install_root, sudo: false)
-      @post_install_actions = SystemIntegration.install_handlers(@package, dest_dir, install_root)
-
-      needs_ldconfig = @post_install_actions.any? { |a| a[:type] == :ldconfig }
-      if needs_ldconfig
-        ok = LdconfigManager.update_ldconfig(
-          install_root: install_root,
-          dry_run: @options[:pretend],
-          elevate: sudo
-        )
-        raise PostInstallError, "ldconfig update failed" unless ok
+    def perform_post_install_tasks(_dest_dir, install_root, previous: nil, sudo: false)
+      @post_install_actions = []
+      files = (@installed_files + Array(previous&.dig(:files))).uniq
+      unless refresh_system_caches(files, install_root, sudo: sudo, dry_run: @options[:pretend])
+        raise PostInstallError, "post-install cache update failed"
       end
-
-      desktop_files = @post_install_actions.select { |a| a[:type] == :desktop_file }
-      if desktop_files.any?
-        ok = DesktopDatabaseManager.update_desktop_database(
-          install_root,
-          dry_run: @options[:pretend],
-          elevate: sudo
-        )
-        raise PostInstallError, "desktop database update failed" unless ok
-      end
-
-      info_actions = @post_install_actions.select { |a| a[:type] == :info_pages }
-      if info_actions.any?
-        relative_info_files = info_actions.flat_map { |action| Array(action[:files]) }.uniq
-        ok = update_info_database(
-          install_root,
-          relative_files: relative_info_files,
-          dry_run: @options[:pretend],
-          elevate: sudo
-        )
-        raise PostInstallError, "info database update failed" unless ok
-      end
-
-      mime_needed = @post_install_actions.any? { |a| a[:type] == :mimedb }
-      if mime_needed
-        ok = MimedbManager.update_mime_database(install_root, dry_run: @options[:pretend], elevate: sudo)
-        raise PostInstallError, "MIME database update failed" unless ok
-      end
-
-      gtk_icons = @post_install_actions.any? { |a| a[:type] == :gtk_icon_cache }
-      if gtk_icons
-        ok = GTKIconCacheManager.update_icon_cache(install_root, dry_run: @options[:pretend], elevate: sudo)
-        raise PostInstallError, "GTK icon cache update failed" unless ok
-      end
+      true
     end
 
     def perform_pre_uninstall_tasks(pkg_info, install_root, sudo: false)
-      alt_name = @package.name.to_s
-      if UpdateAlternativesManager.query(alt_name)
-        UpdateAlternativesManager.unregister(alt_name, install_root, dry_run: @options[:pretend])
+      Array(pkg_info[:files]).each do |rel|
+        next unless rel.match?(%r{\A(?:usr/)?(?:local/)?(?:s?bin)/[^/]+\z})
+        name = File.basename(rel)
+        target = File.join(install_root, rel)
+        entry = UpdateAlternativesManager.query(name)
+        next unless entry.is_a?(Hash) && entry.fetch("links", {}).key?(target)
+        UpdateAlternativesManager.unregister(name, target, dry_run: @options[:pretend])
+      rescue ArgumentError
+        next
       end
     end
 
-    def perform_post_uninstall_tasks(install_root, sudo: false)
-      ldconfig_ok = LdconfigManager.update_ldconfig(
-        install_root: install_root,
-        dry_run: @options[:pretend],
-        elevate: sudo
-      )
-      desktop_ok = DesktopDatabaseManager.update_desktop_database(
-        install_root,
-        dry_run: @options[:pretend],
-        elevate: sudo
-      )
-      raise PostInstallError, "post-uninstall cache update failed" unless ldconfig_ok && desktop_ok
+    def perform_post_uninstall_tasks(pkg_info, install_root, sudo: false)
+      unless refresh_system_caches(Array(pkg_info[:files]), install_root, sudo: sudo, dry_run: @options[:pretend])
+        raise PostInstallError, "post-uninstall cache update failed"
+      end
       true
+    end
+
+    def refresh_system_caches(files, install_root, sudo:, dry_run:)
+      paths = Array(files)
+      results = []
+      if paths.any? { |path| path.match?(%r{(?:\A|/)lib(?:64)?/.*\.so(?:\.\d+)*\z}) }
+        results << LdconfigManager.update_ldconfig(install_root: install_root, dry_run: dry_run, elevate: sudo)
+      end
+      if paths.any? { |path| path.start_with?("usr/share/applications/", "usr/local/share/applications/") && path.end_with?(".desktop") }
+        results << DesktopDatabaseManager.update_desktop_database(install_root, dry_run: dry_run, elevate: sudo)
+      end
+      if paths.any? { |path| File.basename(path).match?(/\.info(?:\.(?:gz|bz2|xz|zst))?\z/) }
+        results << rebuild_info_database(install_root, dry_run: dry_run, elevate: sudo)
+      end
+      if paths.any? { |path| path.start_with?("usr/share/mime/", "usr/local/share/mime/") }
+        results << MimedbManager.update_mime_database(install_root, dry_run: dry_run, elevate: sudo)
+      end
+      if paths.any? { |path| path.start_with?("usr/share/icons/", "usr/local/share/icons/") }
+        results << GTKIconCacheManager.update_icon_cache(install_root, dry_run: dry_run, elevate: sudo)
+      end
+      if paths.any? { |path| path.start_with?("usr/share/glib-2.0/schemas/", "usr/local/share/glib-2.0/schemas/") }
+        results << GSettingsSchemaManager.compile(install_root, dry_run: dry_run, elevate: sudo)
+      end
+      results.none?(false)
+    rescue
+      false
     end
 
     def collect_image_files(dest_dir)
@@ -449,25 +491,45 @@ module Quarks
     end
 
     def collect_image_manifest(dest_dir)
+      root = File.realpath(dest_dir)
       files = []
+      directories = []
       Find.find(dest_dir) do |path|
         next if path == dest_dir
         stat = File.lstat(path)
         if (stat.mode & 0o6000).positive?
           raise InstallError, "Set-ID files/directories require an explicit privileged-file policy: #{path}"
         end
-        next if stat.directory?
+
+        rel = path.delete_prefix(dest_dir).sub(%r{\A/+}, "")
+        next if rel.empty?
+        if stat.directory?
+          directories << { path: rel, mode: stat.mode & 0o777 }
+          next
+        end
         unless stat.file? || stat.symlink?
           raise InstallError, "Package image contains an unsupported special file: #{path}"
         end
+        if stat.symlink?
+          target = File.readlink(path)
+          raise InstallError, "Invalid symlink target: #{path}" if target.include?("\0")
+          raise InstallError, "Absolute symlinks are not allowed in package images: #{path} -> #{target}" if target.start_with?("/")
+          resolved = File.expand_path(target, File.dirname(path))
+          unless resolved == root || resolved.start_with?(root + File::SEPARATOR)
+            raise InstallError, "Symlink escapes staging root: #{path} -> #{target}"
+          end
+        end
+        if GeneratedPaths.generated?(rel)
+          FileUtils.rm_f(path)
+          next
+        end
 
-        rel = path.sub(dest_dir, "").sub(%r{^/+}, "")
-        next if rel.empty?
         kind = stat.symlink? ? "symlink" : "file"
         digest_input = stat.symlink? ? "symlink\0#{File.readlink(path)}" : nil
         sha256 = digest_input ? Digest::SHA256.hexdigest(digest_input) : Digest::SHA256.file(path).hexdigest
         files << { path: rel, sha256: sha256, size: stat.size, mode: stat.mode & 0o7777, kind: kind }
       end
+      @directory_manifest = directories.sort_by { |entry| entry[:path].count(File::SEPARATOR) }
       files.sort_by { |entry| entry[:path] }.uniq { |entry| entry[:path] }
     end
 
@@ -501,17 +563,57 @@ module Quarks
     end
 
     def copy_image_tree(src_dir, install_root, sudo: false)
-      cmd = ["/bin/cp", "-a", "--no-preserve=ownership", "--", "#{src_dir}/.", install_root]
-      ok = sudo ? run_process(sudo_path, *cmd) : run_process(*cmd)
-      return if ok
+      directories = @directory_manifest
+      unless directories
+        directories = []
+        Find.find(src_dir) do |path|
+          next if path == src_dir
+          stat = File.lstat(path)
+          rel = path.delete_prefix(src_dir).sub(%r{\A/+}, "")
+          directories << { path: rel, mode: stat.mode & 0o777 } if stat.directory?
+        end
+        directories.sort_by! { |entry| entry[:path].count(File::SEPARATOR) }
+      end
+      directories.each do |directory|
+        target = File.join(install_root, directory[:path])
+        if File.exist?(target) || File.symlink?(target)
+          stat = File.lstat(target)
+          raise InstallError, "Destination directory is a symlink: #{target}" if stat.symlink?
+          raise InstallError, "Destination directory path is not a directory: #{target}" unless stat.directory?
+          next
+        end
+        if sudo
+          install_tool = SystemIntegration.trusted_command("install")
+          raise InstallError, "Trusted system install tool is unavailable" unless install_tool
+          raise InstallError, "Failed to create destination directory: #{target}" unless run_process(sudo_path, install_tool, "-d", "-m", format("%04o", directory[:mode]), target)
+        else
+          Dir.mkdir(target, directory[:mode])
+        end
+      end
 
-      raise InstallError, <<~MSG.strip
-        Failed to copy staged files into install root:
+      hardlinks = {}
+      @file_manifest.each do |entry|
+        rel = entry[:path]
+        source = File.join(src_dir, rel)
+        target = File.join(install_root, rel)
+        validate_target_parent!(target, File.expand_path(install_root))
+        raise InstallError, "Failed to replace destination object: #{target}" unless remove_path(target, sudo: sudo)
+        ensure_parent_directory(target, sudo: sudo)
 
-          #{install_root}
-
-        Fix permissions or use a writable QUARKS_ROOT.
-      MSG
+        stat = File.lstat(source)
+        inode_key = stat.file? && stat.nlink > 1 ? [stat.dev, stat.ino] : nil
+        previous_target = inode_key && hardlinks[inode_key]
+        if previous_target
+          argv = ["/bin/ln", "--", previous_target, target]
+          ok = sudo ? run_process(sudo_path, *argv) : run_process(*argv)
+        else
+          argv = ["/bin/cp", "-a", "--no-preserve=ownership", "--", source, target]
+          ok = sudo ? run_process(sudo_path, *argv) : run_process(*argv)
+          hardlinks[inode_key] = target if ok && inode_key
+        end
+        raise InstallError, "Failed to install staged object: #{rel}" unless ok
+      end
+      true
     end
 
     def installed_entry_matches?(path, entry)
@@ -576,12 +678,16 @@ module Quarks
 
     def writable_dir?(path)
       FileUtils.mkdir_p(path) unless Dir.exist?(path)
-      test = File.join(path, ".quarks_write_test_#{Process.pid}")
-      File.write(test, "ok")
+      test = File.join(path, ".quarks-write-#{Process.pid}-#{SecureRandom.hex(8)}")
+      flags = File::WRONLY | File::CREAT | File::EXCL
+      flags |= File::NOFOLLOW if File.const_defined?(:NOFOLLOW)
+      File.open(test, flags, 0o600) { |file| file.write("ok") }
       File.delete(test)
       true
     rescue
       false
+    ensure
+      FileUtils.rm_f(test) if defined?(test) && test && File.exist?(test)
     end
 
     def update_info_database(install_root, relative_files: nil, dry_run: false, elevate: false)
@@ -612,6 +718,23 @@ module Quarks
     rescue => e
       warn "[quarks] Warning: info database update failed: #{e.message}"
       false
+    end
+
+    def rebuild_info_database(install_root, dry_run: false, elevate: false)
+      return true unless SystemIntegration.command_available?("install-info")
+      [
+        File.join(install_root, "usr", "share", "info"),
+        File.join(install_root, "usr", "local", "share", "info")
+      ].each do |directory|
+        next unless Dir.exist?(directory)
+        dir_file = File.join(directory, "dir")
+        if dry_run
+          puts "[quarks] Would rebuild info index in #{directory}"
+        else
+          remove_path(dir_file, sudo: elevate) if File.exist?(dir_file) || File.symlink?(dir_file)
+        end
+      end
+      update_info_database(install_root, relative_files: nil, dry_run: dry_run, elevate: elevate)
     end
 
     def find_info_files(root)

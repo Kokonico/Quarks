@@ -21,12 +21,14 @@ require "quarks/source_size"
 
 module Quarks
   class Builder
-    MAX_SOURCE_BYTES = Integer(ENV.fetch("QUARKS_MAX_SOURCE_BYTES", 4 * 1024 * 1024 * 1024)).freeze
-    MAX_EXTRACTED_BYTES = Integer(ENV.fetch("QUARKS_MAX_EXTRACTED_BYTES", 20 * 1024 * 1024 * 1024)).freeze
-    MAX_EXTRACTED_FILES = Integer(ENV.fetch("QUARKS_MAX_EXTRACTED_FILES", 250_000)).freeze
+    MAX_SOURCE_BYTES = [Integer(ENV.fetch("QUARKS_MAX_SOURCE_BYTES", 4 * 1024 * 1024 * 1024), exception: false).to_i, 1].max.freeze
+    MAX_EXTRACTED_BYTES = [Integer(ENV.fetch("QUARKS_MAX_EXTRACTED_BYTES", 20 * 1024 * 1024 * 1024), exception: false).to_i, 1].max.freeze
+    MAX_EXTRACTED_FILES = [Integer(ENV.fetch("QUARKS_MAX_EXTRACTED_FILES", 250_000), exception: false).to_i, 1].max.freeze
     MAX_ARCHIVE_LIST_BYTES = 64 * 1024 * 1024
     MAX_OUTPUT_LINE_BYTES = 64 * 1024
-    MAX_LOG_BYTES = Integer(ENV.fetch("QUARKS_MAX_LOG_BYTES", 64 * 1024 * 1024)).freeze
+    MAX_LOG_BYTES = [Integer(ENV.fetch("QUARKS_MAX_LOG_BYTES", 64 * 1024 * 1024), exception: false).to_i, 1].max.freeze
+    class RetryableDownloadError < StandardError; end
+
     BuildPlan = Struct.new(
       :system, :cwd, :build_dir, :configure_cmds, :build_cmds, :install_cmds,
       keyword_init: true
@@ -43,7 +45,9 @@ module Quarks
       @quiet   = ENV["QUARKS_QUIET"].to_s == "1" || @options[:quiet]
       @verbose = !@quiet
       @debug   = ENV["QUARKS_DEBUG"].to_s == "1" || @options[:debug]
-      @jobs    = (@options[:jobs].to_i.positive? ? @options[:jobs].to_i : Quarks::Env.jobs)
+      requested_jobs = @options[:jobs].to_i
+      requested_jobs = Quarks::Env.jobs unless requested_jobs.positive?
+      @jobs = [[requested_jobs, 1].max, 1024].min
       @use_flags = if @options.key?(:use_flags)
                      Array(@options[:use_flags]).map(&:to_s)
                    else
@@ -66,10 +70,12 @@ module Quarks
       state_root = Quarks::Env.state_root rescue (ENV["QUARKS_STATE_ROOT"] || File.expand_path("~/.local/state/quarks"))
       @cache_dir = File.join(state_root, "var", "cache", "quarks", "distfiles")
       @log_dir   = File.join(state_root, "var", "log", "quarks")
-      FileUtils.mkdir_p(@log_dir)
       @log_file  = File.join(@log_dir, "#{workspace_slug}.log")
       @log_bytes = File.file?(@log_file) ? File.size(@log_file) : 0
       @log_truncated = @log_bytes >= MAX_LOG_BYTES
+      @log_io = nil
+      @command_cache = {}
+      @source_size_tracker = @options[:source_size_tracker]
 
       @source_dir = nil
       @downloaded_sources = []
@@ -102,6 +108,7 @@ module Quarks
       @downloaded_sources = download_sources
       true
     ensure
+      close_log!
       cleanup!
     end
 
@@ -145,11 +152,13 @@ module Quarks
       wrapped = build_error_with_log(e)
       cleanup!
       raise wrapped
+    ensure
+      close_log!
     end
 
     def prepare_directories
-      FileUtils.mkdir_p(@cache_dir)
-      FileUtils.mkdir_p(@log_dir)
+      Security.secure_directory(@cache_dir)
+      Security.secure_directory(@log_dir)
 
       unless @options[:resume]
         FileUtils.rm_rf(@build_dir)
@@ -176,30 +185,35 @@ module Quarks
 
     def fetch_source(source, index)
       local_path = resolve_local_source(source)
+      uri = URI.parse(source)
+      cached_path = File.join(@cache_dir, cache_filename_for(uri, index))
+
       if local_path
         say_detail("Using local source #{File.basename(local_path)}")
-        verify_source!(local_path, source)
-        uri = URI.parse(source)
-        cached_path = File.join(@cache_dir, cache_filename_for(uri, index))
-        unless File.exist?(cached_path) && cached_source_valid?(cached_path, source)
-          FileUtils.cp(local_path, cached_path)
-          File.chmod(0o600, cached_path)
+        return cached_path if File.file?(cached_path) && !File.symlink?(cached_path) && cached_source_valid?(cached_path, source)
+
+        tmp = "#{cached_path}.part-#{Process.pid}-#{SecureRandom.hex(6)}"
+        begin
+          FileUtils.copy_file(local_path, tmp)
+          File.chmod(0o600, tmp)
+          verify_source!(tmp, source)
+          File.rename(tmp, cached_path)
+          source_size_tracker.record_verified(@package, source, File.size(cached_path), path: cached_path)
+        ensure
+          FileUtils.rm_f(tmp) if defined?(tmp) && tmp && File.exist?(tmp)
         end
         return cached_path
       end
 
-      uri = URI.parse(source)
-      filename = cache_filename_for(uri, index)
-      cached_path = File.join(@cache_dir, filename)
-
-      if File.exist?(cached_path) && cached_source_valid?(cached_path, source)
+      filename = File.basename(cached_path)
+      if File.file?(cached_path) && !File.symlink?(cached_path) && cached_source_valid?(cached_path, source)
         say_detail("Using cached source #{filename}")
         return cached_path
       end
 
+      FileUtils.rm_f(cached_path) if File.exist?(cached_path) || File.symlink?(cached_path)
       say_detail("Downloading #{source}")
-      download_http(uri, cached_path)
-      verify_source!(cached_path, source)
+      download_http(uri, cached_path, source_key: source)
       cached_path
     rescue URI::InvalidURIError
       raise "Invalid source URL/path: #{source}"
@@ -208,13 +222,13 @@ module Quarks
     def resolve_local_source(source)
       if source.start_with?("file://")
         path = URI.parse(source).path
-        return File.expand_path(path) if File.exist?(path)
+        return File.expand_path(path) if File.file?(path)
         return nil
       end
 
-      return File.expand_path(source) if File.exist?(source)
+      return File.expand_path(source) if File.file?(source)
       nil
-    rescue
+    rescue URI::InvalidURIError, ArgumentError
       nil
     end
 
@@ -223,7 +237,9 @@ module Quarks
     end
 
     def cached_source_valid?(path, source)
+      return false if File.symlink?(path)
       verify_source!(path, source)
+      source_size_tracker.record_verified(@package, source, File.size(path), path: path)
       true
     rescue
       FileUtils.rm_f(path) rescue nil
@@ -258,6 +274,10 @@ module Quarks
       raise "Checksum verification failed for #{File.basename(path)}: #{e.message}"
     end
 
+    def source_size_tracker
+      @source_size_tracker ||= Quarks::SourceSize.new
+    end
+
     def lookup_checksum(source_key)
       checksums = @package.checksums || {}
       raw = checksums[source_key] || checksums[source_key.to_s]
@@ -271,72 +291,124 @@ module Quarks
       end
     end
 
-    def download_http(uri, dest)
-      max_redirects = 5
+    def download_http(uri, dest, source_key:)
+      attempts = 0
+      begin
+        attempts += 1
+        download_http_once(uri, dest, source_key: source_key)
+      rescue RetryableDownloadError, Net::OpenTimeout, Net::ReadTimeout, Timeout::Error, SocketError, Errno::ECONNRESET, Errno::ETIMEDOUT, Errno::ECONNREFUSED => e
+        retry if attempts < 3
+        raise "Download failed after #{attempts} attempts: #{e.message}"
+      end
+    end
+
+    def download_http_once(uri, dest, source_key:)
       allow_http = ENV["QUARKS_ALLOW_INSECURE_SOURCES"] == "1"
       allow_private = ENV["QUARKS_ALLOW_PRIVATE_NETWORKS"] == "1"
-      current_uri = Security.validate_remote_uri!(uri, purpose: "package source", allow_http: allow_http, allow_private: allow_private)
+      current_uri = Security.validate_remote_uri!(
+        uri,
+        purpose: "package source",
+        allow_http: allow_http,
+        allow_private: allow_private,
+        resolve: false
+      )
 
-      max_redirects.times do
-        completed = false
-        redirect = nil
-        tmp = "#{dest}.part-#{Process.pid}-#{SecureRandom.hex(6)}"
+      6.times do
+        addresses = Security.network_addresses!(
+          current_uri.host,
+          purpose: "package source",
+          allow_private: allow_private
+        )
+        result = nil
+        last_error = nil
 
-        http = Net::HTTP.new(current_uri.host, current_uri.port)
-        addresses = allow_private ? Resolv.getaddresses(current_uri.host) : Security.resolve_public_addresses!(current_uri.host, purpose: "package source")
-        raise "Package source host did not resolve: #{current_uri.host}" if addresses.empty?
-        http.ipaddr = addresses.first
-        http.use_ssl = current_uri.scheme == "https"
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
-        http.open_timeout = 15
-        http.read_timeout = 180
-        http.ssl_timeout = 15
-        http.max_retries = 0
-
-        http.start do
-          request = Net::HTTP::Get.new(current_uri)
-          request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
-          http.request(request) do |response|
-            case response
-            when Net::HTTPSuccess
-              declared_size = response["Content-Length"].to_i
-              if declared_size.positive? && declared_size > MAX_SOURCE_BYTES
-                raise "Source exceeds maximum download size (#{declared_size} > #{MAX_SOURCE_BYTES})"
-              end
-
-              bytes = 0
-              File.open(tmp, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
-                response.read_body do |chunk|
-                  bytes += chunk.bytesize
-                  raise "Source exceeds maximum download size (#{MAX_SOURCE_BYTES} bytes)" if bytes > MAX_SOURCE_BYTES
-                  file.write(chunk)
-                end
-                file.flush
-                file.fsync
-              end
-              File.rename(tmp, dest)
-              completed = true
-            when Net::HTTPRedirection
-              location = response["location"].to_s
-              raise "Redirect missing location for #{current_uri}" if location.empty?
-              redirect = URI.join(current_uri.to_s, location)
-            else
-              raise "Download failed: HTTP #{response.code} #{response.message}"
-            end
+        addresses.each do |address|
+          begin
+            result = download_from_address(current_uri, address, dest, source_key: source_key)
+            break
+          rescue RetryableDownloadError, Net::OpenTimeout, Net::ReadTimeout, Timeout::Error, SocketError, Errno::ECONNRESET, Errno::ETIMEDOUT, Errno::ECONNREFUSED, OpenSSL::SSL::SSLError, IOError => e
+            last_error = e
           end
         end
 
-        return dest if completed
+        raise(last_error || "Could not connect to #{current_uri.host}") unless result
+        return dest if result[:completed]
+
+        redirect = result[:redirect]
         raise "Unexpected response while fetching #{current_uri}" unless redirect
         if current_uri.scheme == "https" && redirect.scheme != "https" && !allow_http
           raise "Refusing HTTPS downgrade redirect to #{redirect}"
         end
-        current_uri = Security.validate_remote_uri!(redirect, purpose: "package source redirect", allow_http: allow_http, allow_private: allow_private)
-      ensure
-        FileUtils.rm_f(tmp) if defined?(tmp) && tmp && File.exist?(tmp)
+        current_uri = Security.validate_remote_uri!(
+          redirect,
+          purpose: "package source redirect",
+          allow_http: allow_http,
+          allow_private: allow_private,
+          resolve: false
+        )
       end
 
       raise "Too many redirects while fetching #{uri}"
+    end
+
+    def download_from_address(uri, address, dest, source_key:)
+      tmp = "#{dest}.part-#{Process.pid}-#{SecureRandom.hex(6)}"
+      http = Net::HTTP.new(uri.host, uri.port, nil, nil)
+      http.ipaddr = address
+      http.use_ssl = uri.scheme == "https"
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER if http.use_ssl?
+      http.open_timeout = 15
+      http.read_timeout = 180
+      http.ssl_timeout = 15
+      http.max_retries = 0
+
+      result = {}
+      http.start do
+        request = Net::HTTP::Get.new(uri)
+        request["User-Agent"] = "Quarks/#{Quarks::VERSION rescue 'dev'}"
+        request["Accept-Encoding"] = "identity"
+        http.request(request) do |response|
+          case response
+          when Net::HTTPSuccess
+            declared_size = Integer(response["Content-Length"].to_s, exception: false)
+            if declared_size&.positive? && declared_size > MAX_SOURCE_BYTES
+              raise "Source exceeds maximum download size (#{declared_size} > #{MAX_SOURCE_BYTES})"
+            end
+
+            bytes = 0
+            File.open(tmp, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+              response.read_body do |chunk|
+                bytes += chunk.bytesize
+                raise "Source exceeds maximum download size (#{MAX_SOURCE_BYTES} bytes)" if bytes > MAX_SOURCE_BYTES
+                file.write(chunk)
+              end
+              file.flush
+              file.fsync
+            end
+            if declared_size&.positive? && bytes != declared_size
+              raise RetryableDownloadError, "Incomplete response (expected #{declared_size} bytes, received #{bytes})"
+            end
+            verify_source!(tmp, source_key)
+            File.rename(tmp, dest)
+            source_size_tracker.record_verified(@package, source_key, bytes, path: dest)
+            result[:completed] = true
+          when Net::HTTPRedirection
+            location = response["location"].to_s
+            raise "Redirect missing location for #{uri}" if location.empty?
+            result[:redirect] = URI.join(uri.to_s, location)
+          else
+            code = response.code.to_i
+            message = "HTTP #{response.code} #{response.message}"
+            if code == 408 || code == 425 || code == 429 || code.between?(500, 599)
+              raise RetryableDownloadError, message
+            end
+            raise "Download failed: #{message}"
+          end
+        end
+      end
+      result
+    ensure
+      FileUtils.rm_f(tmp) if defined?(tmp) && tmp && File.exist?(tmp)
     end
 
     def stage_sources
@@ -907,6 +979,7 @@ module Quarks
         status = wait_thr.value
       end
 
+      Quarks::SignalHandler.instance.check_and_raise! if defined?(Quarks::SignalHandler)
       return true if status&.success?
       raise "Command failed (exit #{status&.exitstatus || 'unknown'}): #{cmd}"
     end
@@ -955,8 +1028,10 @@ module Quarks
     end
 
     def command_exists?(name)
-      ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? do |directory|
-        File.executable?(File.join(directory, name.to_s))
+      key = [ENV.fetch("PATH", ""), name.to_s]
+      return @command_cache[key] if @command_cache.key?(key)
+      @command_cache[key] = key[0].split(File::PATH_SEPARATOR).any? do |directory|
+        File.executable?(File.join(directory, key[1]))
       end
     end
 
@@ -1020,15 +1095,40 @@ module Quarks
         data = data.byteslice(0, fragment_size).to_s + marker.byteslice(0, remaining).to_s
         @log_truncated = true
       end
-      File.open(@log_file, "ab") { |file| file.write(data) }
+      open_log!
+      @log_io.write(data)
       @log_bytes += data.bytesize
     rescue
       nil
     end
 
+    def open_log!
+      return @log_io if @log_io && !@log_io.closed?
+      Security.secure_directory(@log_dir)
+      raise "Build log path is a symlink: #{@log_file}" if File.symlink?(@log_file)
+      @log_io = File.open(@log_file, File::WRONLY | File::CREAT | File::APPEND, 0o600)
+      File.chmod(0o600, @log_file)
+      @log_io
+    end
+
+    def close_log!
+      return unless @log_io
+      @log_io.flush unless @log_io.closed?
+      @log_io.close unless @log_io.closed?
+    rescue
+      nil
+    ensure
+      @log_io = nil
+    end
+
     def build_error_with_log(error)
+      @log_io&.flush
       tail = begin
-        File.readlines(@log_file).last(25).join
+        File.open(@log_file, "rb") do |file|
+          bytes = [file.size, 256 * 1024].min
+          file.seek(-bytes, IO::SEEK_END) if bytes.positive?
+          file.read.to_s.encode(Encoding::UTF_8, invalid: :replace, undef: :replace, replace: "�").lines.last(25).join
+        end
       rescue
         nil
       end

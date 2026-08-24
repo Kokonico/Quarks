@@ -300,7 +300,8 @@ module Quarks
       raw = @install_prefix.to_s
       pathname = Pathname.new(raw)
       clean = pathname.cleanpath.to_s
-      unless pathname.absolute? && !clean.include?("/../") && !raw.include?("\0")
+      components = raw.split("/")
+      unless pathname.absolute? && clean == raw.sub(%r{/+\z}, "").then { |value| value.empty? ? "/" : value } && !components.include?("..") && !raw.include?("\0")
         raise NucleiSchemaError.new(path, "Invalid install_prefix: #{raw.inspect}")
       end
     end

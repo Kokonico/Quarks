@@ -2,130 +2,105 @@
 
 require "thread"
 require "fileutils"
+require "quarks/source_size"
 
 module Quarks
   class ParallelBuilder
-    class BuildError < StandardError
-      attr_reader :package, :log_file
+    attr_reader :succeeded, :failed
 
-      def initialize(message, package: nil, log_file: nil)
-        super(message)
-        @package = package
-        @log_file = log_file
-      end
-    end
-
-    def initialize(jobs: Quarks::Env.jobs, options: {})
-      @max_jobs = [jobs.to_i, 1].max
+    def initialize(max_jobs: nil, options: {})
+      requested = max_jobs.to_i
+      requested = Quarks::Env.jobs unless requested.positive?
+      @max_jobs = [[requested, 1].max, 1024].min
       @options = options || {}
-      @queue = Queue.new
-      @results = []
       @mutex = Mutex.new
-      @running = 0
-      @failed = []
       @succeeded = []
-      @semaphore = Concurrent::Semaphore.new(@max_jobs)
-    rescue NameError
-      @semaphore = nil
-      @max_jobs = 1
+      @failed = []
+      @source_size_tracker = Quarks::SourceSize.new
     end
 
     def build_packages(packages)
-      return sequential_build(packages) if @max_jobs == 1 || !parallel_possible?
+      packages = Array(packages)
+      reset_results!
+      return [] if packages.empty?
+      return sequential_build(packages) if @max_jobs == 1 || !parallel_possible?(packages)
 
-      packages.each { |pkg| @queue.push(pkg) }
+      queue = Queue.new
+      packages.each_with_index { |package, index| queue << [index, package] }
+      results = Array.new(packages.length)
+      stop = false
 
-      threads = @max_jobs.times.map do |i|
+      workers = [@max_jobs, packages.length].min.times.map do
         Thread.new do
-          Thread.current[:worker_id] = i
-          process_queue
+          loop do
+            break if @mutex.synchronize { stop }
+            begin
+              index, package = queue.pop(true)
+            rescue ThreadError
+              break
+            end
+
+            begin
+              result = build_single(package, index + 1, packages.length)
+              @mutex.synchronize do
+                @succeeded << package
+                results[index] = result
+              end
+            rescue => e
+              @mutex.synchronize do
+                @failed << { package: package, error: e, index: index }
+                stop = true unless @options[:keep_going]
+              end
+            end
+          end
         end
       end
+      workers.each(&:join)
 
-      threads.each(&:join)
-
-      @results
+      first_failure = @mutex.synchronize { @failed.min_by { |failure| failure[:index] } }
+      raise first_failure[:error] if first_failure && !@options[:keep_going]
+      results.compact
     end
 
     def sequential_build(packages)
-      packages.each_with_index.map do |package, index|
+      packages.each_with_index.filter_map do |package, index|
         begin
           result = build_single(package, index + 1, packages.length)
           @succeeded << package
           result
         rescue => e
-          @failed << { package: package, error: e }
-          raise e unless @options[:keep_going]
+          @failed << { package: package, error: e, index: index }
+          raise unless @options[:keep_going]
           nil
         end
-      end.compact
+      end
     end
 
     private
 
-    def parallel_possible?
-      return false unless @semaphore
+    def reset_results!
+      @succeeded = []
+      @failed = []
+    end
 
-      packages = []
-      @queue.size.times { packages << @queue.pop(true) }
-      packages.each { |pkg| @queue.push(pkg) }
-
-      packages.all? do |pkg|
-        !has_dependencies?(pkg, packages)
+    def parallel_possible?(packages)
+      names = packages.each_with_object({}) do |package, out|
+        out[dependency_name(package.name)] = true
+      end
+      packages.none? do |package|
+        dependencies = Array(package.dependencies) + Array(package.build_dependencies)
+        dependencies.any? { |dependency| names[dependency_name(dependency)] }
       end
     end
 
-    def has_dependencies?(package, all_packages)
-      deps = Array(package.dependencies) + Array(package.build_dependencies)
-      deps.any? do |dep|
-        all_packages.any? { |p| p.name.to_s.downcase == dep.to_s.downcase }
-      end
-    end
-
-    def process_queue
-      loop do
-        package = @queue.pop(true)
-      rescue ThreadError
-        break
-      end
-
-      begin
-        if @semaphore
-          @semaphore.acquire
-        end
-
-        @mutex.synchronize { @running += 1 }
-
-        result = build_single(package, @succeeded.length + @failed.length + 1, @succeeded.length + @failed.length + @queue.size + 1)
-
-        @mutex.synchronize do
-          @succeeded << package
-          @results << result
-        end
-      rescue => e
-        @mutex.synchronize do
-          @failed << { package: package, error: e }
-        end
-      ensure
-        if @semaphore
-          @semaphore.release
-        end
-        @mutex.synchronize { @running -= 1 }
-      end
+    def dependency_name(value)
+      value.to_s.downcase.split("/", 2).last.to_s
     end
 
     def build_single(package, current, total)
-      builder = Builder.new(package, current, total, @options.merge(jobs: 1))
+      builder = Builder.new(package, current, total, @options.merge(jobs: 1, source_size_tracker: @source_size_tracker))
       dest_dir = builder.build
       { package: package, dest_dir: dest_dir, success: true }
-    end
-
-    def succeeded
-      @succeeded.dup
-    end
-
-    def failed
-      @failed.dup
     end
   end
 
@@ -172,7 +147,7 @@ module Quarks
         visit_node(name, [], order)
       end
 
-      order.reverse
+      order
     end
 
     def check_for_cycles
@@ -192,7 +167,6 @@ module Quarks
 
     def visit_node(name, path, order)
       return if @visited[name] == :permanent
-      return if path.include?(name)
 
       if @visited[name] == :temporary
         cycle = path[path.index(name)..-1] + [name]
@@ -207,13 +181,11 @@ module Quarks
       end
 
       @visited[name] = :permanent
-      order << name unless @visited[name] == :done
-      @visited[name] = :done
+      order << name
     end
 
     def detect_cycle(name)
       return :permanent if @visited[name] == :permanent
-      return if @visited[name] == :processing
 
       if @visited[name] == :processing
         cycle = @rec_stack[@rec_stack.index(name)..-1] + [name]
@@ -300,7 +272,7 @@ module Quarks
       collisions = @database.find_collisions(installed_files, exclude_package: package.name)
 
       collisions.map do |collision|
-        owner_pkg = @database.get_package(collision[:owner])
+        owner_pkg = @database.package_summary(collision[:owner])
         {
           type: :file_collision,
           package: package.atom,
@@ -376,43 +348,6 @@ module Quarks
         "Conflicts detected for package '#{package.atom}'",
         conflicts: all_conflicts
       )
-    end
-  end
-end
-
-module Concurrent
-  class Semaphore
-    def initialize permits
-      @permits = permits
-      @mutex = Mutex.new
-      @condition = ConditionVariable.new
-    end
-
-    def acquire
-      @mutex.synchronize do
-        while @permits.zero?
-          @condition.wait(@mutex)
-        end
-        @permits -= 1
-      end
-    end
-
-    def release
-      @mutex.synchronize do
-        @permits += 1
-        @condition.broadcast
-      end
-    end
-
-    def try_acquire
-      @mutex.synchronize do
-        if @permits > 0
-          @permits -= 1
-          true
-        else
-          false
-        end
-      end
     end
   end
 end

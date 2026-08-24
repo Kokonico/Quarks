@@ -18,7 +18,7 @@ module Quarks
       if Process.euid.zero? && Database.original_user != "root"
         raise "Run 'quarks setup-path' as the target user, not through sudo"
       end
-      FileUtils.mkdir_p(shim_dir)
+      Security.secure_directory(shim_dir)
 
       home = Database.original_user_home
 
@@ -52,7 +52,7 @@ module Quarks
     def sync!(database)
       return if ENV["QUARKS_DISABLE_SHIMS"] == "1"
 
-      FileUtils.mkdir_p(shim_dir)
+      Security.secure_directory(shim_dir)
 
       bins = database.installed_binaries
       desired = {}
@@ -106,7 +106,7 @@ module Quarks
 
       env_path.each do |dir|
         next if dir.nil? || dir.empty?
-        next if dir.start_with?(quarks_root)
+        next if Security.path_within?(dir, quarks_root)
         next if dir == shim_dir
 
         cand = File.join(dir, bin_name)

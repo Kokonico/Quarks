@@ -228,7 +228,8 @@ module Quarks
     def self.build_jobs
       cfg = PROFILES[current]
       jobs = cfg[:jobs]
-      jobs.respond_to?(:call) ? jobs.call : jobs
+      value = jobs.respond_to?(:call) ? jobs.call : jobs
+      [[value.to_i, 1].max, 1024].min
     end
 
   end
@@ -324,9 +325,9 @@ module Quarks
 
     def self.import_hook(url, sha256: nil)
       raise ArgumentError, "A SHA-256 digest is required when importing a hook" unless sha256.to_s.match?(/\A[0-9a-fA-F]{64}\z/)
-      uri = Security.validate_remote_uri!(url, purpose: "hook import")
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.ipaddr = Security.resolve_public_addresses!(uri.host, purpose: "hook import").first
+      uri = Security.validate_remote_uri!(url, purpose: "hook import", resolve: false)
+      http = Net::HTTP.new(uri.host, uri.port, nil, nil)
+      http.ipaddr = Security.network_addresses!(uri.host, purpose: "hook import").first
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
       http.open_timeout = 10
