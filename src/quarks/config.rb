@@ -17,7 +17,8 @@ module Quarks
       "allow_private_networks" => "QUARKS_ALLOW_PRIVATE_NETWORKS",
       "allow_insecure_sources" => "QUARKS_ALLOW_INSECURE_SOURCES",
       "allow_insecure_repositories" => "QUARKS_ALLOW_INSECURE_REPOS",
-      "allow_unsigned_repositories" => "QUARKS_ALLOW_UNSIGNED_REPOS"
+      "allow_unsigned_repositories" => "QUARKS_ALLOW_UNSIGNED_REPOS",
+      "self_update_check" => "QUARKS_SELF_UPDATE_CHECK"
     }.freeze
     PATH_KEYS = {
       "root" => "QUARKS_ROOT",
@@ -30,7 +31,8 @@ module Quarks
       "max_source_bytes" => ["QUARKS_MAX_SOURCE_BYTES", 1, 1 << 50],
       "max_extracted_bytes" => ["QUARKS_MAX_EXTRACTED_BYTES", 1, 1 << 50],
       "max_extracted_files" => ["QUARKS_MAX_EXTRACTED_FILES", 1, 10_000_000],
-      "max_log_bytes" => ["QUARKS_MAX_LOG_BYTES", 1, 1 << 40]
+      "max_log_bytes" => ["QUARKS_MAX_LOG_BYTES", 1, 1 << 40],
+      "self_update_ttl" => ["QUARKS_SELF_UPDATE_TTL", 0, 2_592_000]
     }.freeze
     STRING_KEYS = {
       "use" => "QUARKS_USE",

@@ -190,3 +190,5 @@ spec/*
 tools/*
 !/spec/remove_planner_test.rb
 !/spec/uninstall_safety_test.rb
+!/spec/database_migration_test.rb
+!/spec/self_update_test.rb

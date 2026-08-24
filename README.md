@@ -46,6 +46,18 @@ ruby install.rb --mode distribution --destdir "$PWD/pkg" --yes
 Use `ruby install.rb --help` for custom prefixes, dependency handling, color,
 and dry-run options.
 
+Re-running the same install command performs a clean staged replacement and
+keeps atomic rollback backups. Run the same command with `--uninstall` to fully
+remove Quarks, package data, state, configuration, PATH snippets, and installer
+backups. Use `--remove-program-only` when package data must be preserved.
+
+Repository-installed copies can check their tracked HTTPS upstream during an
+ordinary `quarks sync` without slowing down other commands. Use
+`quarks self-update --check` to force a check or `quarks self-update` to verify,
+confirm, and transactionally install an available update. Self-update is
+enabled only when the installed commit has a valid Git signature; every update
+must match the pinned signing fingerprint recorded at installation.
+
 RubyGems remains the shortest installation method:
 
 ```sh

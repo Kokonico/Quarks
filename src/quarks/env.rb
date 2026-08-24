@@ -187,6 +187,8 @@ module Quarks
       QUARKS_ALLOW_INSECURE_REPOS Allow HTTP repositories (unsafe, 1/0)
       QUARKS_ALLOW_UNSIGNED_REPOS Allow unsigned repositories (unsafe, 1/0)
       QUARKS_ALLOW_DUPLICATES Allow duplicate package definitions (1/0)
+      QUARKS_SELF_UPDATE_CHECK Check for Quarks updates during repository sync (1/0)
+      QUARKS_SELF_UPDATE_TTL Minimum seconds between Quarks update checks (default: 86400)
       TXT
     end
 
@@ -198,6 +200,7 @@ module Quarks
         QUARKS_NO_SANDBOX QUARKS_BUILD_NETWORK QUARKS_ALLOW_PRIVATE_NETWORKS
         QUARKS_ALLOW_INSECURE_SOURCES QUARKS_ALLOW_INSECURE_REPOS
         QUARKS_ALLOW_UNSIGNED_REPOS QUARKS_ALLOW_DUPLICATES
+        QUARKS_SELF_UPDATE_CHECK QUARKS_SELF_UPDATE_TTL
       ].map do |key|
         value = ENV[key].to_s.strip
         value = "(not set)" if value.empty?

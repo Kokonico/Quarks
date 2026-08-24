@@ -155,6 +155,7 @@ module Quarks
       when "which" then which_command(args.first)
       when "owner" then owner_of_path(args.first)
       when "update", "sync" then update_repository
+      when "self-update" then self_update(args)
       when "upgrade", "up" then upgrade_packages
       when "clean", "eclean" then clean_cache
       when "doctor", "check" then run_doctor
@@ -254,6 +255,8 @@ module Quarks
       elsif %w[build flux profile hook spark sync-mode wavelength].include?(command)
         require "quarks/use_slots"
         require "quarks/core"
+      elsif command == "self-update"
+        require "quarks/self_update"
       end
     end
 
@@ -404,6 +407,7 @@ module Quarks
       puts "  #{UI::COLORS[:cyan]}which <cmd>#{UI::COLORS[:reset]}           Which package provides a command"
       puts "  #{UI::COLORS[:cyan]}owner <path>#{UI::COLORS[:reset]}          Which package owns a file path"
       puts "  #{UI::COLORS[:cyan]}update, sync#{UI::COLORS[:reset]}          Refresh repository metadata"
+      puts "  #{UI::COLORS[:cyan]}self-update#{UI::COLORS[:reset]}           Check for and install a Quarks update"
       puts "  #{UI::COLORS[:cyan]}upgrade, world#{UI::COLORS[:reset]}        Upgrade installed packages"
       puts "  #{UI::COLORS[:cyan]}clean, eclean#{UI::COLORS[:reset]}         Clean cache"
       puts "  #{UI::COLORS[:cyan]}doctor#{UI::COLORS[:reset]}                System health check"
@@ -1074,6 +1078,49 @@ module Quarks
       sync = SyncMode.new
       count = @repository.update(force: sync.full_sync?)
       quarks_msg("Repository ready: #{count} packages available")
+      begin
+        require "quarks/self_update"
+        update = SelfUpdate.check_if_due
+        if update[:status] == :available && !@options[:quiet]
+          puts
+          quarks_msg("A Quarks update is available", :warn)
+          puts "  Run #{UI::COLORS[:cyan]}quarks self-update#{UI::COLORS[:reset]} when convenient."
+        end
+      rescue => e
+        quarks_msg("Quarks update check skipped: #{e.message}", :warn) if @options[:debug]
+      end
+    end
+
+    def self_update(args)
+      allowed = %w[--check --dry-run]
+      unknown = args - allowed
+      raise "Unknown self-update option(s): #{unknown.join(', ')}" unless unknown.empty?
+      raise "Use either --check or --dry-run" if args.include?("--check") && args.include?("--dry-run")
+
+      result = SelfUpdate.check_if_due(force: true)
+      case result[:status]
+      when :up_to_date
+        quarks_msg("Quarks is up to date")
+      when :unsupported, :disabled
+        raise "This installation does not have a repository-managed update channel"
+      when :error
+        raise "Could not check for Quarks updates: #{result[:error]}"
+      when :available
+        current = result[:installed_commit].to_s[0, 12]
+        available = result[:remote_commit].to_s[0, 12]
+        quarks_msg("Quarks update available: #{current} -> #{available}", :warn)
+        return if args.include?("--check")
+        if @options[:ask] && !confirm?(args.include?("--dry-run") ? "Verify this update?" : "Install this Quarks update?")
+          quarks_msg("Self-update cancelled", :warn)
+          return
+        end
+        installed = SelfUpdate.install!(remote_commit: result[:remote_commit], dry_run: args.include?("--dry-run") || @options[:pretend])
+        if installed[:status] == :updated
+          quarks_msg("Quarks updated successfully. Restart any long-running Quarks processes.")
+        else
+          quarks_msg("Quarks update verified; no files were changed.")
+        end
+      end
     end
 
     def upgrade_packages

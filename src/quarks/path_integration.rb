@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "etc"
 require "shellwords"
 require "quarks/security"
 
@@ -18,7 +19,7 @@ module Quarks
       if Process.euid.zero? && Database.original_user != "root"
         raise "Run 'quarks setup-path' as the target user, not through sudo"
       end
-      Security.secure_directory(shim_dir)
+      secure_shim_directory!
 
       home = Database.original_user_home
 
@@ -52,7 +53,7 @@ module Quarks
     def sync!(database)
       return if ENV["QUARKS_DISABLE_SHIMS"] == "1"
 
-      Security.secure_directory(shim_dir)
+      secure_shim_directory!
 
       bins = database.installed_binaries
       desired = {}
@@ -87,6 +88,22 @@ module Quarks
     end
 
     private
+
+    def secure_shim_directory!
+      if File.exist?(shim_dir) && !File.symlink?(shim_dir)
+        stat = File.lstat(shim_dir)
+        if stat.uid != Process.euid
+          owner = Etc.getpwuid(stat.uid).name rescue "uid #{stat.uid}"
+          user = Database.original_user
+          passwd = Etc.getpwnam(user)
+          group = Etc.getgrgid(passwd.gid).name
+          repair = Shellwords.join(["sudo", "chown", "-R", "#{user}:#{group}", shim_dir])
+          raise SecurityViolation, "Shim directory #{shim_dir} is owned by #{owner}. Repair it with: #{repair}"
+        end
+      end
+
+      Security.secure_directory(shim_dir)
+    end
 
     def path_snippet
       (["# >>> quarks setup-path >>>"] + environment_lines + ["# <<< quarks setup-path <<<", ""]).join("\n")

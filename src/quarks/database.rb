@@ -482,10 +482,15 @@ module Quarks
         SQL
       },
       5 => -> db {
-        db.execute("ALTER TABLE files ADD COLUMN sha256 TEXT")
-        db.execute("ALTER TABLE files ADD COLUMN size INTEGER")
-        db.execute("ALTER TABLE files ADD COLUMN mode INTEGER")
-        db.execute("ALTER TABLE files ADD COLUMN kind TEXT")
+        existing_columns = db.table_info("files").map { |column| column["name"] || column[1] }
+        {
+          "sha256" => "TEXT",
+          "size" => "INTEGER",
+          "mode" => "INTEGER",
+          "kind" => "TEXT"
+        }.each do |name, type|
+          db.execute("ALTER TABLE files ADD COLUMN #{name} #{type}") unless existing_columns.include?(name)
+        end
       },
       6 => -> db {
         GeneratedPaths::EXACT.each { |path| db.execute("DELETE FROM files WHERE path=?", [path]) }
@@ -566,8 +571,7 @@ module Quarks
 
       @db.prepare("INSERT INTO files(path, package_name, sha256, size, mode, kind) VALUES(?, ?, ?, ?, ?, ?)") do |statement|
         manifest.each do |entry|
-          result = statement.execute(entry[:path], package_name, entry[:sha256], entry[:size], entry[:mode], entry[:kind])
-          result.close if result.respond_to?(:close)
+          statement.execute(entry[:path], package_name, entry[:sha256], entry[:size], entry[:mode], entry[:kind])
         end
       end
     end
