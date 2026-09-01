@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
+require "minitest/mock"
 
 $LOAD_PATH.unshift File.expand_path("../src", __dir__)
 require "quarks/sandbox_build"
