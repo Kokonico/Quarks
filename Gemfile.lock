@@ -24,12 +24,13 @@ DEPENDENCIES
   rake (>= 13, < 14)
 
 CHECKSUMS
-  benchmark (0.5.0)
-  minitest (6.0.0)
-  prism (1.8.1)
+  benchmark (0.5.0) sha256=465df122341aedcb81a2a24b4d3bd19b6c67c1530713fd533f3ff034e419236c
+  bundler (4.0.16) sha256=d6ca5dd440c24f9abce9844cf44cc8e18c6a553de65a47efb4544137af92c47d
+  minitest (6.0.0) sha256=4ca597fc1d735ea18d2b4b98c5fb1d5a6da4a6f35ddf32bd5fa3eded33a453be
+  prism (1.8.1) sha256=b260c1844ee0c7ead9c938f7fd63b95888c87cc054dfb64043204eccff8116ac
   quarks-package-manager (2.0.0)
-  rake (13.3.1)
-  sqlite3 (2.9.6-x86_64-linux-gnu)
+  rake (13.3.1) sha256=8c9e89d09f66a26a01264e7e3480ec0607f0c497a861ef16063604b1b08eb19c
+  sqlite3 (2.9.6-x86_64-linux-gnu) sha256=613188ce02f614126ddbc38c5e217ccffd6306d0dcd9adca9764547aa890a634
 
 BUNDLED WITH
   4.0.16
